@@ -1,0 +1,56 @@
+Bloco 1 - Estado cadastral da família
+Bloco 1 - Faixa da renda total da família
+Bloco 1 - Faixa	da renda familiar per capita
+Bloco 1 - Forma de coleta
+Bloco 1 - Número de meses após a última atualização cadastral
+Bloco 1 - Recebe PBF família
+Bloco 2 - Calçamento em frente ao seu domicílio
+Bloco 2 - Situação do domicílio
+Bloco 2 - Espécie do domicílio
+Bloco 2 - Existência de banheiro
+Bloco 2 - Forma de abastecimento de água
+Bloco 2 - Forma de coleta do lixo
+Bloco 2 - Forma de escoamento sanitário
+Bloco 2 - Material preodiminante nas paredes externas do domicílio
+Bloco 2 - Material preodiminante no piso do domicílio
+Bloco 2 - Água canalizada no domicílio
+Bloco 2 - Tipo de iluminação
+Bloco 3 - Família Indígena
+Bloco 3 - Família quilombola
+Bloco 4 - Cor ou raça
+Bloco 4 - Estado cadastral da pessoa
+Bloco 4 - Faixa etária
+Bloco 4 - Recebe PBF pessoa
+Bloco 4 - Relação de parentesco com responsável familiar
+Bloco 4 - Sexo
+Bloco 4 - Pessoa com marcação de trabalho infantil
+Bloco 6 - Recebe ajuda de cuidador especializado
+Bloco 6 - Recebe ajuda de alguém da família
+Bloco 6 - Recebe ajuda de instituição
+Bloco 6 - Não recebe ajuda de terceiros
+Bloco 6 - Recebe ajuda de outra forma
+Bloco 6 - Recebe ajuda de vizinho
+Bloco 6 - Cegueira
+Bloco 6 - Síndrome de Down
+Bloco 6 - Deficiência física
+Bloco 6 - Deficiência mental ou intelectual
+Bloco 6 - Surdez leve/moderada
+Bloco 6 - Surdez severa/profunda
+Bloco 6 - Transtorno/doença mental
+Bloco 6 - Baixa visão
+Bloco 6 - Pessoa tem deficiência
+Bloco 7 - Ano e série do curso que a pessoa frequenta
+Bloco 7 - A pessoa concluiu o curso?
+Bloco 7 - Curso mais elevado que a pessoa frequentou
+Bloco 7 - Curso que a pessoa frequenta
+Bloco 7 - Grau de instrução
+Bloco 7 - Pessoa frequenta escola
+Bloco 7 - Pessoa sabe ler e escrever
+Bloco 7 - Último ano e série do curso que a pessoa frequentou
+Bloco 8 - Atividade extrativista
+Bloco 8 - Função principal
+Bloco 8 - Pessoa estava afastada na semana passada? 
+Bloco 8 - Trabalho remunerado nos últimos 12 meses
+Bloco 8 - Pessoa trabalhou na semana passada?
+Bloco 11 - Grupos Populacionais Tradicionais e Específicos
+Bloco 12 - Situação de Rua

@@ -1,0 +1,6 @@
+--Select do "bloco 1 estado cadastral da familia"  = 2 - Sem Registro Civil#3 - Cadastrado
+SELECT COUNT(*) AS semregistro, 
+(SELECT COUNT(*) FROM pessoas) AS total,
+((SELECT COUNT(*) FROM pessoas) - (SELECT COUNT(*) FROM pessoas WHERE dcod_est_cadastral_fam = '2')) AS totalmenoscod2igualcadastrado,
+(SELECT COUNT(*) FROM pessoas WHERE dcod_est_cadastral_fam = '3') AS cadastrado
+FROM pessoas WHERE dcod_est_cadastral_fam = '2';

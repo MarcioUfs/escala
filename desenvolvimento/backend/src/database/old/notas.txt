@@ -1,0 +1,18 @@
+Acessar MYSQL com pronpt de comando:
+mysql -h 'servidor' -u 'usuario' -p 
+mysql -h localhost -u root -p
+
+Criar usuario:
+CREATE USER 'marcioAdmin'@'localhost' IDENTIFIED WITH mysql_native_password BY '123456';
+
+Liberar permissão para acessa a base de dados:
+GRANT ALL PRIVILEGES ON * . * TO 'marcioAdmin'@'localhost';
+
+Recarregar todos os privilegios:
+FLUSH PRIVILEGES;
+
+SELECT * FROM cadunico.entra;
+
+INSERT INTO `cadunico`.`entra` (`iddados`, `meublob`) VALUES('4', ('C:\Users\marcioalves\dev\projetos\cadastrounico\cadunicoback\uploads\231aa21899934cd002671fc98c81539b'));
+
+https://ichi.pro/pt/como-implementar-o-upload-de-imagens-usando-express-e-multer-postgresql-13666154346994

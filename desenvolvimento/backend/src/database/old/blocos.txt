@@ -1,0 +1,160 @@
+<option>Bloco 1 - Estado cadastral da família</option>
+<option>Bloco 1 - Faixa da renda total da família</option>
+<option>Bloco 1 - Faixa	da renda familiar per capita</option>
+<option>Bloco 1 - Forma de coleta</option>
+<option>Bloco 1 - Número de meses após a última atualização cadastral</option>
+<option>Bloco 1 - Recebe PBF família</option>
+<option>Bloco 2 - Calçamento em frente ao seu domicílio</option>
+<option>Bloco 2 - Situação do domicílio</option>
+<option>Bloco 2 - Espécie do domicílio</option>
+<option>Bloco 2 - Existência de banheiro</option>
+<option>Bloco 2 - Forma de abastecimento de água</option>
+<option>Bloco 2 - Forma de coleta do lixo</option>
+<option>Bloco 2 - Forma de escoamento sanitário</option>
+<option>Bloco 2 - Material preodiminante nas paredes externas do domicílio</option>
+<option>Bloco 2 - Material preodiminante no piso do domicílio</option>
+<option>Bloco 2 - Água canalizada no domicílio</option>
+<option>Bloco 2 - Tipo de iluminação</option>
+<option>Bloco 3 - Família Indígena</option>
+<option>Bloco 3 - Família quilombola</option>
+<option>Bloco 4 - Cor ou raça</option>
+<option>Bloco 4 - Estado cadastral da pessoa</option>
+<option>Bloco 4 - Faixa etária</option>
+<option>Bloco 4 - Recebe PBF pessoa</option>
+<option>Bloco 4 - Relação de parentesco com responsável familiar</option>
+<option>Bloco 4 - Sexo</option>
+<option>Bloco 4 - Pessoa com marcação de trabalho infantil</option>
+<option>Bloco 6 - Recebe ajuda de cuidador especializado</option>
+<option>Bloco 6 - Recebe ajuda de alguém da família</option>
+<option>Bloco 6 - Recebe ajuda de instituição</option>
+<option>Bloco 6 - Não recebe ajuda de terceiros</option>
+<option>Bloco 6 - Recebe ajuda de outra forma</option>
+<option>Bloco 6 - Recebe ajuda de vizinho</option>
+<option>Bloco 6 - Cegueira</option>
+<option>Bloco 6 - Síndrome de Down</option>
+<option>Bloco 6 - Deficiência física</option>
+<option>Bloco 6 - Deficiência mental ou intelectual</option>
+<option>Bloco 6 - Surdez leve/moderada</option>
+<option>Bloco 6 - Surdez severa/profunda</option>
+<option>Bloco 6 - Transtorno/doença mental</option>
+<option>Bloco 6 - Baixa visão</option>
+<option>Bloco 6 - Pessoa tem deficiência</option>
+<option>Bloco 7 - Ano e série do curso que a pessoa frequenta</option>
+<option>Bloco 7 - A pessoa concluiu o curso?</option>
+<option>Bloco 7 - Curso mais elevado que a pessoa frequentou</option>
+<option>Bloco 7 - Curso que a pessoa frequenta</option>
+<option>Bloco 7 - Grau de instrução</option>
+<option>Bloco 7 - Pessoa frequenta escola</option>
+<option>Bloco 7 - Pessoa sabe ler e escrever</option>
+<option>Bloco 7 - Último ano e série do curso que a pessoa frequentou</option>
+<option>Bloco 8 - Atividade extrativista</option>
+<option>Bloco 8 - Função principal</option>
+<option>Bloco 8 - Pessoa estava afastada na semana passada? </option>
+<option>Bloco 8 - Trabalho remunerado nos últimos 12 meses</option>
+<option>Bloco 8 - Pessoa trabalhou na semana passada?</option>
+<option>Bloco 11 - Grupos Populacionais Tradicionais e Específicos</option>
+<option>Bloco 12 - Situação de Rua</option> 
+
+
+
+
+
+
+
+    <option>Bloco 1 - Estado cadastral da família</option> cod_est_cadastral_fam 2,3
+    <option>Bloco 1 - Faixa da renda total da família</option> vlr_renda_total_fam string
+    <option>Bloco 1 - Faixa	da renda familiar per capita</option> fx_rfpc 1,2,3,4
+    <option>Bloco 1 - Forma de coleta</option> cod_forma_coleta_fam 0,1,2
+    <option>Bloco 1 - Número de meses após a última atualização cadastral</option> qtde_meses_desat_cat 0,1,2,3,4,5
+    <option>Bloco 1 - Recebe PBF família</option> marc_pbf 0,1
+    <option>Bloco 2 - Calçamento em frente ao seu domicílio</option> cod_calcamento_domic_fam 1,2,3
+    <option>Bloco 2 - Situação do domicílio</option> cod_local_domic_fam 1,2
+    <option>Bloco 2 - Espécie do domicílio</option> cod_especie_domic_fam 1,2,3
+    <option>Bloco 2 - Existência de banheiro</option> cod_banheiro_domic_fam 1,2
+    <option>Bloco 2 - Forma de abastecimento de água</option> cod_abaste_agua_domic_fam 1,2,3,4
+    <option>Bloco 2 - Forma de coleta do lixo</option> cod_destino_lixo_domic_fam 1,6
+    <option>Bloco 2 - Forma de escoamento sanitário</option> cod_escoa_sanitario_domic_fam 1,6
+    <option>Bloco 2 - Material preodiminante nas paredes externas do domicílio</option> cod_material_domic_fam 1,8
+    <option>Bloco 2 - Material preodiminante no piso do domicílio</option> cod_material_piso_fam 1,7
+    <option>Bloco 2 - Água canalizada no domicílio</option> cod_agua_canalizada_fam 1,2
+    <option>Bloco 2 - Tipo de iluminação</option> cod_iluminacao_domic_fam 1,6
+    <option>Bloco 3 - Família Indígena</option> cod_familia_indigena_fam 1,2
+    <option>Bloco 3 - Família quilombola</option> ind_familia_quilombola_fam 1,2
+    <option>Bloco 4 - Cor ou raça</option> cod_raca_cor_pessoa 1,5
+    <option>Bloco 4 - Estado cadastral da pessoa</option> cod_est_cadastral_memb 2,6
+    <option>Bloco 4 - Faixa etária</option> fx_idade 0,12
+    <option>Bloco 4 - Recebe PBF pessoa</option> marc_pbf 0,1
+    <option>Bloco 4 - Relação de parentesco com responsável familiar</option> cod_parentesco_rf_pessoa 1,11
+    <option>Bloco 4 - Sexo</option> cod_sexo_pessoa 1,2
+    <option>Bloco 4 - Pessoa com marcação de trabalho infantil</option> ind_trabalho_infantil_pessoa 1,2
+    <option>Bloco 6 - Recebe ajuda de cuidador especializado</option> 
+    <option>Bloco 6 - Recebe ajuda de alguém da família</option>
+    <option>Bloco 6 - Recebe ajuda de instituição</option>
+    <option>Bloco 6 - Não recebe ajuda de terceiros</option>
+    <option>Bloco 6 - Recebe ajuda de outra forma</option>
+    <option>Bloco 6 - Recebe ajuda de vizinho</option>
+    <option>Bloco 6 - Cegueira</option>
+    <option>Bloco 6 - Síndrome de Down</option>
+    <option>Bloco 6 - Deficiência física</option>
+    <option>Bloco 6 - Deficiência mental ou intelectual</option>
+    <option>Bloco 6 - Surdez leve/moderada</option>
+    <option>Bloco 6 - Surdez severa/profunda</option>
+    <option>Bloco 6 - Transtorno/doença mental</option>
+    <option>Bloco 6 - Baixa visão</option>
+    <option>Bloco 6 - Pessoa tem deficiência</option>
+    <option>Bloco 7 - Ano e série do curso que a pessoa frequenta</option>
+    <option>Bloco 7 - A pessoa concluiu o curso?</option>
+    <option>Bloco 7 - Curso mais elevado que a pessoa frequentou</option>
+    <option>Bloco 7 - Curso que a pessoa frequenta</option>
+    <option>Bloco 7 - Grau de instrução</option>
+    <option>Bloco 7 - Pessoa frequenta escola</option>
+    <option>Bloco 7 - Pessoa sabe ler e escrever</option>
+    <option>Bloco 7 - Último ano e série do curso que a pessoa frequentou</option>
+    <option>Bloco 8 - Atividade extrativista</option>
+    <option>Bloco 8 - Função principal</option>
+    <option>Bloco 8 - Pessoa estava afastada na semana passada? </option>
+    <option>Bloco 8 - Trabalho remunerado nos últimos 12 meses</option>
+    <option>Bloco 8 - Pessoa trabalhou na semana passada?</option>
+    <option>Bloco 11 - Grupos Populacionais Tradicionais e Específicos</option>
+    <option>Bloco 12 - Situação de Rua</option> */}
+
+
+
+tabulacao,
+coluna,
+mes,
+ano,
+selecao geografica,
+filtros [Estado cadastral da família,Faixa da renda familiar per capita,Recebe PBF família,Número de meses após a última atualização cadastral,Situação do domicílio,Família Indígena,Família quilombola,Estado cadastral da pessoa,Sexo,Relação de parentesco com o responsável familiar,Cor ou raça,Faixa etária,Recebe PBF pessoa,Pessoa tem deficiência?,Pessoa sabe ler e escrever,Grupos Populacionais Tradicionais e Específicos,Situação de Rua]
+
+modelo JSON para envio
+
+{
+	"marcacaopbf": "1",
+	"selecaogeografica": "Aracaju",
+	"coluna": "qtde_meses_desat_cat",
+	"linha": "qtde_meses_desat_cat",
+	"mes": "08",
+	"ano": "2021",
+	"filtros": [
+		{
+			"estadocadastralfamilia": "2",
+			"situacaodomicilio": "1",
+			"numeroultatualizacaocadastral": "0",
+			"recebepbf": "1",
+			"faixarendafamiliarpcapita": "1"
+		},
+		{
+			"faixarendafamiliarpcapita": "1"
+		},
+		{
+			"recebepbf": "1"
+		},
+		{
+			"numeroultatualizacaocadastral": "0"
+		},
+		{
+			"situacaodomicilio": "1"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+  language: "node_js",
+  os: [
+    "windows"
+  ],
+  node_js: [
+    - '14.13'
+  ]
+}
+# os: windows
+# language: node_js
+# node_js: 
+#   - "stable"
+# sudo: false
+# script: "npm start"
