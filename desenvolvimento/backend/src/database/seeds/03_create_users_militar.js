@@ -21,7 +21,7 @@ exports.seed = async function(knex) {
       nome: 'Marcio da Silva Alves',
       cpf: '03251007483',
       matricula: '200207001890',
-      role: 'admin',
+      role: 'user',
       created_at: now,
       updated_at: now
     },
@@ -32,7 +32,7 @@ exports.seed = async function(knex) {
       nome: 'John Doe',
       cpf: '03251007482',
       matricula: '200207001891',
-      role: 'admin',
+      role: 'user',
       created_at: now,
       updated_at: now
     },

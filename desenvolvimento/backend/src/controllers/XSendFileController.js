@@ -1,5 +1,5 @@
 const init = require('../functions/init');
-const createEmptyFile = require('../functions/createEmptyFile');
+const createEmptyFile = require('../functions/XcreateEmptyFile');
 const pool = require('../database/database');
 const cron = require('node-cron');
 

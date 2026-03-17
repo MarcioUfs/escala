@@ -1,4 +1,4 @@
-const formatPorcentagem = require('./formatPorcentagem');
+const formatPorcentagem = require('./XformatPorcentagem');
 
 function arrPorcentoFun(tamArrEntre, arrayResults, entradaColuna, totalPessoas, totalFamilias) {
     let arrPorcento = [];

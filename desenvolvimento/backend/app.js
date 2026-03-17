@@ -1,15 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const sendFileRoute = require('./src/routes/sendFileRoute');
-const dashBoardRoute = require('./src/routes/dashBoardRoute');
-const searchRoute = require('./src/routes/searchRoute');
-const tabuladorRoute = require('./src/routes/tabuladorRoute');
-const listaDados = require('./src/routes/listDadosRoute');
-const fichaRoute = require('./src/routes/fichaRoute');
+// const sendFileRoute = require('./src/routes/sendFileRoute');
+// const dashBoardRoute = require('./src/routes/dashBoardRoute');
+// const searchRoute = require('./src/routes/searchRoute');
+// const tabuladorRoute = require('./src/routes/tabuladorRoute');
+// const listaDados = require('./src/routes/listDadosRoute');
+// const fichaRoute = require('./src/routes/fichaRoute');
 const userRoute = require('./src/routes/userRoute');
 const adminRoute = require('./src/routes/adminroutes');
-const verifyJWT = require('./src/middleware/verifyJWT');
+// const verifyJWT = require('./src/middleware/verifyJWT');
 
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
