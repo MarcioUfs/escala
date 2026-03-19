@@ -8,36 +8,6 @@ const somenteMatricula = require("../functions/somenteMatricula");
 const validateEmail = require("../functions/validarEmail");
 const validateFields = require("../functions/validarCampos");
 
-// async function readUsers(req, res) {
-//   await database
-//     .select()
-//     .table("users")
-//     .orderBy("nome")
-//     .then((data) => {
-//       const arrayDados = [];
-//       if (data.length > 0) {
-//         for (element of data) {
-//           arrayDados.push(
-//             JSON.parse(`{
-//                         "nome":"${element.nome}",
-//                         "cpf":"${tratarCpf(element.cpf)}",
-//                         "email":"${element.email}",
-//                         "perfil":"${element.role}",
-//                         "matricula":"${tratarMatricula(element.matricula)}",
-//                         "id":"${element.id_user}"
-//                     }`),
-//           );
-//         }
-//         return res.status(200).json(arrayDados);
-//       } else {
-//         return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
-//       }
-//     })
-//     .catch((error) => {
-//       return res.status(500).json({ msg: "Erro do servidor!" });
-//     });
-// }
-
 async function readUsers(req, res) {
   await database
     .select(
@@ -56,19 +26,12 @@ async function readUsers(req, res) {
       "efetivo_antiguidade.tempo_promocao",
     )
     .from("users")
-    // O leftJoin une a matricula do usuário com o matricula dos dados militares
-    .leftJoin(
-      "efetivo_antiguidade",
-      "users.matricula",
-      "efetivo_antiguidade.matricula",
-    )
-    // Ordenação pela ordem de antiguidade, colocando os sem ficha no final
+    .leftJoin("efetivo_antiguidade","users.matricula","efetivo_antiguidade.matricula",)
     .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
     .then((data) => {
       const arrayDados = [];
       if (data.length > 0) {
         for (let element of data) {
-          // Criando o objeto diretamente: mais rápido e à prova de travamentos com aspas no nome
           arrayDados.push({
             nome: element.nome_militar || element.nome,
             cpf: tratarCpf(element.cpf),
@@ -77,8 +40,7 @@ async function readUsers(req, res) {
             matricula: tratarMatricula(element.matricula),
             id: element.id_user,
 
-            // Dados Militares - Se não tiver ficha, usa os dados do usuário ou valores padrão
-            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001, // Número grande aleatório para garantir que usuários sem ficha fiquem no final da lista
+            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001, 
             patente: element.patente || "Sem Posto",
             quadro: element.quadro || "Sem Quadro",
             data_promocao: element.data_promocao || "01/01/1900",
@@ -97,14 +59,14 @@ async function readUsers(req, res) {
 
 async function create(req, res) {
   
-  // const isValid = validateFields(req, res, [
-  //   "email",
-  //   "password",
-  //   "cpf",
-  //   "nome",
-  //   "matricula",
-  // ]);
-  // if (!isValid) return;
+  const isValid = validateFields(req, res, [
+    "email",
+    "password",
+    "cpf",
+    "nome",
+    "matricula",
+  ]);
+  if (!isValid) return;
 
   const isValidEmail = validateEmail(req, res);
   if (!isValidEmail) return;
@@ -301,9 +263,9 @@ async function createAdmin(req, res) {
   await database
     .select()
     .table("admins")
-    .where({ cpf: req.body.cpf })
+    .where({ cpf: somenteCpf(req.body.cpf) })
     .orWhere({ email: req.body.email })
-    .orWhere({ matricula: req.body.matricula })
+    .orWhere({ matricula: somenteMatricula(req.body.matricula) })
     .then((data) => {
       if (data.length >= 1) {
         return res
