@@ -5,6 +5,8 @@ const tratarCpf = require("../functions/tratarCpf");
 const somenteCpf = require("../functions/somenteCpf");
 const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
+const validateEmail = require("../functions/validarEmail");
+const validateFields = require("../functions/validarCampos");
 
 // async function readUsers(req, res) {
 //   await database
@@ -39,41 +41,48 @@ const somenteMatricula = require("../functions/somenteMatricula");
 async function readUsers(req, res) {
   await database
     .select(
-      "users.*", // Pega tudo da tabela users
-      "dados_militares.posto_graduacao",
-      "dados_militares.abreviacao",
-      "dados_militares.peso_hierarquico",
-      "dados_militares.anos_servico",
-      "dados_militares.meses_servico",
-      "dados_militares.dias_servico"
+      "users.id_user",
+      "users.email",
+      "users.cpf",
+      "users.nome",
+      "users.matricula",
+      "users.role",
+      "users.updated_at",
+      "efetivo_antiguidade.nome AS nome_militar",
+      "efetivo_antiguidade.ordem",
+      "efetivo_antiguidade.patente",
+      "efetivo_antiguidade.quadro",
+      "efetivo_antiguidade.data_promocao",
+      "efetivo_antiguidade.tempo_promocao",
     )
     .from("users")
-    // O leftJoin une o ID do usuário com o user_id dos dados militares
-    .leftJoin("dados_militares", "users.id_user", "dados_militares.user_id")
-    // Ordenação Militar: Primeiro os mais antigos/maior patente, depois desempata por antiguidade ou nome
-    .orderBy("dados_militares.peso_hierarquico", "asc")
-    .orderBy("dados_militares.anos_servico", "desc")
-    .orderBy("users.nome", "asc")
+    // O leftJoin une a matricula do usuário com o matricula dos dados militares
+    .leftJoin(
+      "efetivo_antiguidade",
+      "users.matricula",
+      "efetivo_antiguidade.matricula",
+    )
+    // Ordenação pela ordem de antiguidade, colocando os sem ficha no final
+    .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
     .then((data) => {
       const arrayDados = [];
       if (data.length > 0) {
         for (let element of data) {
           // Criando o objeto diretamente: mais rápido e à prova de travamentos com aspas no nome
           arrayDados.push({
-            nome: element.nome,
+            nome: element.nome_militar || element.nome,
             cpf: tratarCpf(element.cpf),
             email: element.email,
             perfil: element.role,
             matricula: tratarMatricula(element.matricula),
             id: element.id_user,
-            
-            // Dados Militares (com fallback caso o usuário ainda não tenha ficha)
-            posto_graduacao: element.posto_graduacao || "Sem Posto",
-            abreviacao: element.abreviacao || "",
-            peso_hierarquico: element.peso_hierarquico || 99,
-            anos_servico: element.anos_servico || 0,
-            meses_servico: element.meses_servico || 0,
-            dias_servico: element.dias_servico || 0
+
+            // Dados Militares - Se não tiver ficha, usa os dados do usuário ou valores padrão
+            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001, // Número grande aleatório para garantir que usuários sem ficha fiquem no final da lista
+            patente: element.patente || "Sem Posto",
+            quadro: element.quadro || "Sem Quadro",
+            data_promocao: element.data_promocao || "01/01/1900",
+            tempo_promocao: element.tempo_promocao || "0 anos",
           });
         }
         return res.status(200).json(arrayDados);
@@ -82,12 +91,24 @@ async function readUsers(req, res) {
       }
     })
     .catch((error) => {
-      console.error(error); // Ajuda você a ver no terminal se der erro
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
 
 async function create(req, res) {
+  
+  // const isValid = validateFields(req, res, [
+  //   "email",
+  //   "password",
+  //   "cpf",
+  //   "nome",
+  //   "matricula",
+  // ]);
+  // if (!isValid) return;
+
+  const isValidEmail = validateEmail(req, res);
+  if (!isValidEmail) return;
+
   await database
     .select()
     .table("users")
@@ -113,16 +134,6 @@ async function create(req, res) {
               updated_at: new Date(),
             };
             try {
-              if (
-                user.email === "" ||
-                user.password === "" ||
-                user.cpf === "" ||
-                user.nome === "" ||
-                user.matricula === "" ||
-                user.role === ""
-              ) {
-                return res.status(403).json({ msg: "Falta algum dado!" });
-              }
               await database
                 .insert(user)
                 .into("users")
@@ -134,10 +145,12 @@ async function create(req, res) {
                 .catch((err) => {
                   return res
                     .status(500)
-                    .json({ msg: "Erro interno do servidor" });
+                    .json({ msg: "Erro interno do servidor", error: err });
                 });
             } catch (error) {
-              return res.status(500).json({ msg: "Erro interno do servidor" });
+              return res
+                .status(500)
+                .json({ msg: "Erro interno do servidor", error: error });
             }
           });
         });
@@ -235,7 +248,7 @@ async function updateUser(req, res) {
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
   let cpfOnly = somenteCpf(req.body.cpf);
-  
+
   if (cpfOnly === 0) {
     return res.status(401).send({ msg: "Credencial inválida!" });
   }
@@ -334,9 +347,7 @@ async function createAdmin(req, res) {
                     .json({ msg: "Erro interno do servidor" });
                 });
             } catch (error) {
-              return res
-                .status(500)
-                .json({ msg: "Erro interno do servidor" });
+              return res.status(500).json({ msg: "Erro interno do servidor" });
             }
           });
         });
@@ -358,7 +369,9 @@ async function getAdmin(req, res) {
         .where({ id_admin: decoded.id_admin })
         .then((data) => {
           if (data.length <= 0) {
-            return res.status(404).send({ msg: "Administrador não encontrado" });
+            return res
+              .status(404)
+              .send({ msg: "Administrador não encontrado" });
           } else {
             const userData = {
               nome: data[0].nome,

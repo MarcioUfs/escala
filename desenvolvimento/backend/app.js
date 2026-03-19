@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+// Importa o nosso novo agendador
+const iniciarAgendamentos = require('./src/jobs/scheduler');
 // const sendFileRoute = require('./src/routes/sendFileRoute');
 // const dashBoardRoute = require('./src/routes/dashBoardRoute');
 // const searchRoute = require('./src/routes/searchRoute');
@@ -17,6 +19,9 @@ app.use(cors({
     origin: "*",
     methods: "PUT,PATCH,POST,UPDATE,DELETE,GET"
 }));
+
+// Liga os agendamentos automáticos em segundo plano
+iniciarAgendamentos();
 
 // app.use('/databases', verifyJWT, sendFileRoute);
 // app.use('/dashboard', verifyJWT, dashBoardRoute);

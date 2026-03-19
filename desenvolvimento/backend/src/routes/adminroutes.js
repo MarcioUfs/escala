@@ -1,6 +1,6 @@
 const express = require('express');
 const verifyJWTAdmin = require('../middleware/verifyJWTAdmin');
-const adminController = require('../controllers/adminController');
+const adminController = require('../controllers/AdminController');
 const AlmanaqueController = require('../controllers/AlmanaqueController');
 // const { router } = require('./almanaqueroutes');
 
