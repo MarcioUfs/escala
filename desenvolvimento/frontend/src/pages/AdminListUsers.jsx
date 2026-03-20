@@ -99,7 +99,6 @@ export default function AdminListUsers() {
   };
 
   if (loading) {
-    // Retirado o min-h-screen e bg-gray-50
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-xl text-gray-600">A carregar utilizadores...</p>
@@ -107,7 +106,6 @@ export default function AdminListUsers() {
     );
   }
 
-  // Retirado o min-h-screen e bg-gray-50
   return (
     <div className="p-4 sm:p-8 relative">
       <div className="max-w-7xl mx-auto">
@@ -147,7 +145,7 @@ export default function AdminListUsers() {
 
           <button
             onClick={() => navigate("/admin/create-user")}
-            className="w-full md:w-auto px-6 py-3 bg-blue-800 text-white font-medium rounded-lg hover:bg-blue-900 transition shadow-sm"
+            className="w-full md:w-auto px-6 py-3 bg-blue-800 text-white font-medium rounded-lg hover:bg-blue-900 transition shadow-sm whitespace-nowrap"
           >
             + Novo Utilizador
           </button>
@@ -167,7 +165,7 @@ export default function AdminListUsers() {
         )}
 
         {/* VISÃO MOBILE (CARDS) */}
-        <div className="grid grid-cols-1 gap-4 md:hidden">
+        <div className="grid grid-cols-1 gap-4 lg:hidden">
           {filteredUsers.length > 0 ? (
             filteredUsers.map((user) => (
               <div
@@ -184,23 +182,30 @@ export default function AdminListUsers() {
                     </p>
                   </div>
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
-                    {user.perfil}
+                    {user.ordem}
                   </span>
                 </div>
 
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">CPF:</span> {user.cpf}
                 </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Patente/Graduação:</span> {user.patente}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Quadro:</span> {user.quadro}
+                </p>
                 <p className="text-sm text-gray-600 mb-4">
                   <span className="font-semibold">E-mail:</span> {user.email}
                 </p>
 
+                {/* BOTÕES NO MOBILE (Grid 2 colunas, todos de largura igual) */}
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <button
                     onClick={() =>
                       navigate("/admin/view-user", { state: { user } })
                     }
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium transition"
+                    className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition text-center"
                   >
                     Ver
                   </button>
@@ -208,19 +213,19 @@ export default function AdminListUsers() {
                     onClick={() =>
                       navigate("/admin/edit-user", { state: { user } })
                     }
-                    className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 text-sm font-medium transition"
+                    className="w-full py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 text-sm font-medium transition text-center"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => handleDeleteClick(user)}
-                    className="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium"
+                    className="w-full py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium transition text-center"
                   >
                     Deletar
                   </button>
                   <button
                     onClick={() => toggleEscala(user.id)}
-                    className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 text-sm font-medium"
+                    className="w-full py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 text-sm font-medium transition text-center"
                   >
                     Escalar
                   </button>
@@ -234,16 +239,18 @@ export default function AdminListUsers() {
           )}
         </div>
 
-        {/* VISÃO DESKTOP (TABELA) */}
-        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* VISÃO DESKTOP/TABLET (TABELA) */}
+        <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-max">
               <thead>
                 <tr className="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
                   <th className="p-4 border-b font-semibold">Nome</th>
+                  <th className="p-4 border-b font-semibold">Patente</th>
+                  <th className="p-4 border-b font-semibold">Quadro</th>
                   <th className="p-4 border-b font-semibold">Matrícula</th>
                   <th className="p-4 border-b font-semibold">CPF</th>
-                  <th className="p-4 border-b font-semibold">Perfil</th>
+                  <th className="p-4 border-b font-semibold">Ordem</th>
                   <th className="p-4 border-b font-semibold text-center">
                     Ações
                   </th>
@@ -259,48 +266,53 @@ export default function AdminListUsers() {
                           {user.email}
                         </div>
                       </td>
+                      <td className="p-4 text-gray-700">{user.patente}</td>
+                      <td className="p-4 text-gray-700">{user.quadro}</td>
                       <td className="p-4 text-gray-700">{user.matricula}</td>
                       <td className="p-4 text-gray-700">{user.cpf}</td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
-                          {user.perfil}
+                          {user.ordem}
                         </span>
                       </td>
-                      <td className="p-4 text-center space-x-2">
-                        <button
-                          onClick={() =>
-                            navigate("/admin/view-user", { state: { user } })
-                          }
-                          className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium transition"
-                        >
-                          Ver
-                        </button>
-                        <button
-                          onClick={() =>
-                            navigate("/admin/edit-user", { state: { user } })
-                          }
-                          className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 text-sm font-medium transition"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(user)}
-                          className="px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium transition"
-                        >
-                          Deletar
-                        </button>
-                        <button
-                          onClick={() => toggleEscala(user.id)}
-                          className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded hover:bg-emerald-200 text-sm font-medium transition"
-                        >
-                          Escalar
-                        </button>
+                      <td className="p-4">
+                        {/* BOTÕES NO DESKTOP (Flex horizontal sem quebrar, botões de largura igual min-w) */}
+                        <div className="flex items-center justify-center gap-2 flex-nowrap">
+                          <button
+                            onClick={() =>
+                              navigate("/admin/view-user", { state: { user } })
+                            }
+                            className="min-w-[70px] px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium transition text-center"
+                          >
+                            Ver
+                          </button>
+                          <button
+                            onClick={() =>
+                              navigate("/admin/edit-user", { state: { user } })
+                            }
+                            className="min-w-[70px] px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-sm font-medium transition text-center"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(user)}
+                            className="min-w-[70px] px-3 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition text-center"
+                          >
+                            Deletar
+                          </button>
+                          <button
+                            onClick={() => toggleEscala(user.id)}
+                            className="min-w-[70px] px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-md hover:bg-emerald-200 text-sm font-medium transition text-center"
+                          >
+                            Escalar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">
+                    <td colSpan="7" className="p-8 text-center text-gray-500">
                       Nenhum utilizador encontrado com a pesquisa "{searchTerm}".
                     </td>
                   </tr>
@@ -346,13 +358,13 @@ export default function AdminListUsers() {
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={closeDeleteModal}
-                  className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition"
+                  className="w-full px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="px-5 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
+                  className="w-full px-5 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
                 >
                   Sim, Excluir
                 </button>

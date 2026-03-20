@@ -5,7 +5,7 @@ import api from "../services/api";
 export default function AdminCreateUser() {
   const navigate = useNavigate();
 
-  // Estado que espelha os dados exigidos pelo seu backend (sem o role, pois o backend já define)
+  // Estados do formulário e status
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
@@ -13,8 +13,13 @@ export default function AdminCreateUser() {
     email: "",
     password: "",
   });
-
   const [status, setStatus] = useState({ type: "", message: "" });
+
+  // Novos estados para a barra de pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchMessage, setSearchMessage] = useState("");
 
   // Máscara visual para o CPF
   const handleCpfChange = (e) => {
@@ -27,12 +32,10 @@ export default function AdminCreateUser() {
     setFormData({ ...formData, cpf: value });
   };
 
-  // Nova máscara visual para a Matrícula (ex: 2002070018-90)
+  // Máscara visual para a Matrícula
   const handleMatriculaChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
-    if (value.length > 12) value = value.substring(0, 12); // Limita a 12 números
-
-    // Coloca o traço após o 10º dígito
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 12) value = value.substring(0, 12);
     value = value.replace(/(\d{10})(\d)/, "$1-$2");
 
     setFormData({ ...formData, matricula: value });
@@ -40,6 +43,57 @@ export default function AdminCreateUser() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // --- NOVA FUNÇÃO: Buscar PMs ---
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      setSearchMessage("Digite um nome ou matrícula para buscar.");
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchMessage("");
+    setSearchResults([]);
+
+    try {
+      // Faz a requisição para a rota (o token deve estar configurado no seu ../services/api)
+      const response = await api.get("/admin/allpm");
+      const allPms = response.data;
+
+      // Filtra os resultados baseados no texto digitado (nome ou matricula)
+      const filtered = allPms.filter(
+        (pm) =>
+          pm.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          pm.matricula.includes(searchTerm)
+      );
+
+      if (filtered.length === 0) {
+        setSearchMessage("Nenhum policial encontrado com esses dados.");
+      } else {
+        setSearchResults(filtered);
+      }
+    } catch (error) {
+      console.error(error);
+      setSearchMessage("Erro ao buscar dados do efetivo. Verifique sua conexão.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // --- NOVA FUNÇÃO: Preencher formulário ao clicar em "Incluir" ---
+  const handleInclude = (pm) => {
+    setFormData((prev) => ({
+      ...prev,
+      nome: pm.nome,
+      matricula: pm.matricula,
+      // Se quiser que a senha padrão seja o CPF ou matrícula, pode adicionar aqui também!
+    }));
+    
+    // Limpa a pesquisa após incluir para deixar a tela limpa
+    setSearchResults([]);
+    setSearchTerm("");
+    setSearchMessage("");
   };
 
   const handleSubmit = async (e) => {
@@ -54,7 +108,6 @@ export default function AdminCreateUser() {
         message: "Usuário cadastrado com sucesso!",
       });
 
-      // Limpa os campos do formulário após o sucesso
       setFormData({
         nome: "",
         cpf: "",
@@ -63,13 +116,11 @@ export default function AdminCreateUser() {
         password: "",
       });
 
-      // Retorna ao painel de administração após 2 segundos
       setTimeout(() => {
         navigate("/admin");
       }, 2000);
     } catch (error) {
       console.error(error);
-      // Tratamento de erros baseado nas respostas do seu Controller
       if (error.response?.status === 409) {
         setStatus({
           type: "error",
@@ -90,14 +141,76 @@ export default function AdminCreateUser() {
   };
 
   return (
-    <div className="py-10 px-4 sm:px-6 lg:px-8 flex justify-center">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-md overflow-hidden p-8 border-t-4 border-blue-500">
+    <div className="py-10 px-4 sm:px-6 lg:px-8 flex justify-center w-full box-border overflow-hidden">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-md p-6 sm:p-8 border-t-4 border-blue-500">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Novo Usuário</h2>
           <p className="text-sm text-gray-600">
             Cadastro de perfil comum (Operacional)
           </p>
         </div>
+
+        {/* --- INÍCIO DA SESSÃO DE PESQUISA --- */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Buscar no Efetivo (Nome ou Matrícula)
+          </label>
+          
+          {/* Ajuste de responsividade: empilha no mobile (flex-col), lado a lado no desktop (sm:flex-row) */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+              placeholder="Digite para buscar..."
+            />
+            <button
+              type="button"
+              onClick={handleSearch}
+              disabled={isSearching}
+              className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 disabled:opacity-50 transition-colors shrink-0"
+            >
+              {isSearching ? "Buscando..." : "Buscar"}
+            </button>
+          </div>
+
+          {searchMessage && (
+            <p className="mt-2 text-xs text-red-600 font-medium">
+              {searchMessage}
+            </p>
+          )}
+
+          {searchResults.length > 0 && (
+            <ul className="mt-3 space-y-2 max-h-48 overflow-y-auto pr-1">
+              {searchResults.map((pm) => (
+                <li
+                  key={pm.id}
+                  /* Ajuste na lista: empilha os textos e o botão de incluir no mobile, se necessário */
+                  className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 gap-3 bg-white border border-gray-200 rounded-md shadow-sm"
+                >
+                  <div className="text-sm w-full break-words">
+                    <p className="font-bold text-gray-800">
+                      {pm.patente} {pm.nome}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Mat: {pm.matricula} | {pm.quadro}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleInclude(pm)}
+                    className="w-full sm:w-auto px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded shadow hover:bg-green-700 transition-colors shrink-0"
+                  >
+                    Incluir
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* --- FIM DA SESSÃO DE PESQUISA --- */}
 
         {status.message && (
           <div
@@ -113,7 +226,7 @@ export default function AdminCreateUser() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 w-full">
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Nome Completo
@@ -188,18 +301,18 @@ export default function AdminCreateUser() {
             />
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <button
               type="button"
               onClick={() => navigate("/admin")}
-              className="w-1/3 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+              className="w-full sm:w-1/3 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={status.type === "loading"}
-              className="w-2/3 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+              className="w-full sm:w-2/3 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:opacity-50"
             >
               {status.type === "loading" ? "A Salvar..." : "Cadastrar Usuário"}
             </button>
