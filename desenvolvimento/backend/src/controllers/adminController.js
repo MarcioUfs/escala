@@ -26,7 +26,11 @@ async function readUsers(req, res) {
       "efetivo_antiguidade.tempo_promocao",
     )
     .from("users")
-    .leftJoin("efetivo_antiguidade","users.matricula","efetivo_antiguidade.matricula",)
+    .leftJoin(
+      "efetivo_antiguidade",
+      "users.matricula",
+      "efetivo_antiguidade.matricula",
+    )
     .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
     .then((data) => {
       const arrayDados = [];
@@ -40,7 +44,7 @@ async function readUsers(req, res) {
             matricula: tratarMatricula(element.matricula),
             id: element.id_user,
 
-            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001, 
+            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001,
             patente: element.patente || "Sem Posto",
             quadro: element.quadro || "Sem Quadro",
             data_promocao: element.data_promocao || "01/01/1900",
@@ -58,7 +62,6 @@ async function readUsers(req, res) {
 }
 
 async function create(req, res) {
-  
   const isValid = validateFields(req, res, [
     "email",
     "password",
@@ -206,7 +209,37 @@ async function updateUser(req, res) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
-
+/*************LISTAR ALL****************/
+async function readAllPm(req, res) {
+  await database
+    .select("efetivo_antiguidade.*")
+    .from("efetivo_antiguidade")
+    .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
+    .then((data) => {
+      const arrayDados = [];
+      if (data.length > 0) {
+        for (let element of data) {
+          arrayDados.push({
+            id: element.id,
+            nome: element.nome,
+            ordem: element.ordem,
+            patente: element.patente,
+            matricula: tratarMatricula(element.matricula),
+            quadro: element.quadro,
+            patente: element.patente,
+            data_promocao: element.data_promocao,
+            tempo_promocao: element.tempo_promocao,
+          });
+        }
+        return res.status(200).json(arrayDados);
+      } else {
+        return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
+      }
+    })
+    .catch((error) => {
+      return res.status(500).json({ msg: "Erro do servidor!" });
+    });
+}
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
   let cpfOnly = somenteCpf(req.body.cpf);
@@ -359,6 +392,8 @@ module.exports = {
   deleteUser: deleteUser,
   updateUser: updateUser,
 
+  readAllPm: readAllPm,
+  
   loginAdmin: loginAdmin,
   createAdmin: createAdmin,
   getAdmin: getAdmin,
