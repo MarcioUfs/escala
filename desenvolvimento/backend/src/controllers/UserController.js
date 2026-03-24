@@ -92,6 +92,88 @@ async function getUser(req, res) {
 }
 
 
+async function updatePassword(req, res) {
+  // 1. Extração e Validação Inicial dos Campos
+  const { oldPassword, newPassword, confirmNewPassword } = req.body;
+
+  if (!oldPassword || !newPassword || !confirmNewPassword) {
+    return res.status(400).json({ msg: "Preencha a senha antiga, a nova e a confirmação." });
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({ msg: "A nova senha e a confirmação não coincidem." });
+  }
+  
+  if (newPassword === oldPassword) {
+    return res.status(400).json({ msg: "A nova senha deve ser diferente da senha antiga." });
+  }
+
+  // 2. Identificação do Usuário via Token
+  // Assumindo que seu middleware de auth coloca o ID do dono do token em req.userId
+  const userId = req.decodedData.id_user; 
+
+  if (!userId) {
+    return res.status(401).json({ msg: "Acesso negado. Usuário não autenticado." });
+  }
+
+  try {
+    // 3. Buscar os dados atuais do usuário no banco
+    const users = await database
+      .select("*")
+      .table("users")
+      .where({ id_user: userId });
+
+    if (users.length === 0) {
+      return res.status(404).json({ msg: "Usuário não encontrado no sistema." });
+    }
+
+    const user = users[0];
+
+    // 4. Comparar a senha antiga enviada com o hash salvo no banco
+    bcryptjs.compare(oldPassword, user.password, function (err, isMatch) {
+      if (err) {
+        return res.status(500).json({ msg: "Erro ao verificar a credencial antiga", error: err });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ msg: "A senha antiga está incorreta." });
+      }
+
+      // 5. Se a senha antiga estiver correta, geramos o hash da nova senha
+      bcryptjs.genSalt(10, function (err, salt) {
+        if (err) {
+          return res.status(500).json({ msg: "Erro ao gerar parâmetros de segurança", error: err });
+        }
+
+        bcryptjs.hash(newPassword, salt, async function (err, hash) {
+          if (err) {
+            return res.status(500).json({ msg: "Erro ao criptografar a nova senha", error: err });
+          }
+
+          // 6. Atualizar a senha no banco de dados
+          try {
+            await database
+              .table("users")
+              .where({ id_user: userId })
+              .update({
+                password: hash,
+                updated_at: new Date(),
+              });
+
+            return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
+
+          } catch (updateError) {
+            return res.status(500).json({ msg: "Erro interno ao salvar a nova senha", error: updateError });
+          }
+        });
+      });
+    });
+
+  } catch (dbError) {
+    return res.status(500).json({ msg: "Erro de conexão com o banco de dados", error: dbError });
+  }
+}
+
 //SEM USO AINDA
 async function updateMyUser(req, res) {
   if (isNaN(req.params.id)) {
@@ -159,6 +241,7 @@ async function catchUser(req, res) {
 module.exports = {
   login: login,
   getUser: getUser,
+  updatePassword: updatePassword,
   updateMyUser: updateMyUser,
   catchUser: catchUser,
 };
