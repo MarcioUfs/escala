@@ -1,59 +1,56 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet"); // Recomendação de segurança
+const swaggerUi = require("swagger-ui-express");
+const swaggerFile = require("./swagger-output.json");
+
+// Importação de Rotas e Serviços
+const iniciarAgendamentos = require("./src/jobs/scheduler");
+const { generalLimiter } = require("./src/middleware/rateLimiter");
+const userRoute = require("./src/routes/userRoute");
+const adminRoute = require("./src/routes/adminroutes");
+
 const app = express();
-// Importa o nosso novo agendador
-const iniciarAgendamentos = require('./src/jobs/scheduler');
-// const sendFileRoute = require('./src/routes/sendFileRoute');
-// const dashBoardRoute = require('./src/routes/dashBoardRoute');
-// const searchRoute = require('./src/routes/searchRoute');
-// const tabuladorRoute = require('./src/routes/tabuladorRoute');
-// const listaDados = require('./src/routes/listDadosRoute');
-// const fichaRoute = require('./src/routes/fichaRoute');
-const userRoute = require('./src/routes/userRoute');
-const adminRoute = require('./src/routes/adminroutes');
-// const verifyJWT = require('./src/middleware/verifyJWT');
 
-app.use(express.urlencoded({ extended: false }))
-app.use(express.json())
-app.use(cors({
-    origin: "*",
-    methods: "PUT,PATCH,POST,UPDATE,DELETE,GET"
-}));
+// Avisa o Express que ele está atrás de um proxy e deve ler o IP real do usuário
+app.set('trust proxy', 1);
 
-// Liga os agendamentos automáticos em segundo plano
+// ---------------------------------------------------
+// 1. MIDDLEWARES GLOBAIS (Devem vir antes das rotas)
+// ---------------------------------------------------
+
+// Helmet ajuda a proteger o Express configurando cabeçalhos HTTP de segurança
+app.use(helmet());
+
+// Configuração estrita do CORS
+app.use(
+  cors({
+    // Em produção, troque "*" pela URL exata do seu frontend React
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+// Parsers do corpo da requisição
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// ---------------------------------------------------
+// 2. DOCUMENTAÇÃO
+// ---------------------------------------------------
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
+
+// ---------------------------------------------------
+// 3. ROTAS (Acoplamento e Versionamento)
+// ---------------------------------------------------
+// Prefixar rotas é uma boa prática para evitar conflitos e facilitar futuras versões
+app.use("/", generalLimiter, userRoute);
+app.use("/admin", generalLimiter, adminRoute);
+
+// ---------------------------------------------------
+// 4. PROCESSOS EM SEGUNDO PLANO
+// ---------------------------------------------------
 iniciarAgendamentos();
 
-// app.use('/databases', verifyJWT, sendFileRoute);
-// app.use('/dashboard', verifyJWT, dashBoardRoute);
-// app.use('/search', verifyJWT, searchRoute);
-// app.use('/list', verifyJWT, listaDados);
-// app.use('/ficha', verifyJWT, fichaRoute);
-// app.use('/tabulador', verifyJWT, tabuladorRoute);
-app.use('/', userRoute);
-app.use('/admin', adminRoute);
-
 module.exports = app;
-// class App {
-//     constructor() {
-//         this.app = express();
-//         this.middlewares();
-//         this.routes();
-//     }
-//     middlewares() {
-//         this.app.use(express.urlencoded({ extended: true }));
-//         this.app.use(cors());
-//         this.app.use(express.json());
-//     }
-//     routes() {
-//         this.app.use('/upload', sendFileRoute);
-//         this.app.use('/dashboard', dashBoardRoute);
-//         this.app.use('/', dashBoardRoute);
-//         this.app.use('/search', dashBoardSearchRoute);
-//         this.app.use('/list', listaDados);
-//         this.app.use('/tabulador', tabuladorRoute);
-//         this.app.use('/', tabuladorRoute);
-//         this.app.use('/ficha',fichaRoute);
-//         this.app.use('/versaofinal',consultaRoute);
-//     }
-// }
-// module.exports = new App().app;
