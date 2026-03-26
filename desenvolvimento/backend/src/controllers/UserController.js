@@ -39,7 +39,7 @@ function login(req, res) {
                     msg: "Autenticação com sucesso!",
                     id: data[0].id_user,
                     role: data[0].role,
-                    // nome: data[0].nome,
+                    nome: data[0].nome,
                     // cpf: tratarCpf(data[0].cpf),
                     // matricula: tratarMatricula(data[0].matricula),
                     tokenUser: token,

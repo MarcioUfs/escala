@@ -5,18 +5,18 @@ const { strictLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 /*************ADMIN USERS****************/
-router.get('/allusers',verifyJWTAdmin,adminController.readUsers);
-router.post('/sign-up', strictLimiter, verifyJWTAdmin, adminController.create);
+router.get('/allusers', verifyJWTAdmin, adminController.readUsers);
+router.post('/sign-up', verifyJWTAdmin, adminController.create); 
 router.delete('/deleteuser/:id', verifyJWTAdmin, adminController.deleteUser);
-router.put('/updateuser',verifyJWTAdmin,adminController.updateUser);
+router.put('/updateuser', verifyJWTAdmin, adminController.updateUser);
 
 /***********LISTAR TODOS OS PM************/
 router.get('/allpm', verifyJWTAdmin, adminController.readAllPm);
 
 /*************ADMIN CRUD****************/
-router.post('/login', strictLimiter, adminController.loginAdmin);
-router.post('/createadmin', strictLimiter, verifyJWTAdmin, adminController.createAdmin);
-router.get('/getadmin', verifyJWTAdmin, adminController.getAdmin);
+router.post('/login', strictLimiter, adminController.loginAdmin); 
 
+router.post('/createadmin', verifyJWTAdmin, adminController.createAdmin); 
+router.get('/getadmin', verifyJWTAdmin, adminController.getAdmin);
 
 module.exports = router;
