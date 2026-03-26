@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const helmet = require("helmet"); // Recomendação de segurança
+const helmet = require("helmet"); 
 const swaggerUi = require("swagger-ui-express");
 const swaggerFile = require("./swagger-output.json");
 
@@ -12,27 +12,33 @@ const adminRoute = require("./src/routes/adminroutes");
 
 const app = express();
 
-// Avisa o Express que ele está atrás de um proxy e deve ler o IP real do usuário
-app.set('trust proxy', 1);
+// ---------------------------------------------------
+// 0. CONFIGURAÇÃO DE SEGURANÇA DE REDE
+// ---------------------------------------------------
+// Dinâmico: Garante o teste local sem falsos bloqueios 
+// e aplica a segurança real (1) no servidor de produção.
+const isProduction = process.env.NODE_ENV === "production";
+app.set('trust proxy', isProduction ? 1 : 'loopback');
 
 // ---------------------------------------------------
-// 1. MIDDLEWARES GLOBAIS (Devem vir antes das rotas)
+// 1. MIDDLEWARES GLOBAIS (Ordem Crítica de Segurança)
 // ---------------------------------------------------
 
-// Helmet ajuda a proteger o Express configurando cabeçalhos HTTP de segurança
+// 1.1 Helmet: Blinda os cabeçalhos HTTP contra ataques comuns logo na entrada
 app.use(helmet());
 
-// Configuração estrita do CORS
+// 1.2 CORS: Bloqueia requisições de sites não autorizados
 app.use(
   cors({
-    // Em produção, troque "*" pela URL exata do seu frontend React
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
 
-// Parsers do corpo da requisição
+// 1.3 Parsers de Body: Obrigatório vir ANTES das rotas.
+// Sem isso, o `req.body.cpf` chegaria vazio no momento do login e 
+// o sistema não conseguiria bloquear tentativas de força bruta.
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -44,13 +50,14 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // ---------------------------------------------------
 // 3. ROTAS (Acoplamento e Versionamento)
 // ---------------------------------------------------
-// Prefixar rotas é uma boa prática para evitar conflitos e facilitar futuras versões
+// O generalLimiter protege toda a navegação básica do sistema
 app.use("/", generalLimiter, userRoute);
 app.use("/admin", generalLimiter, adminRoute);
 
 // ---------------------------------------------------
 // 4. PROCESSOS EM SEGUNDO PLANO
 // ---------------------------------------------------
+// O scraper rodará independentemente das requisições web
 iniciarAgendamentos();
 
 module.exports = app;
