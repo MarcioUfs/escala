@@ -29,7 +29,7 @@ export default function AdminSignUp() {
 
     try {
       // Faz o POST para a rota de criação de admin no backend
-      await api.post('/admin/sign-up', formData);
+      await api.post('/admin/createAdmin', formData);
       
       setStatus({ type: 'success', message: 'Administrador registado com sucesso!' });
       

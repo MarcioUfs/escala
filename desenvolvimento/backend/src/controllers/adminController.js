@@ -7,6 +7,7 @@ const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
 const validateEmail = require("../functions/validarEmail");
 const validateFields = require("../functions/validarCampos");
+const somenteTelefone = require("../functions/somenteTelefone");
 
 async function readUsers(req, res) {
   await database
@@ -62,17 +63,19 @@ async function readUsers(req, res) {
 }
 
 async function create(req, res) {
-  const isValid = validateFields(req, res, [
-    "email",
-    "password",
-    "cpf",
-    "nome",
-    "matricula",
-  ]);
-  if (!isValid) return;
+  console.log("Requisição recebida para criar usuário:", req.body); // Log para depuração
+  // const isValid = validateFields(req, res, [
+  //   "email",
+  //   "password",
+  //   "cpf",
+  //   "nome",
+  //   "matricula",
+  //   "telefone"
+  // ]);
+  // if (!isValid) return;
 
-  const isValidEmail = validateEmail(req, res);
-  if (!isValidEmail) return;
+  // const isValidEmail = validateEmail(req, res);
+  // if (!isValidEmail) return;
 
   await database
     .select()
@@ -94,6 +97,7 @@ async function create(req, res) {
               cpf: somenteCpf(req.body.cpf),
               nome: req.body.nome,
               matricula: somenteMatricula(req.body.matricula),
+              telefone: somenteTelefone(req.body.telefone),
               role: "user",
               created_at: new Date(),
               updated_at: new Date(),
@@ -108,8 +112,9 @@ async function create(req, res) {
                     .json({ msg: "Cadastrado com sucesso!" });
                 })
                 .catch((err) => {
+                   console.error("Erro ao inserir usuário no banco de dados:", err); // Log detalhado do erro
                   return res
-                    .status(500)
+                    .status(501)
                     .json({ msg: "Erro interno do servidor", error: err });
                 });
             } catch (error) {
@@ -122,7 +127,7 @@ async function create(req, res) {
       }
     })
     .catch((err) => {
-      return res.status(500).json({ msg: "Erro do servidor" });
+      return res.status(502).json({ msg: "Erro do servidor" });
     });
 }
 
@@ -313,7 +318,7 @@ async function createAdmin(req, res) {
               cpf: req.body.cpf,
               nome: req.body.nome,
               matricula: req.body.matricula,
-              role: req.body.role,
+              role: "admin",
               created_at: new Date(),
               updated_at: new Date(),
             };
