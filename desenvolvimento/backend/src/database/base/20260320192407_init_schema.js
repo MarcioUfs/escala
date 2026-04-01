@@ -7,21 +7,21 @@ exports.up = async function (knex) {
     table.increments("id_user").primary();
     table.string("email", 255).notNullable().unique();
     table.string("password", 255).notNullable();
-    table.string("cpf", 14).notNullable().unique();
     table.string("nome", 255).notNullable();
+    table.string("cpf", 14).notNullable().unique();
     table.string("matricula", 255).notNullable().unique();
-    table.string("role", 255).notNullable();
+    table.string("telefone", 255);
+    table.boolean("is_active").defaultTo(true);
+    table.string("role", 255).notNullable().defaultTo("user");
     table.timestamps(true, true);
   });
 
   await knex.schema.createTable("admins", function (table) {
     table.increments("id_admin").primary();
-    table.string("email", 255).notNullable().unique();
     table.string("password", 255).notNullable();
-    table.string("cpf", 14).notNullable().unique();
     table.string("nome", 255).notNullable();
-    table.string("matricula", 255).notNullable().unique();
-    table.string("role", 255).notNullable();
+    table.string("cpf", 14).notNullable().unique();
+    table.string("role", 255).notNullable().defaultTo("admin");
     table.timestamps(true, true);
   });
 

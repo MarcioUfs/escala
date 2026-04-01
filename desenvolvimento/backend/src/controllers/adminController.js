@@ -5,6 +5,7 @@ const tratarCpf = require("../functions/tratarCpf");
 const somenteCpf = require("../functions/somenteCpf");
 const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
+const tratarTelefone = require("../functions/tratarTelefone");
 const validateEmail = require("../functions/validarEmail");
 const validateFields = require("../functions/validarCampos");
 const somenteTelefone = require("../functions/somenteTelefone");
@@ -18,6 +19,8 @@ async function readUsers(req, res) {
       "users.nome",
       "users.matricula",
       "users.role",
+      "users.telefone",
+      "users.is_active AS ativo",
       "users.updated_at",
       "efetivo_antiguidade.nome AS nome_militar",
       "efetivo_antiguidade.ordem",
@@ -38,12 +41,14 @@ async function readUsers(req, res) {
       if (data.length > 0) {
         for (let element of data) {
           arrayDados.push({
+            id: element.id_user,
             nome: element.nome_militar || element.nome,
             cpf: tratarCpf(element.cpf),
             email: element.email,
-            perfil: element.role,
             matricula: tratarMatricula(element.matricula),
-            id: element.id_user,
+            perfil: element.role,
+            telefone: tratarTelefone(element.telefone) ,
+            ativo: element.ativo,
 
             ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001,
             patente: element.patente || "Sem Posto",
@@ -58,7 +63,7 @@ async function readUsers(req, res) {
       }
     })
     .catch((error) => {
-      return res.status(500).json({ msg: "Erro do servidor!" });
+      return res.status(500).json({ msg: "Erro do servidor!"});
     });
 }
 
@@ -94,8 +99,8 @@ async function create(req, res) {
             const user = {
               email: req.body.email,
               password: hash,
-              cpf: somenteCpf(req.body.cpf),
               nome: req.body.nome,
+              cpf: somenteCpf(req.body.cpf),
               matricula: somenteMatricula(req.body.matricula),
               telefone: somenteTelefone(req.body.telefone),
               role: "user",
@@ -201,12 +206,13 @@ async function updateUser(req, res) {
 
     // 5. Executar o Update
     await database("users").where({ id_user: id }).update({
-      nome,
       email,
       password: hash,
+      nome,
       cpf: cpfOnly,
       matricula: matriculaOnly,
-      updated_at: new Date(), // O Knex/JS lida bem com objetos Date
+      telefone: req.body.telefone || null,
+      updated_at: new Date(),
     });
 
     return res.status(200).json({ msg: "Usuário atualizado com sucesso!" });
@@ -302,8 +308,6 @@ async function createAdmin(req, res) {
     .select()
     .table("admins")
     .where({ cpf: somenteCpf(req.body.cpf) })
-    .orWhere({ email: req.body.email })
-    .orWhere({ matricula: somenteMatricula(req.body.matricula) })
     .then((data) => {
       if (data.length >= 1) {
         return res
@@ -313,9 +317,7 @@ async function createAdmin(req, res) {
         bcryptjs.genSalt(10, function (err, salt) {
           bcryptjs.hash(req.body.password, salt, async function (err, hash) {
             const admin = {
-              email: req.body.email,
               password: hash,
-              cpf: req.body.cpf,
               nome: req.body.nome,
               matricula: req.body.matricula,
               role: "admin",
@@ -324,11 +326,9 @@ async function createAdmin(req, res) {
             };
             try {
               if (
-                admin.email === "" ||
                 admin.password === "" ||
-                admin.cpf === "" ||
                 admin.nome === "" ||
-                admin.matricula === "" ||
+                admin.cpf === "" ||
                 admin.role === ""
               ) {
                 return res.status(403).json({ msg: "Falta algum dado!" });
@@ -374,11 +374,9 @@ async function getAdmin(req, res) {
               .send({ msg: "Administrador não encontrado" });
           } else {
             const userData = {
+              id: data[0].id_admin,
               nome: data[0].nome,
               cpf: tratarCpf(data[0].cpf),
-              email: data[0].email,
-              matricula: tratarMatricula(data[0].matricula),
-              id: data[0].id_admin,
               role: data[0].role,
             };
             return res.status(200).send(userData);
