@@ -14,7 +14,7 @@ exports.seed = async function(knex) {
 
   await knex('users').insert([
     {
-      id_user: 1, 
+      id_user: 100000, 
       email: 'marcos@gmail.com', 
       password: hashedPassword, 
       nome: 'Marcos Lima Santos',
@@ -27,7 +27,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 2, 
+      id_user: 100001, 
       email: 'josef@gmail.com', 
       password: hashedPassword, 
       nome: 'Jose Francisco de Assis',
@@ -40,7 +40,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 3, 
+      id_user: 100003, 
       email: 'carlos.silva@gmail.com', 
       password: hashedPassword, 
       nome: 'Carlos Eduardo Silva',
@@ -53,7 +53,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 4, 
+      id_user: 100004, 
       email: 'ana.oliveira@gmail.com', 
       password: hashedPassword, 
       nome: 'Ana Beatriz Oliveira',
@@ -66,7 +66,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 5, 
+      id_user: 100005, 
       email: 'paulo.santos@gmail.com', 
       password: hashedPassword, 
       nome: 'Paulo Roberto Santos',
@@ -79,7 +79,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 6, 
+      id_user: 100006, 
       email: 'marcos.souza@gmail.com', 
       password: hashedPassword, 
       nome: 'Marcos Vinícius Souza',
@@ -92,7 +92,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 7, 
+      id_user: 100007, 
       email: 'roberto.costa@gmail.com', 
       password: hashedPassword, 
       nome: 'Roberto Carlos Costa',
@@ -105,7 +105,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 8, 
+      id_user: 100008, 
       email: 'felipe.gomes@gmail.com', 
       password: hashedPassword, 
       nome: 'Felipe Augusto Gomes',
@@ -118,7 +118,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 9, 
+      id_user: 100009, 
       email: 'lucas.almeida@gmail.com', 
       password: hashedPassword, 
       nome: 'Lucas Almeida',
@@ -131,7 +131,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 10, 
+      id_user: 100010, 
       email: 'juliana.mendes@gmail.com', 
       password: hashedPassword, 
       nome: 'Juliana Mendes',
@@ -144,7 +144,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_user: 11, 
+      id_user: 100011, 
       email: 'Myths.user@gmail.com', 
       password: hashedPassword, 
       nome: 'Myths User',
@@ -160,7 +160,7 @@ exports.seed = async function(knex) {
 
   await knex('admins').insert([
     {
-      id_admin: 1, 
+      id_admin: 100000, 
       password: hashedPassword, 
       nome: 'Marcio Alves',
       cpf: '03251007483',
@@ -169,7 +169,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_admin: 2, 
+      id_admin: 100001, 
       password: hashedPassword, 
       nome: 'John Doe',
       cpf: '03251007482',
@@ -178,7 +178,7 @@ exports.seed = async function(knex) {
       updated_at: now
     },
     {
-      id_admin: 3, 
+      id_admin: 100002, 
       password: hashedPassword, 
       nome: 'Myths Admin',
       cpf: '00000000001',
