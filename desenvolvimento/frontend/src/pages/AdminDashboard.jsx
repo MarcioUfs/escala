@@ -34,7 +34,7 @@ export default function AdminDashboard() {
           {/* Badges para as informações secundárias */}
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-              Matrícula: {user?.matricula}
+              Matrícula: {user?.id}
             </span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
               Perfil: {user?.role}
@@ -59,9 +59,15 @@ export default function AdminDashboard() {
                 to="/admin/users"
                 className="w-full sm:w-auto text-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
-                Gerir Utilizadores
+                Gerir Utilizadores (users)
               </Link>
 
+              <Link
+                to="/admin/admins"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-red-800 text-white font-medium rounded-lg hover:bg-red-900 transition-colors shadow-sm"
+              >
+                Gerir Administradores
+              </Link>
               <Link
                 to="/admin/sign-up"
                 className="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm"

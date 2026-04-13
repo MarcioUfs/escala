@@ -14,6 +14,8 @@ import AdminCreateUser from "./pages/AdminCreateUser";
 import AdminListUsers from "./pages/AdminListUsers";
 import AdminEditUser from "./pages/AdminEditUser";
 import AdminViewUser from "./pages/AdminViewUser";
+import AdminListAdmins from "./pages/AdminListAdmins";
+import AdminViewAdmin from "./pages/AdminViewAdmin";
 
 function App() {
   return (
@@ -44,7 +46,10 @@ function App() {
             <Route path="users" element={<AdminListUsers />} />
             <Route path="edit-user" element={<AdminEditUser />} />
             <Route path="view-user" element={<AdminViewUser />} />
+            <Route path="view-admin" element={<AdminViewAdmin />} />
             <Route path="create-user" element={<AdminCreateUser />} />
+            <Route path="admins" element={<AdminListAdmins />} />
+
           </Route>
 
           {/* ==============================================
