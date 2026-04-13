@@ -9,6 +9,7 @@ const iniciarAgendamentos = require("./src/jobs/scheduler");
 const { generalLimiter } = require("./src/middleware/rateLimiter");
 const userRoute = require("./src/routes/userRoute");
 const adminRoute = require("./src/routes/adminroutes");
+const escalaRoutes = require("./src/routes/escalaRoutes");
 
 const app = express();
 
@@ -17,8 +18,8 @@ const app = express();
 // ---------------------------------------------------
 // Dinâmico: Garante o teste local sem falsos bloqueios 
 // e aplica a segurança real (1) no servidor de produção.
-const isProduction = process.env.NODE_ENV === "production";
-app.set('trust proxy', isProduction ? 1 : 'loopback');
+// const isProduction = process.env.NODE_ENV === "production";
+// app.set('trust proxy', isProduction ? 1 : 'loopback');
 
 // ---------------------------------------------------
 // 1. MIDDLEWARES GLOBAIS (Ordem Crítica de Segurança)
@@ -31,6 +32,7 @@ app.use(helmet());
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    // origin: "*", // Permite todas as origens (ajuste conforme necessário)
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -53,7 +55,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // O generalLimiter protege toda a navegação básica do sistema
 app.use("/",  userRoute);
 app.use("/admin",  adminRoute);
-
+app.use("/escala", escalaRoutes);
 // ---------------------------------------------------
 // 4. PROCESSOS EM SEGUNDO PLANO
 // ---------------------------------------------------

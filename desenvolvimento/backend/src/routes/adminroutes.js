@@ -18,5 +18,7 @@ router.post('/login', strictLimiter, adminController.loginAdmin);
 
 router.post('/createadmin', verifyJWTAdmin, adminController.createAdmin); 
 router.get('/getadmin', verifyJWTAdmin, adminController.getAdmin);
+router.get('/readadmins', verifyJWTAdmin, adminController.readAdmins);
+router.delete('/deleteadmin/:id', verifyJWTAdmin, adminController.deleteAdmin);
 
 module.exports = router;

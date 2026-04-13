@@ -5,6 +5,7 @@ exports.seed = async function(knex) {
   // Isso evita o erro de restrição de chave estrangeira (Foreign Key Constraint)
   await knex('admins').del()
   await knex('users').del();
+  await knex("modelos_escala").del();
 
   // Gera o hash da senha '123456' uma única vez para usar em todos os usuários teste
   const salt = await bcrypt.genSalt(10);
@@ -187,4 +188,51 @@ exports.seed = async function(knex) {
       updated_at: now
     }
   ]);
+
+  await knex("modelos_escala").insert([
+    {
+      codigo: "8H_24H_72H",
+      nome: "Escala 8h com ciclo 24h/24h/72h",
+      descricao:
+        "07:00 às 15:00, depois 15:00 às 23:00, depois 23:00 às 07:00 do dia seguinte, com reinício do ciclo.",
+      ativo: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+    {
+      codigo: "12X48_12X72",
+      nome: "Escala 12x48 e 12x72",
+      descricao:
+        "Modelo simplificado com turnos de 12 horas e folgas alternadas de 48h e 72h.",
+      ativo: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+  ]);
 };
+
+
+// exports.seed = async function (knex) {
+//   await knex("modelos_escala").del();
+
+//   await knex("modelos_escala").insert([
+//     {
+//       codigo: "8H_24H_72H",
+//       nome: "Escala 8h com ciclo 24h/24h/72h",
+//       descricao:
+//         "07:00 às 15:00, depois 15:00 às 23:00, depois 23:00 às 07:00 do dia seguinte, com reinício do ciclo.",
+//       ativo: true,
+//       created_at: new Date(),
+//       updated_at: new Date(),
+//     },
+//     {
+//       codigo: "12X48_12X72",
+//       nome: "Escala 12x48 e 12x72",
+//       descricao:
+//         "Modelo simplificado com turnos de 12 horas e folgas alternadas de 48h e 72h.",
+//       ativo: true,
+//       created_at: new Date(),
+//       updated_at: new Date(),
+//     },
+//   ]);
+// };

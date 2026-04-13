@@ -68,7 +68,7 @@ async function readUsers(req, res) {
 }
 
 async function create(req, res) {
-  console.log("Requisição recebida para criar usuário:", req.body); // Log para depuração
+
   // const isValid = validateFields(req, res, [
   //   "email",
   //   "password",
@@ -117,7 +117,7 @@ async function create(req, res) {
                     .json({ msg: "Cadastrado com sucesso!" });
                 })
                 .catch((err) => {
-                   console.error("Erro ao inserir usuário no banco de dados:", err); // Log detalhado do erro
+                   
                   return res
                     .status(501)
                     .json({ msg: "Erro interno do servidor", error: err });
@@ -304,6 +304,7 @@ function loginAdmin(req, res) {
 }
 
 async function createAdmin(req, res) {
+  console.log("Requisição para criar admin recebida:", req.body); // Log da requisição
   await database
     .select()
     .table("admins")
@@ -312,14 +313,14 @@ async function createAdmin(req, res) {
       if (data.length >= 1) {
         return res
           .status(409)
-          .json({ msg: "Email, Matricula ou CPF já cadastrado!" });
+          .json({ msg: "Email ou CPF já cadastrado!" });
       } else {
         bcryptjs.genSalt(10, function (err, salt) {
           bcryptjs.hash(req.body.password, salt, async function (err, hash) {
             const admin = {
               password: hash,
               nome: req.body.nome,
-              matricula: req.body.matricula,
+              cpf: somenteCpf(req.body.cpf),
               role: "admin",
               created_at: new Date(),
               updated_at: new Date(),
@@ -343,8 +344,8 @@ async function createAdmin(req, res) {
                 })
                 .catch((err) => {
                   return res
-                    .status(500)
-                    .json({ msg: "Erro interno do servidor" });
+                    .status(501)
+                    .json({ msg: "Erro interno do servidor", error: err });
                 });
             } catch (error) {
               return res.status(500).json({ msg: "Erro interno do servidor" });
@@ -389,6 +390,48 @@ async function getAdmin(req, res) {
   });
 }
 
+async function readAdmins(req, res) {
+  await database
+    .select("admins.*")
+    .from("admins")
+    .orderByRaw("admins.id_admin ASC NULLS LAST")
+    .then((data) => {
+      const arrayDados = [];
+      if (data.length > 0) {
+        for (let element of data) {
+          arrayDados.push({
+            id: element.id_admin,
+            nome: element.nome,
+            cpf: tratarCpf(element.cpf),
+            role: element.role
+          });
+        }
+        return res.status(200).json(arrayDados);
+      } else {
+        return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
+      }
+    })
+    .catch((error) => {
+      return res.status(500).json({ msg: "Erro do servidor!" });
+    });
+}
+
+async function deleteAdmin(req, res) {
+  const { id } = req.params;
+  try {
+    const userExists = await database("admins").where({ id_admin: id }).first();
+    if (!userExists) {
+      return res.status(404).json({ msg: "Administrador não encontrado" });
+    }
+
+    await database("admins").where({ id_admin: id }).del();
+
+    return res.status(200).json({ msg: "Administrador deletado com sucesso!" });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
 module.exports = {
   readUsers: readUsers,
   create: create,
@@ -400,4 +443,6 @@ module.exports = {
   loginAdmin: loginAdmin,
   createAdmin: createAdmin,
   getAdmin: getAdmin,
+  readAdmins:readAdmins,
+  deleteAdmin: deleteAdmin
 };
