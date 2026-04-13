@@ -1,16 +1,58 @@
+// const jwt = require('jsonwebtoken');
+// function verifyJwt(req, res, next) {    
+//         if (!req.headers.authorization) {
+//             return res.status(401).send({ "msg": "Não autorizado, Token inexistente" })
+//         }
+//         const splitTokenB = req.headers.authorization.split(' ')
+//         const tokenB = splitTokenB[1]
+//         jwt.verify(tokenB, process.env.SECRET_ADMIN, function (err, decoded) {
+//             if (err) {
+//                 return res.status(403).send({ "msg": "Token expirado! realize novo login" })
+//             }
+//             req.decodedData = decoded;
+//             next();
+//         })
+// }
+// module.exports = verifyJwt;
+
 const jwt = require('jsonwebtoken');
-function verifyJwt(req, res, next) {    
-        if (!req.headers.authorization) {
-            return res.status(401).send({ "msg": "Não autorizado, Token inexistente" })
+
+// 1. Verifica se o token é válido (Usuário está logado)
+function verifyJwt(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).send({ "msg": "Não autorizado. Token inexistente." });
+    }
+
+    // Boa prática: verificar se o token segue o padrão "Bearer <token>"
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+        return res.status(401).send({ "msg": "Token mal formatado." });
+    }
+
+    const token = parts[1];
+
+    // Use uma chave única para todos, ex: JWT_SECRET
+    jwt.verify(token, process.env.SECRET_ADMIN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ "msg": "Token inválido ou expirado! Realize novo login." });
         }
-        const splitTokenB = req.headers.authorization.split(' ')
-        const tokenB = splitTokenB[1]
-        jwt.verify(tokenB, process.env.SECRET_ADMIN, function (err, decoded) {
-            if (err) {
-                return res.status(403).send({ "msg": "Token expirado! realize novo login" })
-            }
-            req.decodedData = decoded;
-            next();
-        })
+        
+        // Salvamos os dados do token (id, role, etc) na requisição para as próximas etapas
+        req.user = decoded; 
+        next();
+    });
 }
-module.exports = verifyJwt;
+
+// 2. Verifica se o usuário autenticado é um Administrador
+function isAdmin(req, res, next) {
+    // Como o verifyJwt roda antes, req.user já vai existir aqui
+    if (req.user && req.user.role === 'admin') {
+        next(); // Tudo certo, ele é admin. Pode continuar para a rota!
+    } else {
+        return res.status(403).send({ "msg": "Acesso negado. Ação restrita a administradores." });
+    }
+}
+
+module.exports = { verifyJwt, isAdmin };

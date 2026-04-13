@@ -1,24 +1,24 @@
 const express = require('express');
-const verifyJWTAdmin = require('../middleware/verifyJWTAdmin');
+const {verifyJwt, isAdmin} = require('../middleware/verifyJWTAdmin');
 const adminController = require('../controllers/adminController');
 const { strictLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 /*************ADMIN USERS****************/
-router.get('/allusers', verifyJWTAdmin, adminController.readUsers);
-router.post('/sign-up', verifyJWTAdmin, adminController.create); 
-router.delete('/deleteuser/:id', verifyJWTAdmin, adminController.deleteUser);
-router.put('/updateuser', verifyJWTAdmin, adminController.updateUser);
+router.get('/allusers', verifyJwt, isAdmin, adminController.readUsers);
+router.post('/sign-up', verifyJwt, isAdmin, adminController.create); 
+router.delete('/deleteuser/:id', verifyJwt, isAdmin, adminController.deleteUser);
+router.put('/updateuser', verifyJwt, isAdmin, adminController.updateUser);
 
 /***********LISTAR TODOS OS PM************/
-router.get('/allpm', verifyJWTAdmin, adminController.readAllPm);
+router.get('/allpm', verifyJwt, isAdmin, adminController.readAllPm);
 
 /*************ADMIN CRUD****************/
 router.post('/login', strictLimiter, adminController.loginAdmin); 
 
-router.post('/createadmin', verifyJWTAdmin, adminController.createAdmin); 
-router.get('/getadmin', verifyJWTAdmin, adminController.getAdmin);
-router.get('/readadmins', verifyJWTAdmin, adminController.readAdmins);
-router.delete('/deleteadmin/:id', verifyJWTAdmin, adminController.deleteAdmin);
+router.post('/createadmin', verifyJwt, isAdmin, adminController.createAdmin); 
+router.get('/getadmin', verifyJwt, isAdmin, adminController.getAdmin);
+router.get('/alladmins', verifyJwt, isAdmin, adminController.allAdmins);
+router.delete('/deleteadmin/:id', verifyJwt, isAdmin, adminController.deleteAdmin);
 
 module.exports = router;

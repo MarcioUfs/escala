@@ -1,14 +1,14 @@
 const express = require("express");
-const verifyJWTAdmin = require("../middleware/verifyJWTAdmin");
+const {verifyJwt} = require("../middleware/verifyJWTAdmin");
 const escalaController = require("../controllers/escalaController");
 
 const router = express.Router();
 
-router.get("/modelos", verifyJWTAdmin, escalaController.listarModelosEscala);
+router.get("/modelos", verifyJwt, escalaController.listarModelosEscala);
 
-router.get("/guarnicoes", verifyJWTAdmin, escalaController.listarGuarnicoes);
-router.post("/guarnicoes", verifyJWTAdmin, escalaController.criarGuarnicao);
+router.get("/guarnicoes", verifyJwt, escalaController.listarGuarnicoes);
+router.post("/guarnicoes", verifyJwt, escalaController.criarGuarnicao);
 
-router.post("/gerar", verifyJWTAdmin, escalaController.gerarEscala);
+router.post("/gerar", verifyJwt, escalaController.gerarEscala);
 
 module.exports = router;

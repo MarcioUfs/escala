@@ -390,7 +390,7 @@ async function getAdmin(req, res) {
   });
 }
 
-async function readAdmins(req, res) {
+async function allAdmins(req, res) {
   await database
     .select("admins.*")
     .from("admins")
@@ -443,6 +443,6 @@ module.exports = {
   loginAdmin: loginAdmin,
   createAdmin: createAdmin,
   getAdmin: getAdmin,
-  readAdmins:readAdmins,
+  allAdmins:allAdmins,
   deleteAdmin: deleteAdmin
 };
