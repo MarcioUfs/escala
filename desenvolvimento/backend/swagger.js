@@ -12,7 +12,7 @@ const doc = {
 
 const outputFile = './swagger-output.json';
 // Aqui você aponta para o seu arquivo principal de rotas
-const endpointsFiles = ['./src//routes/adminroutes.js','./src/routes/userRoute.js']; 
+const endpointsFiles = ['./src//routes/adminroutes.js','./src/routes/userRoute.js','./src/routes/escalaRoutes.js']; 
 
 // Gera o arquivo swagger-output.json
 swaggerAutogen(outputFile, endpointsFiles, doc);

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AuthContext } from "../contexts/AuthContext";
+import { AuthContext } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -68,6 +68,12 @@ export default function AdminDashboard() {
               >
                 Gerir Administradores
               </Link>
+              {/* <Link
+                to="/admin/escalas"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition-colors shadow-sm"
+              >
+                Gerir Escalas
+              </Link> */}
               <Link
                 to="/admin/sign-up"
                 className="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm"
@@ -77,14 +83,47 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Módulo de Aviso */}
-          <div className="p-5 sm:p-6 bg-gray-50 border border-gray-200 rounded-xl">
-            <h2 className="text-base font-bold text-gray-800">
-              Módulo Administrativo
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Apenas usuários com perfil "admin" podem ver esta tela.
+          <div className="p-5 sm:p-6 bg-blue-50/50 border border-blue-200 rounded-xl">
+            <h2 className="text-lg font-bold text-green-900">Módulo Escalas</h2>
+            <p className="text-sm sm:text-base text-green-700 mb-5">
+              Gerencie escalas, atribua turnos e visualize os horários dos
+              funcionários.
             </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* <Link
+                to="/admin/#"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Gerir Utilizadores (users)
+              </Link>
+
+              <Link
+                to="/admin/#"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-red-800 text-white font-medium rounded-lg hover:bg-red-900 transition-colors shadow-sm"
+              >
+                Gerir Administradores
+              </Link> */}
+              <Link
+                to="/admin/escalas"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition-colors shadow-sm"
+              >
+                Gerir Escalas
+              </Link>
+              {/* <Link
+                to="/admin/#"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm"
+              >
+                + Novo Administrador
+              </Link> */}
+            </div>
+          </div>
+          <div className="p-5 sm:p-6 bg-gray-50 border border-gray-200 rounded-xl">
+            <h2 className="text-base font-bold text-gray-800">Avisos</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Lembrar que texto é so um exemplo, e que o módulo de escalas ainda
+              não tem funcionalidades implementadas.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3"></div>
           </div>
         </div>
       </div>

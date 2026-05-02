@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import api from "../../services/api";
 
 export default function AdminListUsers() {
   const [users, setUsers] = useState([]);
@@ -190,7 +190,8 @@ export default function AdminListUsers() {
                   <span className="font-semibold">CPF:</span> {user.cpf}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Patente/Graduação:</span> {user.patente}
+                  <span className="font-semibold">Patente/Graduação:</span>{" "}
+                  {user.patente}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">Quadro:</span> {user.quadro}
@@ -313,7 +314,8 @@ export default function AdminListUsers() {
                 ) : (
                   <tr>
                     <td colSpan="7" className="p-8 text-center text-gray-500">
-                      Nenhum utilizador encontrado com a pesquisa "{searchTerm}".
+                      Nenhum utilizador encontrado com a pesquisa "{searchTerm}
+                      ".
                     </td>
                   </tr>
                 )}

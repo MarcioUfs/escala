@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../contexts/AuthContext";
+import { AuthContext } from "../../contexts/AuthContext";
 
 export default function AdminLogin() {
   const [cpf, setCpf] = useState("");
@@ -26,7 +26,7 @@ export default function AdminLogin() {
     try {
       // 1. Enviamos o 'cpf' (com pontos e traço) e apontamos para '/admin/login'
       const role = await signIn(cpf, password, "/admin/login");
-      
+
       // 2. Barreira de Segurança
       if (role !== "admin") {
         signOut();

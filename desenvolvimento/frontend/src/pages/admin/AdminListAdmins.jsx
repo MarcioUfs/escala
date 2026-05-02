@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { ArrowBigLeft } from "lucide-react";
+import api from "../../services/api";
 
 export default function AdminListAdmins() {
   const [admins, setAdmins] = useState([]);
@@ -14,34 +15,28 @@ export default function AdminListAdmins() {
 
   const navigate = useNavigate();
 
-  // 1. PRIMEIRO: Declaramos a função
-  const fetchAdmins = async () => {
-    try {
-      const response = await api.get("/admin/readadmins");
-      setAdmins(response.data);
-      setLoading(false);
-      console.log("Lista de administradores carregada:", response.data);
-    } catch (err) {
-      console.error(err);
-      if (err.response?.status === 404) {
-        setActionMessage({
-          type: "error",
-          text: "Nenhum administrador encontrado no sistema.",
-        });
-      } else {
-        setActionMessage({
-          type: "error",
-          text: "Erro ao carregar a lista de administradores.",
-        });
-      }
-      setLoading(false);
-    }
-  };
-
-  // 2. DEPOIS: Chamamos a função no useEffect (O erro vermelho some aqui!)
   useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const response = await api.get("/admin/alladmins");
+
+        setAdmins(response.data);
+      } catch (err) {
+        const is404 = err.response?.status === 404;
+
+        setActionMessage({
+          type: "error",
+          text: is404
+            ? "Nenhum administrador encontrado."
+            : "Erro ao carregar a lista.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchAdmins();
-  }, []);
+  }, []); // Array de dependências vazio para rodar apenas no mount
 
   const filteredAdmins = admins.filter((admin) => {
     const searchLower = searchTerm.toLowerCase();
@@ -83,7 +78,7 @@ export default function AdminListAdmins() {
 
       setTimeout(() => setActionMessage(null), 3000);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao deletar administrador:", error);
       setActionMessage({
         type: "error",
         text: "Erro ao deletar administrador. Tente novamente.",
@@ -142,7 +137,14 @@ export default function AdminListAdmins() {
             onClick={() => navigate("/admin/sign-up")}
             className="w-full md:w-auto px-6 py-3 bg-blue-800 text-white font-medium rounded-lg hover:bg-blue-900 transition shadow-sm whitespace-nowrap"
           >
-            + Novo Administrador
+            Novo Administrador
+          </button>
+          <button
+            onClick={() => navigate("/admin")}
+            className="flex items-center gap-2 w-full md:w-auto px-6 py-3 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition shadow-sm whitespace-nowrap"
+          >
+            <ArrowBigLeft />
+            Voltar a gestão
           </button>
         </div>
 
@@ -209,7 +211,6 @@ export default function AdminListAdmins() {
                   >
                     Deletar
                   </button>
-                
                 </div>
               </div>
             ))
@@ -228,7 +229,7 @@ export default function AdminListAdmins() {
                 <tr className="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
                   <th className="p-4 border-b font-semibold">Nome</th>
                   <th className="p-4 border-b font-semibold">Identificador</th>
-                 
+
                   <th className="p-4 border-b font-semibold">CPF</th>
                   <th className="p-4 border-b font-semibold text-center">
                     Ações
@@ -247,13 +248,15 @@ export default function AdminListAdmins() {
                       </td>
                       <td className="p-4 text-gray-700">{admin.id}</td>
                       <td className="p-4 text-gray-700">{admin.cpf}</td>
-                     
+
                       <td className="p-4">
                         {/* BOTÕES NO DESKTOP (Flex horizontal sem quebrar, botões de largura igual min-w) */}
                         <div className="flex items-center justify-center gap-2 flex-nowrap">
                           <button
                             onClick={() =>
-                              navigate("/admin/view-admin", { state: { admin } })
+                              navigate("/admin/view-admin", {
+                                state: { admin },
+                              })
                             }
                             className="min-w-[70px] px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium transition text-center"
                           >
@@ -273,7 +276,6 @@ export default function AdminListAdmins() {
                           >
                             Deletar
                           </button>
-                        
                         </div>
                       </td>
                     </tr>
@@ -281,7 +283,8 @@ export default function AdminListAdmins() {
                 ) : (
                   <tr>
                     <td colSpan="7" className="p-8 text-center text-gray-500">
-                      Nenhum Adminsitrador encontrado com a pesquisa "{searchTerm}".
+                      Nenhum Adminsitrador encontrado com a pesquisa "
+                      {searchTerm}".
                     </td>
                   </tr>
                 )}

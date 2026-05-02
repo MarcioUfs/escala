@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import api from "../../services/api";
 
 export default function AdminCreateUser() {
   const navigate = useNavigate();
@@ -74,7 +74,10 @@ export default function AdminCreateUser() {
         const responseUsers = await api.get("/admin/users");
         registeredUsers = responseUsers.data;
       } catch (err) {
-        console.warn("Não foi possível buscar a lista de usuários cadastrados.", err);
+        console.warn(
+          "Não foi possível buscar a lista de usuários cadastrados.",
+          err,
+        );
       }
 
       // 3. Filtra pela matrícula digitada
@@ -84,8 +87,10 @@ export default function AdminCreateUser() {
         setSearchMessage("Nenhum policial encontrado com essa matrícula.");
       } else {
         // Mapeia adicionando a flag se já está cadastrado
-        const resultsWithStatus = filtered.map(pm => {
-          const isRegistered = registeredUsers.some(user => user.matricula === pm.matricula);
+        const resultsWithStatus = filtered.map((pm) => {
+          const isRegistered = registeredUsers.some(
+            (user) => user.matricula === pm.matricula,
+          );
           return { ...pm, isRegistered };
         });
         setSearchResults(resultsWithStatus);
@@ -110,18 +115,19 @@ export default function AdminCreateUser() {
   };
 
   const handleDeleteUser = async (matricula) => {
-    const confirmDelete = window.confirm(`Tem certeza que deseja excluir o usuário com matrícula ${matricula}?`);
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja excluir o usuário com matrícula ${matricula}?`,
+    );
     if (!confirmDelete) return;
 
     try {
       // Ajuste a rota de deleção conforme a sua API
       await api.delete(`/admin/users/${matricula}`);
       alert("Usuário excluído com sucesso!");
-      
+
       // Limpa a busca para atualizar a tela
       setSearchResults([]);
       setSearchTerm("");
-      
     } catch (error) {
       console.error(error);
       alert("Erro ao excluir usuário. Tente novamente.");
@@ -145,7 +151,10 @@ export default function AdminCreateUser() {
     // Validação básica e efetiva de E-mail via Regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(payload.email)) {
-      setStatus({ type: "error", message: "Por favor, insira um e-mail válido." });
+      setStatus({
+        type: "error",
+        message: "Por favor, insira um e-mail válido.",
+      });
       return;
     }
 
@@ -174,11 +183,20 @@ export default function AdminCreateUser() {
     } catch (error) {
       console.error(error);
       if (error.response?.status === 409) {
-        setStatus({ type: "error", message: "Email, Matrícula ou CPF já cadastrado!" });
+        setStatus({
+          type: "error",
+          message: "Email, Matrícula ou CPF já cadastrado!",
+        });
       } else if (error.response?.status === 403) {
-        setStatus({ type: "error", message: "Preencha todos os campos obrigatórios!" });
+        setStatus({
+          type: "error",
+          message: "Preencha todos os campos obrigatórios!",
+        });
       } else {
-        setStatus({ type: "error", message: "Erro interno do servidor. Tente novamente." });
+        setStatus({
+          type: "error",
+          message: "Erro interno do servidor. Tente novamente.",
+        });
       }
     }
   };
@@ -188,7 +206,9 @@ export default function AdminCreateUser() {
       <div className="max-w-md w-full bg-white rounded-xl shadow-md p-6 sm:p-8 border-t-4 border-blue-500">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Novo Usuário</h2>
-          <p className="text-sm text-gray-600">Cadastro de perfil comum (Operacional)</p>
+          <p className="text-sm text-gray-600">
+            Cadastro de perfil comum (Operacional)
+          </p>
         </div>
 
         {/* --- SESSÃO DE PESQUISA --- */}
@@ -196,13 +216,13 @@ export default function AdminCreateUser() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Buscar no Efetivo (Matrícula)
           </label>
-          
+
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
               placeholder="Digite a matrícula..."
             />
@@ -217,7 +237,9 @@ export default function AdminCreateUser() {
           </div>
 
           {searchMessage && (
-            <p className="mt-2 text-xs text-red-600 font-medium">{searchMessage}</p>
+            <p className="mt-2 text-xs text-red-600 font-medium">
+              {searchMessage}
+            </p>
           )}
 
           {searchResults.length > 0 && (
@@ -226,18 +248,24 @@ export default function AdminCreateUser() {
                 <li
                   key={pm.id}
                   className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 gap-3 bg-white border rounded-md shadow-sm ${
-                    pm.isRegistered ? "border-red-300 bg-red-50" : "border-gray-200"
+                    pm.isRegistered
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-200"
                   }`}
                 >
                   <div className="text-sm w-full break-words">
-                    <p className={`font-bold ${pm.isRegistered ? "text-red-600" : "text-gray-800"}`}>
+                    <p
+                      className={`font-bold ${pm.isRegistered ? "text-red-600" : "text-gray-800"}`}
+                    >
                       {pm.patente} {pm.nome}
                     </p>
-                    <p className={`text-xs ${pm.isRegistered ? "text-red-500" : "text-gray-500"}`}>
+                    <p
+                      className={`text-xs ${pm.isRegistered ? "text-red-500" : "text-gray-500"}`}
+                    >
                       Mat: {pm.matricula} | {pm.quadro}
                     </p>
                   </div>
-                  
+
                   {pm.isRegistered ? (
                     <button
                       type="button"
@@ -268,8 +296,8 @@ export default function AdminCreateUser() {
               status.type === "success"
                 ? "bg-green-100 text-green-700"
                 : status.type === "error"
-                ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-blue-100 text-blue-700"
             }`}
           >
             {status.message}
@@ -278,7 +306,9 @@ export default function AdminCreateUser() {
 
         <form onSubmit={handleSubmit} className="space-y-4 w-full">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Nome Completo
+            </label>
             <input
               type="text"
               name="nome"
@@ -290,7 +320,9 @@ export default function AdminCreateUser() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">CPF</label>
+            <label className="block text-sm font-medium text-gray-700">
+              CPF
+            </label>
             <input
               type="text"
               name="cpf"
@@ -304,7 +336,9 @@ export default function AdminCreateUser() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Matrícula</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Matrícula
+            </label>
             <input
               type="text"
               name="matricula"
@@ -318,7 +352,9 @@ export default function AdminCreateUser() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Telefone</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Telefone
+            </label>
             <input
               type="text"
               name="telefone"
@@ -332,7 +368,9 @@ export default function AdminCreateUser() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">E-mail</label>
+            <label className="block text-sm font-medium text-gray-700">
+              E-mail
+            </label>
             <input
               type="email"
               name="email"
@@ -345,7 +383,9 @@ export default function AdminCreateUser() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Senha Padrão</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Senha Padrão
+            </label>
             <input
               type="password"
               name="password"
@@ -469,7 +509,7 @@ export default function AdminCreateUser() {
 //       matricula: pm.matricula,
 //       // Se quiser que a senha padrão seja o CPF ou matrícula, pode adicionar aqui também!
 //     }));
-    
+
 //     // Limpa a pesquisa após incluir para deixar a tela limpa
 //     setSearchResults([]);
 //     setSearchTerm("");
@@ -535,7 +575,7 @@ export default function AdminCreateUser() {
 //           <label className="block text-sm font-medium text-gray-700 mb-2">
 //             Buscar no Efetivo (Nome ou Matrícula)
 //           </label>
-          
+
 //           {/* Ajuste de responsividade: empilha no mobile (flex-col), lado a lado no desktop (sm:flex-row) */}
 //           <div className="flex flex-col sm:flex-row gap-2">
 //             <input
@@ -703,9 +743,6 @@ export default function AdminCreateUser() {
 //   );
 // }
 
-
-
-
 // import { useState } from "react";
 // import { useNavigate } from "react-router-dom";
 // import api from "../services/api";
@@ -797,7 +834,7 @@ export default function AdminCreateUser() {
 //       matricula: pm.matricula,
 //       // Se quiser que a senha padrão seja o CPF ou matrícula, pode adicionar aqui também!
 //     }));
-    
+
 //     // Limpa a pesquisa após incluir para deixar a tela limpa
 //     setSearchResults([]);
 //     setSearchTerm("");
@@ -863,7 +900,7 @@ export default function AdminCreateUser() {
 //           <label className="block text-sm font-medium text-gray-700 mb-2">
 //             Buscar no Efetivo (Nome ou Matrícula)
 //           </label>
-          
+
 //           {/* Ajuste de responsividade: empilha no mobile (flex-col), lado a lado no desktop (sm:flex-row) */}
 //           <div className="flex flex-col sm:flex-row gap-2">
 //             <input

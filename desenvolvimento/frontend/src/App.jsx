@@ -2,20 +2,22 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 
-import AdminLayout from './layouts/AdminLayout';
-import UserLayout from './layouts/UserLayout';
+import AdminLayout from "./layouts/AdminLayout";
+import UserLayout from "./layouts/UserLayout";
 
-import Login from "./pages/Login";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminSignUp from "./pages/AdminSignUp";
-import UserDashboard from "./pages/UserDashboard";
-import AdminCreateUser from "./pages/AdminCreateUser";
-import AdminListUsers from "./pages/AdminListUsers";
-import AdminEditUser from "./pages/AdminEditUser";
-import AdminViewUser from "./pages/AdminViewUser";
-import AdminListAdmins from "./pages/AdminListAdmins";
-import AdminViewAdmin from "./pages/AdminViewAdmin";
+import Login from "./pages/user/Login";
+import UserDashboard from "./pages/user/UserDashboard";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminSignUp from "./pages/admin/AdminSignUp";
+import AdminCreateUser from "./pages/user/AdminCreateUser";
+import AdminListUsers from "./pages/user/AdminListUsers";
+import AdminEditUser from "./pages/user/AdminEditUser";
+import AdminViewUser from "./pages/user/AdminViewUser";
+import AdminListAdmins from "./pages/admin/AdminListAdmins";
+import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
+import DashboardEscalas from "./pages/escala/DashboardEscala";
+import EscalaEdit from "./pages/escala/EscalaEdit";
 
 function App() {
   return (
@@ -30,8 +32,8 @@ function App() {
               ROTAS PROTEGIDAS - ADMIN 
               O AdminLayout abraça todas as telas administrativas
               ============================================== */}
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout />
@@ -40,7 +42,7 @@ function App() {
           >
             {/* O 'index' é a tela que abre quando acessa exatamente '/admin' */}
             <Route index element={<AdminDashboard />} />
-            
+
             {/* As rotas abaixo juntam com '/admin'. Ex: '/admin/sign-up' */}
             <Route path="sign-up" element={<AdminSignUp />} />
             <Route path="users" element={<AdminListUsers />} />
@@ -49,15 +51,16 @@ function App() {
             <Route path="view-admin" element={<AdminViewAdmin />} />
             <Route path="create-user" element={<AdminCreateUser />} />
             <Route path="admins" element={<AdminListAdmins />} />
-
+            <Route path="escalas" element={<DashboardEscalas />} />
+            <Route path="edit-escala" element={<EscalaEdit />} />
           </Route>
 
           {/* ==============================================
               ROTAS PROTEGIDAS - USER 
               O UserLayout abraça as telas operacionais
               ============================================== */}
-          <Route 
-            path="/user" 
+          <Route
+            path="/user"
             element={
               <ProtectedRoute allowedRoles={["user"]}>
                 <UserLayout />
