@@ -111,3 +111,10 @@ uploads/*
 #tratarDados/arquivo.csv
 #tratarDados/arquivo1.csv
 #tratarDados/arquivo1.txt
+
+#ignore migrations
+desenvolvimento\backend\src\database\migrations
+
+#ignore seeds
+desenvolvimento\backend\src\database\seeds
+
