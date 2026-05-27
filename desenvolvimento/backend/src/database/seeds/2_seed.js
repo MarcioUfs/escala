@@ -1,0 +1,401 @@
+const bcrypt = require("bcryptjs");
+
+exports.seed = async function (knex) {
+  await knex("tbl_escala_admin_autorizados").del();
+  await knex("tbl_guarnicao").del();
+  await knex("tbl_escala").del();
+  await knex("admins").del();
+  await knex("tbl_setores").del();
+  await knex("masters").del();
+  await knex("users").del();
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash("123456", salt);
+
+  const now = new Date().toISOString();
+
+  await knex("users").insert([
+    {
+      id_user: 100000,
+      email: "marcos@gmail.com",
+      password: hashedPassword,
+      nome: "Marcos Lima Santos",
+      cpf: "10101010101",
+      matricula: "200205000890",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100001,
+      email: "josef@gmail.com",
+      password: hashedPassword,
+      nome: "Jose Francisco de Assis",
+      cpf: "63542617415",
+      matricula: "200207001891",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100003,
+      email: "carlos.silva@gmail.com",
+      password: hashedPassword,
+      nome: "Carlos Eduardo Silva",
+      cpf: "11122233344",
+      matricula: "201507001234",
+      telefone: "",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100004,
+      email: "ana.oliveira@gmail.com",
+      password: hashedPassword,
+      nome: "Ana Beatriz Oliveira",
+      cpf: "55566677788",
+      matricula: "201007005678",
+      telefone: "79987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100005,
+      email: "paulo.santos@gmail.com",
+      password: hashedPassword,
+      nome: "Paulo Roberto Santos",
+      cpf: "99988877766",
+      matricula: "199807009012",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100006,
+      email: "marcos.souza@gmail.com",
+      password: hashedPassword,
+      nome: "Marcos Vinícius Souza",
+      cpf: "44433322211",
+      matricula: "200507003456",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100007,
+      email: "roberto.costa@gmail.com",
+      password: hashedPassword,
+      nome: "Roberto Carlos Costa",
+      cpf: "12312312312",
+      matricula: "199507007890",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100008,
+      email: "felipe.gomes@gmail.com",
+      password: hashedPassword,
+      nome: "Felipe Augusto Gomes",
+      cpf: "32132132132",
+      matricula: "200807001122",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100009,
+      email: "lucas.almeida@gmail.com",
+      password: hashedPassword,
+      nome: "Lucas Almeida",
+      cpf: "45645645645",
+      matricula: "202007003344",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: false,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100010,
+      email: "juliana.mendes@gmail.com",
+      password: hashedPassword,
+      nome: "Juliana Mendes",
+      cpf: "78978978978",
+      matricula: "201207005566",
+      telefone: "11987654321",
+      nome_guerra: "Marcos Lima",
+      is_active: false,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_user: 100011,
+      email: "Myths.user@gmail.com",
+      password: hashedPassword,
+      nome: "Myths User",
+      cpf: "00000000001",
+      matricula: "201207005578",
+      telefone: "79999994321",
+      nome_guerra: "Marcos Lima",
+      is_active: true,
+      role: "user",
+      created_at: now,
+      updated_at: now,
+    },
+  ]);
+  await knex("tbl_setores").insert([
+    {
+      id_setor: 5000,
+      nome_setor: "Administração CIOSP",
+      sigla: "SSP",
+      is_active: false,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_setor: 4000,
+      nome_setor: "Gestão CIOSP",
+      sigla: "SSP",
+      is_active: false,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_setor: 3000,
+      nome_setor: "Administração COPOM",
+      sigla: "BPGD",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_setor: 2000,
+      nome_setor: "Gestão COPOM",
+      sigla: "BPGD",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+  ]);
+  await knex("masters").insert([
+    {
+      id_master: 100,
+      password: hashedPassword,
+      nome: "Myths Master",
+      cpf: "00000000001",
+      role: "master",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_master: 101,
+      password: hashedPassword,
+      nome: "Another Master",
+      cpf: "00000000002",
+      role: "master",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    }
+
+  ]);
+  await knex("admins").insert([
+    {
+      id_admin: 100000,
+      password: hashedPassword,
+      nome: "Marcio Alves",
+      cpf: "03251007483",
+      role: "admin",
+      fk_id_setor: 3000,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_admin: 100001,
+      password: hashedPassword,
+      nome: "John Doe",
+      cpf: "03251007482",
+      role: "",
+      fk_id_setor: 2000,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_admin: 100002,
+      password: hashedPassword,
+      nome: "Myths Admin",
+      cpf: "00000000001",
+      role: "admin",
+      fk_id_setor: 3000,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
+  ]);
+   await knex("tbl_escala").insert([
+    {
+      id_escala: 100000,
+      nome_escala: "Ciosp 2026-02",
+      descricao_escala:
+        "Escala de serviço para o CIOSP com rotação de guarnições A-B-C-D-E-F e 3 dias de folga por semana.",
+      data_inicio: "2026-02-01 07:00:00.000-03",
+      data_fim: "2026-02-28 23:00:00.000-03",
+      fk_id_setor: 3000,
+      fk_id_admin: 100000,
+      is_active: true,
+      admins_autorizados: JSON.stringify({
+        auth_admins: [
+          {
+            id_admin: 100001,
+            created_at: now,
+          },
+          {
+            id_admin: 100002,
+            created_at: now,
+          },
+        ],
+      }),
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id_escala: 100001,
+      nome_escala: "Copom 2026-06",
+      descricao_escala:
+        "Escala de serviço para o COPOM com rotação de guarnições A-B-C-D-E-F e 3 dias de folga por semana.",
+      data_inicio: "2026-06-01 07:00:00.000-03",
+      data_fim: "2026-06-30 23:00:00.000-03",
+      fk_id_setor: 3000,
+      fk_id_admin: 100001,
+      is_active: true,
+      admins_autorizados: JSON.stringify({
+        auth_admins: [
+          {
+            id_admin: 100000,
+            created_at: now,
+          },
+          {
+            id_admin: 100002,
+            created_at: now,
+          },
+        ],
+      }),
+      created_at: now,
+      updated_at: now,
+    },
+    
+  ]);
+  await knex("tbl_guarnicao").insert([
+    {
+      id_guarnicao: 1000,
+      data_guarnicao: "2026-02-01 07:00:00.000-03",
+      hora_guarnicao: "2026-02-01 07:00:00.000-03",
+      turno: 1,
+      dayofyear: 32,
+      grupamento: "A",
+      fk_id_escala: 100000,
+      dados_guarnicao: JSON.stringify({
+        grupamento_escala: [
+          {
+            id_user: 100000,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205000897",
+            nome_guerra: "Marcos L",
+            cpf: "03251007483",
+            nome: "Marcos Lima ",
+          },
+          {
+            id_user: 100001,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205000840",
+            nome_guerra: "M Lima",
+            cpf: "03251007483",
+            nome: "Marcos  Santos",
+          },
+          {
+            id_user: 100002,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205000690",
+            nome_guerra: " Lima",
+            cpf: "03251007483",
+            nome: " Lima Santos",
+          },
+          {
+            id_user: 100003,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205002890",
+            nome_guerra: " Lima",
+            cpf: "03251007483",
+            nome: "  Santos",
+          },
+          {
+            id_user: 100004,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205030890",
+            nome_guerra: "Marcos ",
+            cpf: "03251007483",
+            nome: " Lima ",
+          },
+          {
+            id_user: 100005,
+            funcao: "CMD",
+            graduacao: "ST",
+            matricula: "200205100890",
+            nome_guerra: "Maos ",
+            cpf: "03251007483",
+            nome: "Marcs  Santos",
+          },
+        ],
+      }),
+    },
+    
+  ]);
+  await knex("tbl_escala_admin_autorizados").insert([
+    {
+      id_escala_admin_autorizado: 50, 
+      fk_id_escala: 100000,
+      fk_id_admin: 100001,
+    },
+    {
+      id_escala_admin_autorizado: 51, 
+      fk_id_escala: 100000,
+      fk_id_admin: 100002,
+    }, 
+  ]);
+};
+

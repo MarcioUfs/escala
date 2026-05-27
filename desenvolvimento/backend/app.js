@@ -10,6 +10,7 @@ const { generalLimiter } = require("./src/middleware/rateLimiter");
 const userRoute = require("./src/routes/userRoute");
 const adminRoute = require("./src/routes/adminroutes");
 const escalaRoutes = require("./src/routes/escalaRoutes");
+const setorRoutes = require("./src/routes/setorroutes");
 
 const app = express();
 
@@ -56,6 +57,8 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 app.use("/",  userRoute);
 app.use("/admin",  adminRoute);
 app.use("/escala", escalaRoutes);
+app.use("/setores", setorRoutes);
+
 // ---------------------------------------------------
 // 4. PROCESSOS EM SEGUNDO PLANO
 // ---------------------------------------------------
