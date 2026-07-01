@@ -27,10 +27,11 @@ async function rotinaDiaria() {
 
 function iniciarAgendamentos() {
   // Roda todos os dias às 03:00 da manhã
-  cron.schedule('0 3 * * *', rotinaDiaria, {
-    scheduled: true,
-    timezone: "America/Maceio" 
-  });
+  // Agendador parado!!!
+  // cron.schedule('0 3 * * *', rotinaDiaria, {
+  //   scheduled: true,
+  //   timezone: "America/Maceio" 
+  // });
 
   console.log('Agendador de tarefas iniciado! O scraper da PMSE rodará todos os dias às 03:00.');
 }
