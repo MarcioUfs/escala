@@ -31,3 +31,7 @@
  modifique as tabelas
  npx knex migrate:latest
  
+ # atulizar o swagger
+ node swagger.js ou se script salvo "sw": "node swagger.js" -> npm run sw
+
+ 
