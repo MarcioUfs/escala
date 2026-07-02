@@ -245,7 +245,6 @@ async function readAllPm(req, res) {
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
   let cpfOnly = somenteCpf(req.body.cpf);
-console.log("CPF recebido para login:", req.body.cpf, "CPF processado:", cpfOnly); // Log do CPF recebido e processado
   if (cpfOnly === 0) {
     return res.status(401).send({ msg: "Credencial inválida!" });
   }
@@ -295,7 +294,6 @@ console.log("CPF recebido para login:", req.body.cpf, "CPF processado:", cpfOnly
 }
 
 async function createAdmin(req, res) {
-  console.log("Requisição para criar admin recebida:", req.body); // Log da requisição
   await database
     .select()
     .table("admins")
