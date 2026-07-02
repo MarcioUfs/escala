@@ -7,20 +7,18 @@
   },
   "host": "localhost:3000",
   "basePath": "/",
+  "tags": [],
   "schemes": [
     "http"
   ],
+  "consumes": [],
+  "produces": [],
   "paths": {
     "/allusers": {
       "get": {
+        "tags": [],
         "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "OK"
@@ -40,17 +38,13 @@
         }
       }
     },
-    "/sign-up": {
+    "/createuser": {
       "post": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
+            "name": "obj",
             "in": "body",
             "schema": {
               "type": "object",
@@ -69,43 +63,39 @@
                 },
                 "nome": {
                   "example": "any"
+                },
+                "telefone": {
+                  "example": "any"
+                },
+                "nome_guerra": {
+                  "example": "any"
                 }
               }
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
           },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
+          "502": {
+            "description": "Bad Gateway"
           }
         }
       }
     },
     "/deleteuser/{id}": {
       "delete": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
             "type": "string"
           }
         ],
@@ -130,19 +120,21 @@
     },
     "/updateuser": {
       "put": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
+            "name": "obj",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
+                "telefone": {
+                  "example": "any"
+                },
+                "nome_guerra": {
+                  "example": "any"
+                },
                 "id": {
                   "example": "any"
                 },
@@ -181,9 +173,6 @@
           "404": {
             "description": "Not Found"
           },
-          "409": {
-            "description": "Conflict"
-          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -192,14 +181,9 @@
     },
     "/allpm": {
       "get": {
+        "tags": [],
         "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "OK"
@@ -221,10 +205,11 @@
     },
     "/login": {
       "post": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "body",
+            "name": "obj",
             "in": "body",
             "schema": {
               "type": "object",
@@ -254,15 +239,11 @@
     },
     "/createadmin": {
       "post": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
+            "name": "obj",
             "in": "body",
             "schema": {
               "type": "object",
@@ -270,25 +251,34 @@
                 "cpf": {
                   "example": "any"
                 },
-                "email": {
-                  "example": "any"
-                },
-                "matricula": {
-                  "example": "any"
-                },
                 "password": {
                   "example": "any"
                 },
                 "nome": {
-                  "example": "any"
-                },
-                "role": {
                   "example": "any"
                 }
               }
             }
           }
         ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/getadmin": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
         "responses": {
           "200": {
             "description": "OK"
@@ -299,8 +289,29 @@
           "403": {
             "description": "Forbidden"
           },
-          "409": {
-            "description": "Conflict"
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/alladmins": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -308,13 +319,15 @@
         }
       }
     },
-    "/getadmin": {
-      "get": {
+    "/deleteadmin/{id}": {
+      "delete": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "authorization",
-            "in": "header",
+            "name": "id",
+            "in": "path",
+            "required": true,
             "type": "string"
           }
         ],
@@ -339,14 +352,9 @@
     },
     "/getUser": {
       "get": {
+        "tags": [],
         "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "OK"
@@ -368,15 +376,11 @@
     },
     "/updatePassword": {
       "put": {
+        "tags": [],
         "description": "",
         "parameters": [
           {
-            "name": "authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
+            "name": "obj",
             "in": "body",
             "schema": {
               "type": "object",
@@ -415,6 +419,114 @@
           }
         }
       }
+    },
+    "/listar": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "203": {
+            "description": "Non-Authoritative Information"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/listar/{id}": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/guarnicao": {
+      "post": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "203": {
+            "description": "Non-Authoritative Information"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/criar": {
+      "post": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": {
+                  "example": "any"
+                },
+                "descricao": {
+                  "example": "any"
+                },
+                "data_inicio": {
+                  "example": "any"
+                },
+                "data_fim": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
     }
-  }
+  },
+  "definitions": {}
 }
