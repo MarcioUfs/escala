@@ -20,22 +20,23 @@ async function readUsers(req, res) {
       "users.matricula",
       "users.role",
       "users.telefone",
+      "users.nome_guerra",
       "users.is_active AS ativo",
       "users.updated_at",
-      "efetivo_antiguidade.nome AS nome_militar",
-      "efetivo_antiguidade.ordem",
-      "efetivo_antiguidade.patente",
-      "efetivo_antiguidade.quadro",
-      "efetivo_antiguidade.data_promocao",
-      "efetivo_antiguidade.tempo_promocao",
+      // "efetivo_antiguidade.nome AS nome_militar",
+      // "efetivo_antiguidade.ordem",
+      // "efetivo_antiguidade.patente",
+      // "efetivo_antiguidade.quadro",
+      // "efetivo_antiguidade.data_promocao",
+      // "efetivo_antiguidade.tempo_promocao",
     )
     .from("users")
-    .leftJoin(
-      "efetivo_antiguidade",
-      "users.matricula",
-      "efetivo_antiguidade.matricula",
-    )
-    .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
+    // .leftJoin(
+    //   "efetivo_antiguidade",
+    //   "users.matricula",
+    //   "efetivo_antiguidade.matricula",
+    // )
+    // .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
     .then((data) => {
       const arrayDados = [];
       if (data.length > 0) {
@@ -48,11 +49,12 @@ async function readUsers(req, res) {
             matricula: tratarMatricula(element.matricula),
             perfil: element.role,
             telefone: tratarTelefone(element.telefone) ,
-            ativo: element.ativo,
+            ativo: element.ativo ? "Ativo" : "Inativo",
+            nome_guerra: element.nome_guerra || "Nome de Guerra não Cadastrado",
 
             ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001,
-            patente: element.patente || "Sem Posto",
-            quadro: element.quadro || "Sem Quadro",
+            patente: element.patente || "-",
+            quadro: element.quadro || "-",
             data_promocao: element.data_promocao || "01/01/1900",
             tempo_promocao: element.tempo_promocao || "0 anos",
           });
@@ -68,20 +70,6 @@ async function readUsers(req, res) {
 }
 
 async function createUser(req, res) {
-
-  // const isValid = validateFields(req, res, [
-  //   "email",
-  //   "password",
-  //   "cpf",
-  //   "nome",
-  //   "matricula",
-  //   "telefone"
-  // ]);
-  // if (!isValid) return;
-
-  // const isValidEmail = validateEmail(req, res);
-  // if (!isValidEmail) return;
-
   await database
     .select()
     .table("users")
@@ -103,6 +91,8 @@ async function createUser(req, res) {
               cpf: somenteCpf(req.body.cpf),
               matricula: somenteMatricula(req.body.matricula),
               telefone: somenteTelefone(req.body.telefone),
+              nome_guerra: req.body.nome_guerra,
+              is_active: true,
               role: "user",
               created_at: new Date(),
               updated_at: new Date(),
@@ -153,7 +143,7 @@ async function deleteUser(req, res) {
 }
 
 async function updateUser(req, res) {
-  const { id, nome, cpf, email, password, matricula } = req.body;
+  const { id, nome, nome_guerra, cpf, email, password, matricula } = req.body;
 
   // 1. Validações Iniciais
   if (!id || isNaN(id))
@@ -211,7 +201,8 @@ async function updateUser(req, res) {
       nome,
       cpf: cpfOnly,
       matricula: matriculaOnly,
-      telefone: req.body.telefone || null,
+      telefone: somenteTelefone(req.body.telefone) || 0,
+      nome_guerra: req.body.nome_guerra || "Nome de Guerra não Cadastrado",
       updated_at: new Date(),
     });
 
@@ -254,7 +245,7 @@ async function readAllPm(req, res) {
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
   let cpfOnly = somenteCpf(req.body.cpf);
-
+console.log("CPF recebido para login:", req.body.cpf, "CPF processado:", cpfOnly); // Log do CPF recebido e processado
   if (cpfOnly === 0) {
     return res.status(401).send({ msg: "Credencial inválida!" });
   }
@@ -403,7 +394,9 @@ async function allAdmins(req, res) {
             id: element.id_admin,
             nome: element.nome,
             cpf: tratarCpf(element.cpf),
-            role: element.role
+            role: element.role,
+            created_at: element.created_at,
+            updated_at: element.updated_at
           });
         }
         return res.status(200).json(arrayDados);
