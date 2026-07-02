@@ -139,13 +139,13 @@ export default function AdminListAdmins() {
           >
             Novo Administrador
           </button>
-          <button
+          {/* <button
             onClick={() => navigate("/admin")}
-            className="flex items-center gap-2 w-full md:w-auto px-6 py-3 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition shadow-sm whitespace-nowrap"
+            className="flex items-center gap-2 w-full md:w-auto px-6 py-3 bg-green-700 text-white font-medium rounded-lg hover:bg-green-900 transition shadow-sm whitespace-nowrap"
           >
             <ArrowBigLeft />
             Voltar a gestão
-          </button>
+          </button> */}
         </div>
 
         {/* MENSAGENS DE SUCESSO OU ERRO (TOAST) */}
@@ -172,19 +172,31 @@ export default function AdminListAdmins() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">
-                      {admin.nome}
+                      {admin.nome.toUpperCase()}
                     </h3>
                     <p className="text-sm text-gray-500">
                       Identificador: {admin.id}
                     </p>
                   </div>
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
-                    {admin.ordem}
+                    {admin.id}
                   </span>
                 </div>
 
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">CPF:</span> {admin.cpf}
+                </p>
+
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Atualizado:</span> 
+                  {/* {admin.updated_at} */}
+                  {admin.updated_at ? ` às ${new Date(admin.updated_at).toLocaleTimeString('pt-BR')} de ${new Date(admin.updated_at).toLocaleDateString('pt-BR')}` : 'Data não disponível'}
+                </p>
+
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Criado:</span> 
+                  {/* {admin.created_at} */}
+                  {admin.created_at ? ` às ${new Date(admin.created_at).toLocaleTimeString('pt-BR')} de ${new Date(admin.created_at).toLocaleDateString('pt-BR')}` : 'Data não disponível'}
                 </p>
 
                 {/* BOTÕES NO MOBILE (Grid 2 colunas, todos de largura igual) */}
