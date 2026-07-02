@@ -18,7 +18,7 @@ export default function UserDashboard() {
             </div>
             
             <div className="text-center sm:text-left flex-grow">
-              <h2 className="text-2xl font-bold text-gray-900">{user?.nome || 'Usuário Operacional'}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{user?.nome.toUpperCase() || 'Usuário Operacional'}</h2>
               <div className="mt-2 flex flex-wrap justify-center sm:justify-start gap-2">
                 <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full uppercase tracking-wide border border-emerald-200">
                   Perfil: {user?.role || 'user'}
@@ -35,6 +35,10 @@ export default function UserDashboard() {
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Meus Dados de Cadastro</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <div>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Nome de Guerra</p>
+                <p className="text-gray-900 font-medium">{user?.nome_guerra?.toUpperCase() || '---'}</p>
+              </div>
+              <div>
                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Matrícula</p>
                 <p className="text-gray-900 font-medium">{user?.matricula || '---'}</p>
               </div>
@@ -44,7 +48,11 @@ export default function UserDashboard() {
               </div>
               <div className="sm:col-span-2 md:col-span-1">
                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">E-mail</p>
-                <p className="text-gray-900 font-medium truncate">{user?.email || '---'}</p>
+                <p className="text-gray-900 font-medium truncate">{user?.email.toUpperCase() || '---'}</p>
+              </div>
+              <div className="sm:col-span-2 md:col-span-1">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Telefone</p>
+                <p className="text-gray-900 font-medium">{user?.telefone || '---'}</p>
               </div>
             </div>
           </div>

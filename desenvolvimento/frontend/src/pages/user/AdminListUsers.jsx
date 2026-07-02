@@ -163,7 +163,7 @@ export default function AdminListUsers() {
             {actionMessage.text}
           </div>
         )}
-
+        {/*.toUpperCase()*/}
         {/* VISÃO MOBILE (CARDS) */}
         <div className="grid grid-cols-1 gap-4 lg:hidden">
           {filteredUsers.length > 0 ? (
@@ -175,29 +175,39 @@ export default function AdminListUsers() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">
-                      {user.nome}
+                      {user.nome.toUpperCase()}
                     </h3>
                     <p className="text-sm text-gray-500">
                       Matrícula: {user.matricula}
                     </p>
                   </div>
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
-                    {user.ordem}
+                    {user.ativo.toUpperCase()}
+                    {/* {user.ordem} */}
                   </span>
                 </div>
-
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Nome de Guerra:</span>{" "}
+                  {user.nome_guerra.toUpperCase()}
+                </p>
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">CPF:</span> {user.cpf}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Patente/Graduação:</span>{" "}
-                  {user.patente}
+                  <span className="font-semibold">Telefone:</span> {user.telefone}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Quadro:</span> {user.quadro}
+                  <span className="font-semibold">Patente/Graduação:</span>{" "}
+                  {user.patente.toUpperCase()}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-semibold">Quadro:</span> {user.quadro.toUpperCase()}
                 </p>
                 <p className="text-sm text-gray-600 mb-4">
-                  <span className="font-semibold">E-mail:</span> {user.email}
+                  <span className="font-semibold">E-mail:</span> {user.email.toUpperCase()}
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  <span className="font-semibold">Status:</span> {user.ativo.toUpperCase()}
                 </p>
 
                 {/* BOTÕES NO MOBILE (Grid 2 colunas, todos de largura igual) */}
@@ -247,11 +257,14 @@ export default function AdminListUsers() {
               <thead>
                 <tr className="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
                   <th className="p-4 border-b font-semibold">Nome</th>
-                  <th className="p-4 border-b font-semibold">Patente</th>
-                  <th className="p-4 border-b font-semibold">Quadro</th>
+                  {/* <th className="p-4 border-b font-semibold">Patente</th> */}
+                  <th className="p-4 border-b font-semibold">Nome de guerra</th>
+                  <th className="p-4 border-b font-semibold">Telefone</th>
+                  {/* <th className="p-4 border-b font-semibold">Status</th> */}
+                  {/* <th className="p-4 border-b font-semibold">Quadro</th> */}
                   <th className="p-4 border-b font-semibold">Matrícula</th>
                   <th className="p-4 border-b font-semibold">CPF</th>
-                  <th className="p-4 border-b font-semibold">Ordem</th>
+                  {/* <th className="p-4 border-b font-semibold">Ordem</th> */}
                   <th className="p-4 border-b font-semibold text-center">
                     Ações
                   </th>
@@ -262,20 +275,30 @@ export default function AdminListUsers() {
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition">
                       <td className="p-4 text-gray-900 font-medium">
-                        {user.nome}
+                        {
+                        (user.ativo.toUpperCase()) + ' - ' + user.nome.toUpperCase()}
                         <div className="text-xs text-gray-500 font-normal">
                           {user.email}
                         </div>
                       </td>
-                      <td className="p-4 text-gray-700">{user.patente}</td>
-                      <td className="p-4 text-gray-700">{user.quadro}</td>
+                      <td className="p-4 text-gray-900 font-medium">
+                        {user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}
+                        <div className="text-xs text-gray-500 font-normal">
+                          {user.quadro.toUpperCase()}
+                        </div>
+                      </td>
+                      {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase()}</td> */}
+                      {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}</td> */}
+                      <td className="p-4 text-gray-700">{user.telefone}</td>
+                      {/* <td className="p-4 text-gray-700">{user.ativo ? 'A' : 'I'}</td> */}
+                      {/* <td className="p-4 text-gray-700">{user.quadro.toUpperCase()}</td> */}
                       <td className="p-4 text-gray-700">{user.matricula}</td>
                       <td className="p-4 text-gray-700">{user.cpf}</td>
-                      <td className="p-4">
+                      {/* <td className="p-4">
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
                           {user.ordem}
                         </span>
-                      </td>
+                      </td> */}
                       <td className="p-4">
                         {/* BOTÕES NO DESKTOP (Flex horizontal sem quebrar, botões de largura igual min-w) */}
                         <div className="flex items-center justify-center gap-2 flex-nowrap">

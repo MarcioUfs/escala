@@ -12,7 +12,9 @@ export default function AdminEditUser() {
   const [formData, setFormData] = useState({
     id: userToEdit?.id || '',
     nome: userToEdit?.nome || '',
+    nome_guerra: userToEdit?.nome_guerra || '',
     cpf: userToEdit?.cpf || '',
+    telefone: userToEdit?.telefone || '',
     matricula: userToEdit?.matricula || '',
     email: userToEdit?.email || '',
     password: '' // A senha sempre começa vazia
@@ -42,6 +44,13 @@ export default function AdminEditUser() {
     if (value.length > 12) value = value.substring(0, 12);
     value = value.replace(/(\d{10})(\d)/, '$1-$2');
     setFormData({ ...formData, matricula: value });
+  };
+ const handleTelefoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 11) value = value.substring(0, 11);
+    value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+    value = value.replace(/(\d)(\d{4})$/, "$1-$2");
+    setFormData({ ...formData, telefone: value });
   };
 
   const handleChange = (e) => {
@@ -103,6 +112,11 @@ export default function AdminEditUser() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Nome de Guerra</label>
+            <input type="text" name="nome_guerra" value={formData.nome_guerra} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">CPF</label>
             <input type="text" name="cpf" value={formData.cpf} onChange={handleCpfChange} maxLength={14} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
           </div>
@@ -110,6 +124,10 @@ export default function AdminEditUser() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Matrícula</label>
             <input type="text" name="matricula" value={formData.matricula} onChange={handleMatriculaChange} maxLength={13} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Telefone</label>
+            <input type="text" name="telefone" value={formData.telefone} onChange={handleTelefoneChange} maxLength={15} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
           </div>
 
           <div>

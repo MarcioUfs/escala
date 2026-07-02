@@ -37,7 +37,7 @@ export default function AdminViewUser() {
               </div>
               
               <div className="text-center sm:text-left flex-grow">
-                <h2 className="text-2xl font-bold text-gray-900">{userToView.nome}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{userToView.nome.toUpperCase()}</h2>
                 <div className="mt-2 flex flex-wrap justify-center sm:justify-start gap-2">
                   <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wide border border-indigo-200">
                     Perfil: {userToView.perfil || userToView.role || 'user'}
@@ -53,6 +53,10 @@ export default function AdminViewUser() {
             <div className="bg-gray-50 border-t border-gray-100 p-6 sm:p-8">
               <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Informações de Cadastro</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Nome de Guerra</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{userToView.nome_guerra.toUpperCase()}</p>
+                </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Matrícula</p>
                   <p className="text-gray-900 font-medium text-lg">{userToView.matricula}</p>
@@ -63,8 +67,17 @@ export default function AdminViewUser() {
                 </div>
                 <div className="sm:col-span-2">
                   <p className="text-xs text-gray-500 uppercase font-semibold mb-1">E-mail</p>
-                  <p className="text-gray-900 font-medium text-lg break-words">{userToView.email}</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{userToView.email.toUpperCase()}</p>
                 </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Telefone</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{userToView.telefone}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Status</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{userToView.ativo.toUpperCase()}</p>
+                </div>
+                
               </div>
             </div>
 
