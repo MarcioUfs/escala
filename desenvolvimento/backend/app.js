@@ -32,7 +32,7 @@ app.use(helmet());
 // 1.2 CORS: Bloqueia requisições de sites não autorizados
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     // origin: "*", // Permite todas as origens (ajuste conforme necessário)
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
