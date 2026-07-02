@@ -6,7 +6,7 @@ const router = express.Router();
 
 /*************ADMIN USERS****************/
 router.get('/allusers', verifyJwt, isAdmin, adminController.readUsers);
-router.post('/sign-up', verifyJwt, isAdmin, adminController.create); 
+router.post('/createuser', verifyJwt, isAdmin, adminController.createUser); 
 router.delete('/deleteuser/:id', verifyJwt, isAdmin, adminController.deleteUser);
 router.put('/updateuser', verifyJwt, isAdmin, adminController.updateUser);
 

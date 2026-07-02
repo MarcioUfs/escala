@@ -67,7 +67,7 @@ async function readUsers(req, res) {
     });
 }
 
-async function create(req, res) {
+async function createUser(req, res) {
 
   // const isValid = validateFields(req, res, [
   //   "email",
@@ -434,7 +434,7 @@ async function deleteAdmin(req, res) {
 
 module.exports = {
   readUsers: readUsers,
-  create: create,
+  createUser: createUser,
   deleteUser: deleteUser,
   updateUser: updateUser,
 

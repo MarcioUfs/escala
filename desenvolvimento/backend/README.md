@@ -26,4 +26,8 @@
  adicionar os valores no seed
  npx knex seed:run
 
+ # altera tabelas
+ npx knex migrate:make alterar_tabelas_e_escala
+ modifique as tabelas
+ npx knex migrate:latest
  
