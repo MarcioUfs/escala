@@ -113,8 +113,12 @@ uploads/*
 #tratarDados/arquivo1.txt
 
 #ignore migrations
-desenvolvimento\backend\src\database\migrations
+#desenvolvimento\backend\src\database\migrations
+#src/database/migrations
 
 #ignore seeds
-desenvolvimento\backend\src\database\seeds
+#desenvolvimento\backend\src\database\seeds
+#src/database/seeds
 
+#ignore pasta arquivos
+src/database/arquivos/
