@@ -5,6 +5,7 @@ const tratarCpf = require("../functions/tratarCpf");
 const somenteCpf = require("../functions/somenteCpf");
 const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
+const tratarTelefone = require("../functions/tratarTelefone");
 
 function login(req, res) {
   let cpfOnly = somenteCpf(req.body.cpf);
@@ -78,6 +79,9 @@ async function getUser(req, res) {
               cpf: tratarCpf(data[0].cpf),
               email: data[0].email,
               matricula: tratarMatricula(data[0].matricula),
+              telefone: tratarTelefone(data[0].telefone),
+              nome_guerra: data[0].nome_guerra,
+              patente: "1º SGT",
               id: data[0].id_user,
               role: data[0].role,
             };
@@ -95,7 +99,6 @@ async function getUser(req, res) {
 async function updatePassword(req, res) {
   // 1. Extração e Validação Inicial dos Campos
   const { oldPassword, newPassword, confirmNewPassword } = req.body;
-
   if (!oldPassword || !newPassword || !confirmNewPassword) {
     return res.status(400).json({ msg: "Preencha a senha antiga, a nova e a confirmação." });
   }
