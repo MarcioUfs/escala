@@ -14,6 +14,7 @@ import AdminCreateUser from "./pages/user/AdminCreateUser";
 import AdminListUsers from "./pages/user/AdminListUsers";
 import AdminEditUser from "./pages/user/AdminEditUser";
 import AdminViewUser from "./pages/user/AdminViewUser";
+import UserResetPassword from "./pages/user/UserResetPassword";
 import AdminListAdmins from "./pages/admin/AdminListAdmins";
 import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
 import DashboardEscalas from "./pages/escala/DashboardEscala";
@@ -68,6 +69,7 @@ function App() {
             }
           >
             <Route index element={<UserDashboard />} />
+            <Route path="reset-password" element={<UserResetPassword />} />
           </Route>
 
           {/* REDIRECIONAMENTO PADRÃO */}

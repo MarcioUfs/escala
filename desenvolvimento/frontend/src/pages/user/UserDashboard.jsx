@@ -1,8 +1,10 @@
 import { useContext } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
+import { useNavigate } from "react-router-dom";
 
 export default function UserDashboard() {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   return (
     <div className="p-4 sm:p-8">
@@ -26,6 +28,16 @@ export default function UserDashboard() {
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full uppercase tracking-wide border border-gray-200">
                   Ativo
                 </span>
+                <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full uppercase tracking-wide border border-red-200">
+                  <button
+                    onClick={() =>
+                      navigate("/user/reset-password", { state: { user } })
+                    }
+                    // className="w-full py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 text-sm font-medium transition text-center"
+                  >
+                    RESETAR SENHA
+                  </button>
+                </span>
               </div>
             </div>
           </div>
@@ -36,7 +48,7 @@ export default function UserDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Nome de Guerra</p>
-                <p className="text-gray-900 font-medium">{user?.nome_guerra?.toUpperCase() || '---'}</p>
+                <p className="text-gray-900 font-medium">{user?.patente?.toUpperCase() || "---"} {user?.nome_guerra?.toUpperCase() || '---'}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Matrícula</p>
