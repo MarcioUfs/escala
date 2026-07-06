@@ -213,34 +213,35 @@ async function updateUser(req, res) {
 }
 /*************LISTAR ALL****************/
 async function readAllPm(req, res) {
-  await database
-    .select("efetivo_antiguidade.*")
-    .from("efetivo_antiguidade")
-    .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
-    .then((data) => {
-      const arrayDados = [];
-      if (data.length > 0) {
-        for (let element of data) {
-          arrayDados.push({
-            id: element.id,
-            nome: element.nome,
-            ordem: element.ordem,
-            patente: element.patente,
-            matricula: tratarMatricula(element.matricula),
-            quadro: element.quadro,
-            patente: element.patente,
-            data_promocao: element.data_promocao,
-            tempo_promocao: element.tempo_promocao,
-          });
-        }
-        return res.status(200).json(arrayDados);
-      } else {
-        return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
-      }
-    })
-    .catch((error) => {
-      return res.status(500).json({ msg: "Erro do servidor!" });
-    });
+  return res.status(201).json({ msg: "Função em desenvolvimento!" });
+  // await database
+  //   .select("efetivo_antiguidade.*")
+  //   .from("efetivo_antiguidade")
+  //   .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
+  //   .then((data) => {
+  //     const arrayDados = [];
+  //     if (data.length > 0) {
+  //       for (let element of data) {
+  //         arrayDados.push({
+  //           id: element.id,
+  //           nome: element.nome,
+  //           ordem: element.ordem,
+  //           patente: element.patente,
+  //           matricula: tratarMatricula(element.matricula),
+  //           quadro: element.quadro,
+  //           patente: element.patente,
+  //           data_promocao: element.data_promocao,
+  //           tempo_promocao: element.tempo_promocao,
+  //         });
+  //       }
+  //       return res.status(200).json(arrayDados);
+  //     } else {
+  //       return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     return res.status(500).json({ msg: "Erro do servidor!" });
+  //   });
 }
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
