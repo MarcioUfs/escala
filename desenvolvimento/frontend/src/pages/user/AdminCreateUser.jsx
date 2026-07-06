@@ -18,6 +18,22 @@ export default function AdminCreateUser() {
   const [status, setStatus] = useState({ type: "", message: "" });
 
   // ================= MÁSCARAS =================
+  const handleNomeChange = (e) => {
+    let value = e.target.value;
+    value = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+    value = value.replace(/\s{2,}/g, " ");
+    value = value.replace(/^\s+/g, "");
+    setFormData({ ...formData, nome: value });
+  };
+
+  const handleNomeGuerraChange = (e) => {
+    let value = e.target.value;
+    value = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+    value = value.replace(/\s{2,}/g, " ");
+    value = value.replace(/^\s+/g, "");
+    setFormData({ ...formData, nome_guerra: value });
+  };
+
   const handleCpfChange = (e) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.substring(0, 11);
@@ -147,7 +163,7 @@ export default function AdminCreateUser() {
               type="text"
               name="nome"
               value={formData.nome}
-              onChange={handleChange}
+              onChange={handleNomeChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
@@ -161,7 +177,7 @@ export default function AdminCreateUser() {
               type="text"
               name="nome_guerra"
               value={formData.nome_guerra}
-              onChange={handleChange}
+              onChange={handleNomeGuerraChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
