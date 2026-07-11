@@ -10,8 +10,9 @@ router.post('/createuser', verifyJwt, isAdmin, adminController.createUser);
 router.delete('/deleteuser/:id', verifyJwt, isAdmin, adminController.deleteUser);
 router.put('/updateuser', verifyJwt, isAdmin, adminController.updateUser);
 
-/***********LISTAR TODOS OS PM************/
+/***********LISTAR************/
 router.get('/allpm', verifyJwt, isAdmin, adminController.readAllPm);
+router.get('/allpatentes', verifyJwt, isAdmin, adminController.readAllPatente);
 
 /*************ADMIN CRUD****************/
 router.post('/login', strictLimiter, adminController.loginAdmin); 

@@ -1,5 +1,7 @@
 const e = require("express");
 const database = require("../database/db");
+const bcryptjs = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const limparEspaco = require("../functions/limparEspacos");
 const somenteCpf = require("../functions/somenteCpf");
 const somenteMatricula = require("../functions/somenteMatricula");
@@ -102,82 +104,153 @@ const validarPeriodoEscala = require("../functions/validarPeriodoEscala");
 // // }
 
 async function createModeloEscala(req, res) {
-  nome = limparEspaco(req.body.nome);
-  descricao = limparEspaco(req.body.descricao);
-  if (!nome) {
-    return res.status(400).json({
-      msg: "Nome da escala é obrigatório",
-    });
-  }
-  await database
-    .select()
-    .table("tbl_escala")
-    .where({ nome_escala: req.body.nome })
-    .then(async (data) => {
-      if (data.length >= 1) {
-        return res.status(409).json({ msg: "Nome de escala já cadastrado!" });
-      } else {
-        const dataInicio = validarDataUsuario(
-          formatarDataEscala(req.body.data_inicio),
-        );
-        const dataFim = validarDataUsuario(
-          formatarDataEscala(req.body.data_fim),
-        );
-        const periodoValido = validarPeriodoEscala(
-          dataInicio.objetoDate,
-          dataFim.objetoDate,
-        );
-
-        if (!dataInicio.valido) {
-          return res.status(400).json({ msg: dataInicio.motivo });
-        }
-        if (!dataFim.valido) {
-          return res.status(400).json({ msg: dataFim.motivo });
-        }
-
-        if (!periodoValido.valido) {
-          return res.status(400).json({ msg: periodoValido.motivo });
-        }
-        await database
-          .insert({
-            nome_escala: nome,
-            descricao_escala: descricao || "Sem descrição",
-            data_inicio: dataInicio.objetoDate,
-            data_fim: dataFim.objetoDate,
-            fk_id_guarnicao: null,
-            is_active: true,
-            created_at: new Date(),
-            updated_at: new Date(),
-          })
-          .into("tbl_escala")
-          .then((data) => {
-            return res.status(201).json({
-              msg: "Modelo de escala criado com sucesso",
-            });
-          });
+  //////////////////////
+  console.log("Dados recebidos para criação de modelo de escala:", req.body);
+  const token = req.headers.authorization.split(" ")[1];
+  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ msg: "Token inválido ou expirado" });
+    } else {
+      nome_escala = limparEspaco(req.body.nome_escala);
+      descricao_escala = limparEspaco(req.body.descricao_escala);
+      if (!nome_escala) {
+        return res.status(400).json({
+          msg: "Nome da escala é obrigatório",
+        });
       }
-    });
+      await database
+        .select()
+        .table("tbl_escala")
+        .where({ nome_escala: req.body.nome_escala })
+        .then(async (data) => {
+          if (data.length >= 1) {
+            return res
+              .status(409)
+              .json({ msg: "Nome de escala já cadastrado!" });
+          } else {
+            const dataInicio = validarDataUsuario(
+              formatarDataEscala(req.body.data_inicio),
+            );
+            const dataFim = validarDataUsuario(
+              formatarDataEscala(req.body.data_fim),
+            );
+            const periodoValido = validarPeriodoEscala(
+              dataInicio.objetoDate,
+              dataFim.objetoDate,
+            );
+
+            if (!dataInicio.valido) {
+              return res.status(400).json({ msg: dataInicio.motivo });
+            }
+            if (!dataFim.valido) {
+              return res.status(400).json({ msg: dataFim.motivo });
+            }
+
+            if (!periodoValido.valido) {
+              return res.status(400).json({ msg: periodoValido.motivo });
+            }
+            await database
+              .insert({
+                nome_escala: nome_escala,
+                descricao_escala: descricao_escala || "Sem descrição",
+                data_inicio: dataInicio.objetoDate,
+                data_fim: dataFim.objetoDate,
+                fk_id_admin: decoded.id_admin,
+                fk_id_setor: req.user.fk_id_setor || 3000,
+                is_active: true,
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+              .into("tbl_escala")
+              .then((data) => {
+                return res.status(201).json({
+                  msg: "Modelo de escala criado com sucesso",
+                });
+              });
+          }
+        });
+    }
+  });
+  //************
+
+  // nome = limparEspaco(req.body.nome);
+  // descricao = limparEspaco(req.body.descricao);
+  // if (!nome) {
+  //   return res.status(400).json({
+  //     msg: "Nome da escala é obrigatório",
+  //   });
+  // }
+  // await database
+  //   .select()
+  //   .table("tbl_escala")
+  //   .where({ nome_escala: req.body.nome })
+  //   .then(async (data) => {
+  //     if (data.length >= 1) {
+  //       return res.status(409).json({ msg: "Nome de escala já cadastrado!" });
+  //     } else {
+  //       const dataInicio = validarDataUsuario(
+  //         formatarDataEscala(req.body.data_inicio),
+  //       );
+  //       const dataFim = validarDataUsuario(
+  //         formatarDataEscala(req.body.data_fim),
+  //       );
+  //       const periodoValido = validarPeriodoEscala(
+  //         dataInicio.objetoDate,
+  //         dataFim.objetoDate,
+  //       );
+
+  //       if (!dataInicio.valido) {
+  //         return res.status(400).json({ msg: dataInicio.motivo });
+  //       }
+  //       if (!dataFim.valido) {
+  //         return res.status(400).json({ msg: dataFim.motivo });
+  //       }
+
+  //       if (!periodoValido.valido) {
+  //         return res.status(400).json({ msg: periodoValido.motivo });
+  //       }
+  //       await database
+  //         .insert({
+  //           nome_escala: nome,
+  //           descricao_escala: descricao || "Sem descrição",
+  //           data_inicio: dataInicio.objetoDate,
+  //           data_fim: dataFim.objetoDate,
+  //           fk_id_admin: req.user.id || 100000,
+  //           fk_id_setor: req.user.fk_id_setor || 3000,
+  //           is_active: true,
+  //           created_at: new Date(),
+  //           updated_at: new Date(),
+  //         })
+  //         .into("tbl_escala")
+  //         .then((data) => {
+  //           return res.status(201).json({
+  //             msg: "Modelo de escala criado com sucesso",
+  //           });
+  //         });
+  //     }
+  //   });
 }
 
 async function listarEscalas(req, res) {
-  return res.status(203).json({ msg: "Escala não encontrada + listarEscalas" });
-  // try {
-  //   const guarnicoes = await database("escalas_servicos")
-  //     .select("*")
-  //     .where({ status: true });
-  //   console.log("Guarnições listadas:", guarnicoes.length);
-  //   if (guarnicoes.length <= 0) {
-  //     return res
-  //       .status(404)
-  //       .json({ msg: "Nenhuma guarnição ativa encontrada" });
-  //   }
-  //   return res.status(200).json(guarnicoes);
-  // } catch (error) {
-  //   console.error("Erro ao listar guarnições:", error);
-  //   return res.status(500).json({
-  //     msg: "Erro interno do servidor",
-  //   });
-  // }
+  // return res.status(203).json({ msg: "Escala não encontrada + listarEscalas" });
+  try {
+    const guarnicoes = await database("tbl_escala")
+      .select("*")
+      .where({ is_active: true })
+      .orderBy("created_at", "desc");
+    console.log("Guarnições listadas:", guarnicoes.length);
+    if (guarnicoes.length <= 0) {
+      return res
+        .status(404)
+        .json({ msg: "Nenhuma guarnição ativa encontrada" });
+    }
+    return res.status(200).json(guarnicoes);
+  } catch (error) {
+    console.error("Erro ao listar guarnições:", error);
+    return res.status(500).json({
+      msg: "Erro interno do servidor",
+    });
+  }
 }
 
 async function getEscalaById(req, res) {
@@ -198,7 +271,9 @@ async function getEscalaById(req, res) {
   // }
 }
 async function create_guarnicao(req, res) {
-  return res.status(203).json({ msg: "Escala não encontrada + create_guarnicao" });
+  return res
+    .status(203)
+    .json({ msg: "Escala não encontrada + create_guarnicao" });
   // console.log("Dados recebidos para criação de guarnição:", req.body);
   // await database
   //   .select()

@@ -23,6 +23,6 @@ router.get("/listar/:id", verifyJwt, modelos_escalas.getEscalaById);
 
 //
 router.post("/guarnicao", verifyJwt, modelos_escalas.create_guarnicao);
-router.post("/criar", verifyJwt, modelos_escalas.createModeloEscala);
+router.post("/criar-escala", verifyJwt, modelos_escalas.createModeloEscala);
 
 module.exports = router;

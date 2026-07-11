@@ -23,20 +23,15 @@ async function readUsers(req, res) {
       "users.nome_guerra",
       "users.is_active AS ativo",
       "users.updated_at",
-      // "efetivo_antiguidade.nome AS nome_militar",
-      // "efetivo_antiguidade.ordem",
-      // "efetivo_antiguidade.patente",
-      // "efetivo_antiguidade.quadro",
-      // "efetivo_antiguidade.data_promocao",
-      // "efetivo_antiguidade.tempo_promocao",
+      "tbl_patentes.id_patente",
+      "tbl_patentes.nome_patente",
+      "tbl_patentes.sigla_patente",
+      "tbl_patentes.is_active AS patente_ativa",
+      "tbl_patentes.created_at AS patente_criado_em",
+      "tbl_patentes.updated_at AS patente_atualizado_em",
     )
     .from("users")
-    // .leftJoin(
-    //   "efetivo_antiguidade",
-    //   "users.matricula",
-    //   "efetivo_antiguidade.matricula",
-    // )
-    // .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
+    .leftJoin("tbl_patentes", "users.id_patente", "tbl_patentes.id_patente")
     .then((data) => {
       const arrayDados = [];
       if (data.length > 0) {
@@ -48,15 +43,16 @@ async function readUsers(req, res) {
             email: element.email,
             matricula: tratarMatricula(element.matricula),
             perfil: element.role,
-            telefone: tratarTelefone(element.telefone) ,
+            telefone: tratarTelefone(element.telefone),
             ativo: element.ativo ? "Ativo" : "Inativo",
             nome_guerra: element.nome_guerra || "Nome de Guerra não Cadastrado",
-
+            id_patente: element.id_patente || "N/A",
             ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001,
-            patente: element.patente || "-",
-            quadro: element.quadro || "-",
-            data_promocao: element.data_promocao || "01/01/1900",
-            tempo_promocao: element.tempo_promocao || "0 anos",
+            nome_patente: element.nome_patente || "N/A",
+            sigla_patente: element.sigla_patente || "N/A",
+            patente_ativa: element.patente_ativa ? "Ativa" : "Inativa",
+            patente_criado_em: element.patente_criado_em || "01/01/1900",
+            patente_atualizado_em: element.patente_atualizado_em || "01/01/1900",
           });
         }
         return res.status(200).json(arrayDados);
@@ -65,7 +61,7 @@ async function readUsers(req, res) {
       }
     })
     .catch((error) => {
-      return res.status(500).json({ msg: "Erro do servidor!"});
+      return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
 
@@ -88,6 +84,7 @@ async function createUser(req, res) {
               email: req.body.email,
               password: hash,
               nome: req.body.nome,
+              id_patente: req.body.id_patente,
               cpf: somenteCpf(req.body.cpf),
               matricula: somenteMatricula(req.body.matricula),
               telefone: somenteTelefone(req.body.telefone),
@@ -107,7 +104,6 @@ async function createUser(req, res) {
                     .json({ msg: "Cadastrado com sucesso!" });
                 })
                 .catch((err) => {
-                   
                   return res
                     .status(501)
                     .json({ msg: "Erro interno do servidor", error: err });
@@ -143,12 +139,12 @@ async function deleteUser(req, res) {
 }
 
 async function updateUser(req, res) {
-  const { id, nome, nome_guerra, cpf, email, password, matricula } = req.body;
+  const { id, nome, nome_guerra, cpf, email, password, matricula, id_patente } = req.body;
 
   // 1. Validações Iniciais
   if (!id || isNaN(id))
     return res.status(400).json({ msg: "ID inválido ou ausente" });
-  if (!nome || !cpf || !email || !password || !matricula) {
+  if (!nome || !cpf || !email || !password || !matricula || !id_patente) {
     return res.status(400).json({ msg: "Dados incompletos!" });
   }
 
@@ -195,16 +191,19 @@ async function updateUser(req, res) {
     const hash = await bcryptjs.hash(password, salt);
 
     // 5. Executar o Update
-    await database("users").where({ id_user: id }).update({
-      email,
-      password: hash,
-      nome,
-      cpf: cpfOnly,
-      matricula: matriculaOnly,
-      telefone: somenteTelefone(req.body.telefone) || 0,
-      nome_guerra: req.body.nome_guerra || "Nome de Guerra não Cadastrado",
-      updated_at: new Date(),
-    });
+    await database("users")
+      .where({ id_user: id })
+      .update({
+        email,
+        password: hash,
+        nome,
+        id_patente: req.body.id_patente || null,
+        cpf: cpfOnly,
+        matricula: matriculaOnly,
+        telefone: somenteTelefone(req.body.telefone) || 0,
+        nome_guerra: req.body.nome_guerra || "Nome de Guerra não Cadastrado",
+        updated_at: new Date(),
+      });
 
     return res.status(200).json({ msg: "Usuário atualizado com sucesso!" });
   } catch (error) {
@@ -242,6 +241,31 @@ async function readAllPm(req, res) {
   //   .catch((error) => {
   //     return res.status(500).json({ msg: "Erro do servidor!" });
   //   });
+}
+async function readAllPatente(req, res) {
+  await database
+    .select("*")
+    .from("tbl_patentes")
+    .then((data) => {
+      const arrayDados = [];
+      if (data.length > 0) {
+        for (let element of data) {
+          arrayDados.push({
+            id_patente: element.id_patente,
+            nome_patente: element.nome_patente,
+            sigla_patente: element.sigla_patente,
+            is_active: element.is_active,
+          });
+        }
+        return res.status(200).json(arrayDados);
+      } else {
+        return res.status(404).json({ msg: "Nenhum dado encontrado!" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({ msg: "Erro do servidor!" });
+    });
 }
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
@@ -301,9 +325,7 @@ async function createAdmin(req, res) {
     .where({ cpf: somenteCpf(req.body.cpf) })
     .then((data) => {
       if (data.length >= 1) {
-        return res
-          .status(409)
-          .json({ msg: "Email ou CPF já cadastrado!" });
+        return res.status(409).json({ msg: "Email ou CPF já cadastrado!" });
       } else {
         bcryptjs.genSalt(10, function (err, salt) {
           bcryptjs.hash(req.body.password, salt, async function (err, hash) {
@@ -395,7 +417,7 @@ async function allAdmins(req, res) {
             cpf: tratarCpf(element.cpf),
             role: element.role,
             created_at: element.created_at,
-            updated_at: element.updated_at
+            updated_at: element.updated_at,
           });
         }
         return res.status(200).json(arrayDados);
@@ -431,10 +453,11 @@ module.exports = {
   updateUser: updateUser,
 
   readAllPm: readAllPm,
-  
+  readAllPatente:readAllPatente,
+
   loginAdmin: loginAdmin,
   createAdmin: createAdmin,
   getAdmin: getAdmin,
-  allAdmins:allAdmins,
-  deleteAdmin: deleteAdmin
+  allAdmins: allAdmins,
+  deleteAdmin: deleteAdmin,
 };

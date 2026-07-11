@@ -56,7 +56,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // O generalLimiter protege toda a navegação básica do sistema
 app.use("/",  userRoute);
 app.use("/admin",  adminRoute);
-app.use("/escala", escalaRoutes);
+app.use("/escalas", escalaRoutes);
 app.use("/setores", setorRoutes);
 
 // ---------------------------------------------------
