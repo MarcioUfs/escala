@@ -104,7 +104,7 @@ export default function AdminDashboard() {
                 Gerir Administradores
               </Link> */}
               <Link
-                to="/admin/escalas"
+                to="/admin/list-escalas"
                 className="w-full sm:w-auto text-center px-5 py-2.5 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition-colors shadow-sm"
               >
                 Gerir Escalas

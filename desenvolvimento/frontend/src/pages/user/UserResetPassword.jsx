@@ -50,7 +50,6 @@ export default function ChangePassword() {
       
       // Regra 5: Captura a mensagem específica do backend (se existir na resposta)
       const backendMessage = error.response?.data?.message || error.response?.data?.error;
-      console.log(formData.newPassword === formData.oldPassword);
       
       if (backendMessage) {
         setStatus({ type: 'error', message: backendMessage });

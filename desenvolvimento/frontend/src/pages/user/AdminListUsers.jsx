@@ -38,10 +38,16 @@ export default function AdminListUsers() {
   };
 
   // 2. DEPOIS: Chamamos a função no useEffect (O erro vermelho some aqui!)
+  // useEffect(() => {
+  //   fetchUsers();
+  // }, []);
   useEffect(() => {
-    fetchUsers();
+    const loadUsers = async () => {
+      await fetchUsers();
+    };
+    loadUsers();
   }, []);
-
+  
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -194,20 +200,23 @@ export default function AdminListUsers() {
                   <span className="font-semibold">CPF:</span> {user.cpf}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">Telefone:</span> {user.telefone}
+                  <span className="font-semibold">Telefone:</span>{" "}
+                  {user.telefone}
                 </p>
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">Patente/Graduação:</span>{" "}
-                  {user.patente.toUpperCase()}
+                  {user.nome_patente.toUpperCase()}
                 </p>
-                <p className="text-sm text-gray-600 mb-1">
+                {/* <p className="text-sm text-gray-600 mb-1">
                   <span className="font-semibold">Quadro:</span> {user.quadro.toUpperCase()}
+                </p> */}
+                <p className="text-sm text-gray-600 mb-4">
+                  <span className="font-semibold">E-mail:</span>{" "}
+                  {user.email.toUpperCase()}
                 </p>
                 <p className="text-sm text-gray-600 mb-4">
-                  <span className="font-semibold">E-mail:</span> {user.email.toUpperCase()}
-                </p>
-                <p className="text-sm text-gray-600 mb-4">
-                  <span className="font-semibold">Status:</span> {user.ativo.toUpperCase()}
+                  <span className="font-semibold">Status:</span>{" "}
+                  {user.ativo.toUpperCase()}
                 </p>
 
                 {/* BOTÕES NO MOBILE (Grid 2 colunas, todos de largura igual) */}
@@ -275,17 +284,20 @@ export default function AdminListUsers() {
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition">
                       <td className="p-4 text-gray-900 font-medium">
-                        {
-                        (user.ativo.toUpperCase()) + ' - ' + user.nome.toUpperCase()}
+                        {user.ativo.toUpperCase() +
+                          " - " +
+                          user.nome.toUpperCase()}
                         <div className="text-xs text-gray-500 font-normal">
                           {user.email}
                         </div>
                       </td>
                       <td className="p-4 text-gray-900 font-medium">
-                        {user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}
-                        <div className="text-xs text-gray-500 font-normal">
+                        {user.sigla_patente.toUpperCase() +
+                          " " +
+                          user.nome_guerra.toUpperCase()}
+                        {/* <div className="text-xs text-gray-500 font-normal">
                           {user.quadro.toUpperCase()}
-                        </div>
+                        </div> */}
                       </td>
                       {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase()}</td> */}
                       {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}</td> */}

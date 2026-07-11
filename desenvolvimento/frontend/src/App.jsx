@@ -19,6 +19,8 @@ import AdminListAdmins from "./pages/admin/AdminListAdmins";
 import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
 import DashboardEscalas from "./pages/escala/DashboardEscala";
 import EscalaEdit from "./pages/escala/EscalaEdit";
+import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
+import AdminListEscalas from "./pages/admin/AdminListEscalas";
 
 function App() {
   return (
@@ -54,6 +56,8 @@ function App() {
             <Route path="admins" element={<AdminListAdmins />} />
             <Route path="escalas" element={<DashboardEscalas />} />
             <Route path="edit-escala" element={<EscalaEdit />} />
+            <Route path="create-escala" element={<AdminCreateEscala />} />
+            <Route path="list-escalas" element={<AdminListEscalas />} />
           </Route>
 
           {/* ==============================================
