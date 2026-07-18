@@ -9,6 +9,7 @@ router.get('/allusers', verifyJwt, isAdmin, adminController.readUsers);
 router.post('/createuser', verifyJwt, isAdmin, adminController.createUser); 
 router.delete('/deleteuser/:id', verifyJwt, isAdmin, adminController.deleteUser);
 router.put('/updateuser', verifyJwt, isAdmin, adminController.updateUser);
+router.post('/activeuser', verifyJwt, isAdmin, adminController.activeuser);
 
 /***********LISTAR************/
 router.get('/allpm', verifyJwt, isAdmin, adminController.readAllPm);

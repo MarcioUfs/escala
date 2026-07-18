@@ -125,9 +125,11 @@ async function createUser(req, res) {
 }
 
 async function deleteUser(req, res) {
-  console.log("ID do usuário a ser deletado:", req.params.id);
-  const { id } = req.params;
   try {
+    const { id } = req?.params;
+    if (!id || id === "" || isNaN(id)) {
+      return res.status(400).json({ msg: "ID é obrigatório!" });
+    }
     const userExists = await database("users").where({ id_user: id }).first();
     if (!userExists) {
       return res.status(404).json({ msg: "Usuário não encontrado" });
@@ -137,19 +139,56 @@ async function deleteUser(req, res) {
 
     return res.status(200).json({ msg: "Usuário deletado com sucesso!" });
   } catch (error) {
+    console.error("Erro ao deletar usuário:", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
+async function activeuser(req, res) {
+  try {
+    const { id, is_active } = req?.body;
+
+    if (!id || id === "" || isNaN(id) || !("id" in req?.body)) {
+      return res.status(400).json({ msg: "ID é obrigatório!", id: id });
+    }
+
+    if (!("is_active" in req?.body)) {
+      return res
+        .status(400)
+        .json({ msg: "O atributo de verificação é obrigatório!" });
+    }
+
+    const userExists = await database("users").where({ id_user: id }).first();
+
+    if (!userExists) {
+      return res.status(404).json({ msg: "Usuário não encontrado" });
+    }
+
+    await database("users")
+      .where({ id_user: id })
+      .update({ is_active: is_active, updated_at: new Date() });
+
+    return res.status(200).json({
+      msg: `Usuário ${is_active ? "ativado" : "desativado"} com sucesso!`,
+    });
+  } catch (error) {
+    console.error("Erro ao desativar usuário:", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
 async function updateUser(req, res) {
-
   if (!req.body?.nome || req.body?.nome === "") {
     return res.status(400).json({ msg: "Nome é obrigatório!" });
   }
   if (!req.body?.nome_guerra || req.body?.nome_guerra === "") {
     return res.status(400).json({ msg: "Nome de guerra é obrigatório!" });
   }
-  if (!req.body?.cpf || req.body?.cpf === "" || somenteCpf(req.body?.cpf) === 0) {
+  if (
+    !req.body?.cpf ||
+    req.body?.cpf === "" ||
+    somenteCpf(req.body?.cpf) === 0
+  ) {
     return res.status(400).json({ msg: "CPF é obrigatório!" });
   }
   if (!req.body?.password || req.body?.password === "") {
@@ -158,7 +197,11 @@ async function updateUser(req, res) {
   if (!req.body?.matricula || req.body?.matricula === "") {
     return res.status(400).json({ msg: "Matrícula é obrigatória!" });
   }
-    if (!req.body?.telefone || req.body?.telefone === "" || somenteTelefone(req.body?.telefone) === 0) {
+  if (
+    !req.body?.telefone ||
+    req.body?.telefone === "" ||
+    somenteTelefone(req.body?.telefone) === 0
+  ) {
     return res.status(400).json({ msg: "Telefone é obrigatório!" });
   }
   if (req.body?.password.length < 6) {
@@ -167,17 +210,34 @@ async function updateUser(req, res) {
       .json({ msg: "Senha deve ter pelo menos 6 caracteres!" });
   }
   if (req.body?.email && !validarEmail(req.body?.email)) {
-    return res
-      .status(400)
-      .json({ msg: "Email inválido!" });
+    return res.status(400).json({ msg: "Email inválido!" });
   }
 
-  const { id, nome, nome_guerra, cpf, email, password, matricula, telefone, id_patente } = req.body;
+  const {
+    id,
+    nome,
+    nome_guerra,
+    cpf,
+    email,
+    password,
+    matricula,
+    telefone,
+    id_patente,
+  } = req.body;
 
   // 1. Validações Iniciais
   if (!id || isNaN(id))
     return res.status(400).json({ msg: "ID inválido ou ausente" });
-  if (!nome || !cpf || !email || !password || !matricula || !id_patente || !nome_guerra || !telefone) {
+  if (
+    !nome ||
+    !cpf ||
+    !email ||
+    !password ||
+    !matricula ||
+    !id_patente ||
+    !nome_guerra ||
+    !telefone
+  ) {
     return res.status(400).json({ msg: "Dados incompletos!" });
   }
   //Higienização dos dados
@@ -247,6 +307,7 @@ async function updateUser(req, res) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
+
 /*************LISTAR ALL****************/
 async function readAllPm(req, res) {
   return res.status(201).json({ msg: "Função em desenvolvimento!" });
@@ -279,6 +340,7 @@ async function readAllPm(req, res) {
   //     return res.status(500).json({ msg: "Erro do servidor!" });
   //   });
 }
+
 async function readAllPatente(req, res) {
   await database
     .select("*")
@@ -304,6 +366,7 @@ async function readAllPatente(req, res) {
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
+
 /*************ADMIN CRUD****************/
 function loginAdmin(req, res) {
   if (!req.body?.cpf || req.body?.cpf === "") {
@@ -495,8 +558,11 @@ async function allAdmins(req, res) {
 }
 
 async function deleteAdmin(req, res) {
-  const { id } = req.params;
   try {
+    const { id } = req?.params;
+    if (!id || id === "" || isNaN(id)) {
+      return res.status(400).json({ msg: "ID é obrigatório!" });
+    }
     const userExists = await database("admins").where({ id_admin: id }).first();
     if (!userExists) {
       return res.status(404).json({ msg: "Administrador não encontrado" });
@@ -566,10 +632,12 @@ async function updateAdmin(req, res) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
+
 module.exports = {
   readUsers: readUsers,
   createUser: createUser,
   deleteUser: deleteUser,
+  activeuser: activeuser,
   updateUser: updateUser,
 
   readAllPm: readAllPm,
