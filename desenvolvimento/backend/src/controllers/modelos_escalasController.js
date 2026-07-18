@@ -11,7 +11,7 @@ const validarPeriodoEscala = require("../functions/validarPeriodoEscala");
 
 // const somenteTelefone = require("../functions/somenteTelefone");
 
-// async function createModeloEscala(req, res) {
+// async function createEscala(req, res) {
 //   nome = limparEspaco(req.body.nome);
 //   codigo = limparEspaco(req.body.codigo);
 //   descricao = limparEspaco(req.body.descricao);
@@ -57,28 +57,21 @@ const validarPeriodoEscala = require("../functions/validarPeriodoEscala");
 //     });
 //   }
 // }
-// async function deleteSoftModeloEscala(req, res) {
-//   const { id } = req.params;
-//   try {
-//     const modeloExists = await database("modelos_escala")
-//       .where({ id: id, ativo: true })
-//       .first();
+async function deleteEscala(req, res) {
+  const { id } = req.params;
+  try {
+    const userExists = await database("tbl_escala").where({ id_escala: id }).first();
+    if (!userExists) {
+      return res.status(404).json({ msg: "Escala não encontrada" });
+    }
 
-//     if (modeloExists) {
-//       await database("modelos_escala")
-//         .where({ id: id })
-//         .update({ ativo: false, updated_at: new Date() });
+    await database("tbl_escala").where({ id_escala: id }).del();
 
-//       return res
-//         .status(200)
-//         .json({ msg: "Modelo de escala deletado com sucesso!" });
-//     } else {
-//       return res.status(404).json({ msg: "Modelo de escala não encontrado" });
-//     }
-//   } catch (error) {
-//     return res.status(500).json({ msg: "Erro interno do servidor" });
-//   }
-// }
+    return res.status(200).json({ msg: "Escala deletada com sucesso!" });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
 
 // // async function deleteSoftModeloEscala(req, res) {
 // //   const { id } = req.params;
@@ -103,8 +96,7 @@ const validarPeriodoEscala = require("../functions/validarPeriodoEscala");
 // //   }
 // // }
 
-async function createModeloEscala(req, res) {
-  //////////////////////
+async function createEscala(req, res) {
   console.log("Dados recebidos para criação de modelo de escala:", req.body);
   const token = req.headers.authorization.split(" ")[1];
   jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
@@ -318,13 +310,74 @@ async function create_guarnicao(req, res) {
   //     return res.status(502).json({ msg: "Erro do servidor", error: err });
   //   });
 }
+async function listarEscalaGuarnicoes(req, res) {
+console.log("ID recebido para listar guarnições da escala:", req.body);
+  if (!req.body?.id || isNaN(req.body?.id))
+    return res.status(400).json({ msg: "ID inválido ou ausente" });
+  const { id } = req.body;
+  
 
+    await database
+      .select(
+        "tbl_escala.id_escala",
+        "tbl_escala.nome_escala",
+        "tbl_escala.descricao_escala",
+        "tbl_escala.data_inicio",
+        "tbl_escala.data_fim",
+        "tbl_escala.is_active AS ativo",
+        "tbl_escala.created_at",
+        "tbl_escala.updated_at",
+        "tbl_guarnicao.id_guarnicao",
+        "tbl_guarnicao.data_guarnicao",
+        "tbl_guarnicao.hora_guarnicao",
+        "tbl_guarnicao.dados_guarnicao",
+        "tbl_guarnicao.dayofyear",
+        "tbl_guarnicao.grupamento",
+        "tbl_guarnicao.created_at AS guarnicao_criada_em",
+        "tbl_guarnicao.updated_at AS guarnicao_atualizada_em",
+      )
+      .from("tbl_escala")
+      .leftJoin("tbl_guarnicao", "tbl_escala.id_escala", "tbl_guarnicao.fk_id_escala")
+      .where("tbl_escala.id_escala", id)
+      .then((data) => {
+        const arrayDados = [];
+        if (data.length > 0) {
+          for (let element of data) {
+            arrayDados.push({
+              id_escala: element.id_escala,
+              nome: element.nome_escala || "Nome não cadastrado",
+              descricao: element.descricao_escala || "Descrição não cadastrada",
+              data_inicio: element.data_inicio || "01/01/2025",
+              data_fim: element.data_fim || "01/01/2025",
+              created_at: element.created_at || "01/01/2025",
+              updated_at: element.updated_at || "01/01/2025",
+              id_guarnicao: element.id_guarnicao || "N/A",
+              data_guarnicao: element.data_guarnicao || "01/01/2025",
+              hora_guarnicao: element.hora_guarnicao || "00:00",
+              dados_guarnicao: element.dados_guarnicao || null,
+              dayofyear: element.dayofyear || 1,
+              grupamento: element.grupamento || "N",
+              guarnicao_criada_em: element.guarnicao_criada_em || "01/01/2025",
+              guarnicao_atualizada_em: element.guarnicao_atualizada_em || "01/01/2025",
+            });
+          }
+          return res.status(200).json(arrayDados);
+        } else {
+          return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
+        }
+      })
+      .catch((error) => {
+        console.error("Erro ao listar usuários:", error);
+        return res.status(500).json({ msg: "Erro do servidor!" });
+      });
+}
 module.exports = {
-  createModeloEscala: createModeloEscala,
+  createEscala: createEscala,
   //   deleteSoftModeloEscala: deleteSoftModeloEscala,
   listarEscalas: listarEscalas,
   getEscalaById: getEscalaById,
-
+  deleteEscala: deleteEscala,
+listarEscalaGuarnicoes:listarEscalaGuarnicoes,
   /*
   OUTRA ABORDAGEM PARA O CRUD DE MODELOS DE ESCALA:
   */

@@ -1,10 +1,6 @@
-function validateEmail(req, res) {
+function validarEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(req.body.email)) {
-    res.status(403).json({ msg: "Email inválido!" });
-    return false;
-  }
-  return true;
+  return emailRegex.test(email);
 }
 
-module.exports = validateEmail;
+module.exports = validarEmail;

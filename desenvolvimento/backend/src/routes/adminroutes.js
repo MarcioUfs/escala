@@ -21,5 +21,6 @@ router.post('/createadmin', verifyJwt, isAdmin, adminController.createAdmin);
 router.get('/getadmin', verifyJwt, isAdmin, adminController.getAdmin);
 router.get('/alladmins', verifyJwt, isAdmin, adminController.allAdmins);
 router.delete('/deleteadmin/:id', verifyJwt, isAdmin, adminController.deleteAdmin);
+router.put('/updateadmin', verifyJwt, isAdmin, adminController.updateAdmin);
 
 module.exports = router;

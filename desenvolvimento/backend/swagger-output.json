@@ -64,6 +64,9 @@
                 "nome": {
                   "example": "any"
                 },
+                "id_patente": {
+                  "example": "any"
+                },
                 "telefone": {
                   "example": "any"
                 },
@@ -129,16 +132,16 @@
             "schema": {
               "type": "object",
               "properties": {
-                "telefone": {
-                  "example": "any"
-                },
-                "nome_guerra": {
+                "id_patente": {
                   "example": "any"
                 },
                 "id": {
                   "example": "any"
                 },
                 "nome": {
+                  "example": "any"
+                },
+                "nome_guerra": {
                   "example": "any"
                 },
                 "cpf": {
@@ -151,6 +154,9 @@
                   "example": "any"
                 },
                 "matricula": {
+                  "example": "any"
+                },
+                "telefone": {
                   "example": "any"
                 }
               }
@@ -180,6 +186,24 @@
       }
     },
     "/allpm": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/allpatentes": {
       "get": {
         "tags": [],
         "description": "",
@@ -228,6 +252,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -262,11 +289,17 @@
           }
         ],
         "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
           },
           "500": {
             "description": "Internal Server Error"
@@ -350,6 +383,52 @@
         }
       }
     },
+    "/updateadmin": {
+      "put": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                },
+                "nome": {
+                  "example": "any"
+                },
+                "cpf": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/getUser": {
       "get": {
         "tags": [],
@@ -399,9 +478,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "400": {
             "description": "Bad Request"
           },
@@ -410,9 +486,6 @@
           },
           "403": {
             "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -426,14 +499,17 @@
         "description": "",
         "parameters": [],
         "responses": {
-          "203": {
-            "description": "Non-Authoritative Information"
+          "200": {
+            "description": "OK"
           },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -463,20 +539,33 @@
         }
       }
     },
-    "/guarnicao": {
-      "post": {
+    "/excluir/{id}": {
+      "delete": {
         "tags": [],
         "description": "",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
-          "203": {
-            "description": "Non-Authoritative Information"
+          "200": {
+            "description": "OK"
           },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -492,10 +581,10 @@
             "schema": {
               "type": "object",
               "properties": {
-                "nome": {
+                "nome_escala": {
                   "example": "any"
                 },
-                "descricao": {
+                "descricao_escala": {
                   "example": "any"
                 },
                 "data_inicio": {
@@ -520,9 +609,61 @@
           },
           "403": {
             "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/escala-guarnicoes": {
+      "post": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
-          "409": {
-            "description": "Conflict"
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/guarnicao": {
+      "post": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
         }
       }

@@ -8,10 +8,20 @@ const somenteMatricula = require("../functions/somenteMatricula");
 const tratarTelefone = require("../functions/tratarTelefone");
 
 function login(req, res) {
-  let cpfOnly = somenteCpf(req.body.cpf);
-  if (cpfOnly === 0) {
-    return res.status(401).send({ msg: "Credencial inválida!" });
+  if (
+    !req.body?.cpf ||
+    req.body?.cpf === "" ||
+    somenteCpf(req.body?.cpf) === 0
+  ) {
+    return res.status(400).json({ msg: "CPF é obrigatório!" });
   }
+
+  if (!req.body?.password || req.body?.password === "") {
+    return res.status(400).json({ msg: "Senha é obrigatória!" });
+  }
+
+  let cpfOnly = somenteCpf(req.body.cpf);
+
   database
     .select()
     .table("users")
@@ -68,8 +78,24 @@ async function getUser(req, res) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     } else {
       await database
-        .table("users")
+        .table(
+          "users.id_user",
+          "users.email",
+          "users.cpf",
+          "users.nome",
+          "users.matricula",
+          "users.role",
+          "users.telefone",
+          "users.nome_guerra",
+          "users.is_active AS ativo",
+          "users.updated_at",
+          "tbl_patentes.id_patente",
+          "tbl_patentes.nome_patente",
+          "tbl_patentes.sigla_patente",
+        )
         .where({ id_user: decoded.id_user })
+        .from("users")
+        .leftJoin("tbl_patentes", "users.id_patente", "tbl_patentes.id_patente")
         .then((data) => {
           if (data.length <= 0) {
             return res.status(404).send({ msg: "Usuário não encontrado" });
@@ -81,9 +107,14 @@ async function getUser(req, res) {
               matricula: tratarMatricula(data[0].matricula),
               telefone: tratarTelefone(data[0].telefone),
               nome_guerra: data[0].nome_guerra,
-              patente: "1º SGT",
+              id_patente: data[0].id_patente || "---",
+              patente_nome: data[0].nome_patente || "---",
+              patente_sigla: data[0].sigla_patente || "---",
+              ativo: data[0].is_active ? "Ativo" : "Inativo",
+              updated_at: data[0].updated_at,
+              // patente: data[0].patente || "---",
               id: data[0].id_user,
-              role: data[0].role,
+              perfil: data[0].role,
             };
             return res.status(200).send(userData);
           }
@@ -95,28 +126,45 @@ async function getUser(req, res) {
   });
 }
 
-
 async function updatePassword(req, res) {
+   console.log(`${!req.body?.newPassword} || ${req.body?.newPassword === ""} || ${req.body?.newPassword.length < 6}`);
+  if(!req.body?.newPassword || req.body?.newPassword === "" ||req.body?.newPassword.length < 6) {
+    return res.status(400).json({ msg: "A nova senha deve ter pelo menos 6 caracteres!" });
+  }
+  if(!req.body?.oldPassword || req.body?.oldPassword === "" ||req.body?.oldPassword.length < 6) {
+    return res.status(400).json({ msg: "A senha antiga deve ter pelo menos 6 caracteres!" });
+  }
+  if(!req.body?.confirmNewPassword || req.body?.confirmNewPassword === "" ||req.body?.confirmNewPassword.length < 6) {
+    return res.status(400).json({ msg: "A confirmação da nova senha deve ter pelo menos 6 caracteres!" });
+  }
   // 1. Extração e Validação Inicial dos Campos
   const { oldPassword, newPassword, confirmNewPassword } = req.body;
-  if (!oldPassword || !newPassword || !confirmNewPassword) {
-    return res.status(400).json({ msg: "Preencha a senha antiga, a nova e a confirmação." });
-  }
+  // if (!oldPassword || !newPassword || !confirmNewPassword) {
+  //   return res
+  //     .status(400)
+  //     .json({ msg: "Preencha a senha antiga, a nova e a confirmação." });
+  // }
 
   if (newPassword !== confirmNewPassword) {
-    return res.status(400).json({ msg: "A nova senha e a confirmação não coincidem." });
+    return res
+      .status(400)
+      .json({ msg: "A nova senha e a confirmação não coincidem." });
   }
-  
+
   if (newPassword === oldPassword) {
-    return res.status(400).json({ msg: "A nova senha deve ser diferente da senha antiga." });
+    return res
+      .status(400)
+      .json({ msg: "A nova senha deve ser diferente da senha antiga." });
   }
 
   // 2. Identificação do Usuário via Token
   // Assumindo que seu middleware de auth coloca o ID do dono do token em req.userId
-  const userId = req.decodedData.id_user; 
+  const userId = req.decodedData.id_user;
 
   if (!userId) {
-    return res.status(401).json({ msg: "Acesso negado. Usuário não autenticado." });
+    return res
+      .status(401)
+      .json({ msg: "Acesso negado. Usuário não autenticado." });
   }
 
   try {
@@ -127,7 +175,9 @@ async function updatePassword(req, res) {
       .where({ id_user: userId });
 
     if (users.length === 0) {
-      return res.status(404).json({ msg: "Usuário não encontrado no sistema." });
+      return res
+        .status(404)
+        .json({ msg: "Usuário não encontrado no sistema." });
     }
 
     const user = users[0];
@@ -135,7 +185,9 @@ async function updatePassword(req, res) {
     // 4. Comparar a senha antiga enviada com o hash salvo no banco
     bcryptjs.compare(oldPassword, user.password, function (err, isMatch) {
       if (err) {
-        return res.status(500).json({ msg: "Erro ao verificar a credencial antiga", error: err });
+        return res
+          .status(500)
+          .json({ msg: "Erro ao verificar a credencial antiga", error: err });
       }
 
       if (!isMatch) {
@@ -145,106 +197,111 @@ async function updatePassword(req, res) {
       // 5. Se a senha antiga estiver correta, geramos o hash da nova senha
       bcryptjs.genSalt(10, function (err, salt) {
         if (err) {
-          return res.status(500).json({ msg: "Erro ao gerar parâmetros de segurança", error: err });
+          return res
+            .status(500)
+            .json({ msg: "Erro ao gerar parâmetros de segurança", error: err });
         }
 
         bcryptjs.hash(newPassword, salt, async function (err, hash) {
           if (err) {
-            return res.status(500).json({ msg: "Erro ao criptografar a nova senha", error: err });
+            return res
+              .status(500)
+              .json({ msg: "Erro ao criptografar a nova senha", error: err });
           }
 
           // 6. Atualizar a senha no banco de dados
           try {
-            await database
-              .table("users")
-              .where({ id_user: userId })
-              .update({
-                password: hash,
-                updated_at: new Date(),
-              });
+            await database.table("users").where({ id_user: userId }).update({
+              password: hash,
+              updated_at: new Date(),
+            });
 
-            return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
-
+            return res
+              .status(200)
+              .json({ msg: "Senha atualizada com sucesso!" });
           } catch (updateError) {
-            return res.status(500).json({ msg: "Erro interno ao salvar a nova senha", error: updateError });
+            return res.status(500).json({
+              msg: "Erro interno ao salvar a nova senha",
+              error: updateError,
+            });
           }
         });
       });
     });
-
   } catch (dbError) {
-    return res.status(500).json({ msg: "Erro de conexão com o banco de dados", error: dbError });
+    return res
+      .status(500)
+      .json({ msg: "Erro de conexão com o banco de dados", error: dbError });
   }
 }
 
 //SEM USO AINDA
-async function updateMyUser(req, res) {
-  if (isNaN(req.params.id)) {
-    return res.status(404).send({ msg: "Usuário não encontrado" });
-  }
+// async function updateMyUser(req, res) {
+//   if (isNaN(req.params.id)) {
+//     return res.status(404).send({ msg: "Usuário não encontrado" });
+//   }
 
-  // Verifica se os campos obrigatórios estão preenchidos
-  if (!req.body.nome || !req.body.cpf || !req.body.email) {
-    return res.status(403).send({ msg: "Dados incompletos!" });
-  }
+//   // Verifica se os campos obrigatórios estão preenchidos
+//   if (!req.body.nome || !req.body.cpf || !req.body.email) {
+//     return res.status(403).send({ msg: "Dados incompletos!" });
+//   }
 
-  const user = {
-    email: req.body.email,
-    cpf: req.body.cpf,
-    nome: req.body.nome,
-  };
+//   const user = {
+//     email: req.body.email,
+//     cpf: req.body.cpf,
+//     nome: req.body.nome,
+//   };
 
-  try {
-    // Atualiza os dados do usuário no banco de dados
-    await database
-      .table("users")
-      .where({ id_user: req.params.id })
-      .update(user)
-      .then((data) => {
-        if (data === 0) {
-          return res.status(404).send({ msg: "Usuário não encontrado" });
-        } else {
-          return res.status(200).json({ msg: "Atualizado com sucesso!" });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        return res.status(500).json({ msg: "Erro interno do servidor" });
-      });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ msg: "Erro interno do servidor" });
-  }
-}
+//   try {
+//     // Atualiza os dados do usuário no banco de dados
+//     await database
+//       .table("users")
+//       .where({ id_user: req.params.id })
+//       .update(user)
+//       .then((data) => {
+//         if (data === 0) {
+//           return res.status(404).send({ msg: "Usuário não encontrado" });
+//         } else {
+//           return res.status(200).json({ msg: "Atualizado com sucesso!" });
+//         }
+//       })
+//       .catch((err) => {
+//         console.error(err);
+//         return res.status(500).json({ msg: "Erro interno do servidor" });
+//       });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ msg: "Erro interno do servidor" });
+//   }
+// }
 
-async function catchUser(req, res) {
-  await database
-    .table("users")
-    .where({ id_user: req.body.id })
-    .then((data) => {
-      if (data.length <= 0) {
-        return res.status(404).send({ msg: "Usuário não encontrado" });
-      } else {
-        let result = JSON.parse(`{
-                "nome":"${data[0].nome}",
-                "cpf":"${data[0].cpf}",
-                "email":"${data[0].email}",
-                "role":"${data[0].role}",
-                "id":"${data[0].id_user}"
-            }`);
-        return res.status(200).send(result);
-      }
-    })
-    .catch((error) => {
-      return res.status(500).json({ msg: `"Erro do servidor ${error}"` });
-    });
-}
-
+// async function catchUser(req, res) {
+//   await database
+//     .table("users")
+//     .where({ id_user: req.body.id })
+//     .then((data) => {
+//       if (data.length <= 0) {
+//         return res.status(404).send({ msg: "Usuário não encontrado" });
+//       } else {
+//         let result = JSON.parse(`{
+//                 "nome":"${data[0].nome}",
+//                 "cpf":"${data[0].cpf}",
+//                 "email":"${data[0].email}",
+//                 "role":"${data[0].role}",
+//                 "id":"${data[0].id_user}"
+//             }`);
+//         return res.status(200).send(result);
+//       }
+//     })
+//     .catch((error) => {
+//       return res.status(500).json({ msg: `"Erro do servidor ${error}"` });
+//     });
+// }
 
 module.exports = {
   login: login,
   getUser: getUser,
   updatePassword: updatePassword,
-  updateMyUser: updateMyUser,
-  catchUser: catchUser,
+  // updateMyUser: updateMyUser,
+  // catchUser: catchUser,
 };
