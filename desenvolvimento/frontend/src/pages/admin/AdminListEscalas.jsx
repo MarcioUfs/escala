@@ -20,19 +20,18 @@
 import React, { useState, useEffect } from 'react';
 // Lembre-se de importar sua instância de conexão
 import api from "../../services/api";
+import { useNavigate } from 'react-router-dom';
 
 export default function TelaListarEscalas() {
   const [escalas, setEscalas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Busca os dados assim que o componente é montado
   useEffect(() => {
-    carregarEscalas();
-  }, []);
-
-  const carregarEscalas = async () => {
+      const carregarEscalas = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -52,24 +51,31 @@ export default function TelaListarEscalas() {
     }
   };
 
+    carregarEscalas();
+  }, []);
+
+
+
   // Funções de ação (Prontas para você conectar ao seu React Router ou modais)
   const handleVer = (id) => {
     console.log("Navegar para visualização da escala:", id);
     // Ex: navigate(`/admin/escala/${id}`);
+    navigate(`/admin/create-escala`);
   };
 
   const handleEditar = (id) => {
     console.log("Navegar para edição da escala:", id);
     // Ex: navigate(`/admin/editar-escala/${id}`);
+    navigate(`/admin/create-escala`);
   };
 
   const handleExcluir = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir esta escala? Esta ação não pode ser desfeita.")) {
       try {
-        await api.delete(`/escala/excluir/${id}`);
+        await api.delete(`/escalas/excluir/${id}`);
         // Atualiza a lista removendo o item excluído visualmente
         setEscalas(escalas.filter(escala => escala.id_escala !== id));
-      } catch (err) {
+      } catch {
         alert("Erro ao tentar excluir a escala.");
       }
     }
@@ -115,15 +121,15 @@ export default function TelaListarEscalas() {
             </div>
             
             {/* Botão que aponta para a rota de criação construída na etapa anterior */}
-            <a 
-              href="/admin/criar-escala" 
+            <button 
+              onClick={() => navigate("/admin/create-escala")}
               className="flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
               </svg>
               Nova Escala
-            </a>
+            </button>
           </div>
         </header>
 

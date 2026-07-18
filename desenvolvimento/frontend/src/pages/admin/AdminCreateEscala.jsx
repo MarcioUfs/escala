@@ -1,447 +1,269 @@
-// import React, { useState } from 'react';
-
-// export default function TelaGerenciamentoEscala() {
-//   // Estados do formulário de criação
-//   const [formData, setFormData] = useState({
-//     nome: '',
-//     descricao: '',
-//     data_inicio: '',
-//     data_fim: ''
-//   });
-  
-//   // Estados de feedback e UI
-//   const [status, setStatus] = useState({ type: '', msg: '' });
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [searchTerm, setSearchTerm] = useState('');
-
-//   // Simulação de dados estáticos baseados no modelo em PDF para renderização da grade
-//   const turnos = ['1º TURNO- 07h as 15h', '2º TURNO- 15h as 23h', '3º TURNO- 23h as 07h'];
-//   const diasMes = Array.from({ length: 31 }, (_, i) => i + 1);
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData(prev => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsLoading(true);
-//     setStatus({ type: '', msg: '' });
-
-//     try {
-//       // Alterado para POST pois o backend recebe os parâmetros no req.body
-//       const response = await fetch('/admin/criar-escala', {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(formData),
-//       });
-
-//       const data = await response.json();
-
-//       if (response.ok || response.status === 201) {
-//         setStatus({ type: 'success', msg: data.msg || 'Modelo de escala criado com sucesso!' });
-//         setFormData({ nome: '', descricao: '', data_inicio: '', data_fim: '' });
-//       } else {
-//         // Trata os erros 400 e 409 mapeados no seu backend
-//         setStatus({ type: 'error', msg: data.msg || 'Erro ao processar a solicitação.' });
-//       }
-//     } catch (error) {
-//       setStatus({ type: 'error', msg: 'Erro de conexão com o servidor. Verifique a rede. '+ error.message });
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
-//       <div className="max-w-7xl mx-auto space-y-6">
-        
-//         {/* Cabeçalho */}
-//         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-//           <div>
-//             <h1 className="text-2xl font-bold text-gray-900">E-Escala | Gerenciamento</h1>
-//             <p className="text-sm text-gray-500">Centro Integrado de Operações de Segurança Pública</p>
-//           </div>
-//           <div className="mt-4 md:mt-0 relative w-full md:w-72">
-//             <input
-//               type="text"
-//               placeholder="Buscar militares ou escalas..."
-//               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//               value={searchTerm}
-//               onChange={(e) => setSearchTerm(e.target.value)}
-//             />
-//             <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-//             </svg>
-//           </div>
-//         </header>
-
-//         {/* Formulário de Criação de Escala */}
-//         <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-//           <h2 className="text-lg font-semibold border-b pb-2 mb-4">Nova Escala Base</h2>
-          
-//           {status.msg && (
-//             <div className={`p-4 mb-4 rounded-md ${status.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-//               {status.msg}
-//             </div>
-//           )}
-
-//           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//             <div className="space-y-1">
-//               <label className="text-sm font-medium text-gray-700">Nome da Escala *</label>
-//               <input
-//                 type="text"
-//                 name="nome"
-//                 required
-//                 value={formData.nome}
-//                 onChange={handleInputChange}
-//                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-//                 placeholder="Ex: Escala Dez/Jan"
-//               />
-//             </div>
-            
-//             <div className="space-y-1 lg:col-span-1">
-//               <label className="text-sm font-medium text-gray-700">Descrição</label>
-//               <input
-//                 type="text"
-//                 name="descricao"
-//                 value={formData.descricao}
-//                 onChange={handleInputChange}
-//                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-//                 placeholder="Detalhes opcionais..."
-//               />
-//             </div>
-
-//             <div className="space-y-1">
-//               <label className="text-sm font-medium text-gray-700">Data Início *</label>
-//               <input
-//                 type="date"
-//                 name="data_inicio"
-//                 required
-//                 value={formData.data_inicio}
-//                 onChange={handleInputChange}
-//                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-//               />
-//             </div>
-
-//             <div className="space-y-1">
-//               <label className="text-sm font-medium text-gray-700">Data Fim *</label>
-//               <input
-//                 type="date"
-//                 name="data_fim"
-//                 required
-//                 value={formData.data_fim}
-//                 onChange={handleInputChange}
-//                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-//               />
-//             </div>
-
-//             <div className="lg:col-span-4 flex justify-end mt-2">
-//               <button
-//                 type="submit"
-//                 disabled={isLoading}
-//                 className={`px-6 py-2 rounded-md text-white font-medium flex items-center transition-colors ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-//               >
-//                 {isLoading ? 'Processando...' : (
-//                   <>
-//                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-//                     Gerar Modelo
-//                   </>
-//                 )}
-//               </button>
-//             </div>
-//           </form>
-//         </section>
-
-//         {/* Visualização da Grade da Escala (Layout inspirado no PDF) */}
-//         <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-//           <div className="flex justify-between items-center mb-4">
-//             <h2 className="text-lg font-semibold">Distribuição de Guarnições</h2>
-//             <button className="text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 px-3 py-1 rounded">
-//               Editar Grade Ativa
-//             </button>
-//           </div>
-          
-//           <div className="overflow-x-auto">
-//             <table className="min-w-full border-collapse text-center text-sm">
-//               <thead>
-//                 <tr className="bg-gray-100">
-//                   <th className="border border-gray-300 p-2 text-left w-48 sticky left-0 bg-gray-100 z-10">Dias do Mês</th>
-//                   {diasMes.map(dia => (
-//                     <th key={dia} className="border border-gray-300 p-2 min-w-[40px]">{dia}</th>
-//                   ))}
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {turnos.map((turno, index) => (
-//                   <tr key={index} className="hover:bg-gray-50 transition-colors">
-//                     <td className="border border-gray-300 p-2 text-left font-medium text-xs sticky left-0 bg-white z-10">{turno}</td>
-//                     {diasMes.map(dia => (
-//                       <td key={dia} className="border border-gray-300 p-2 cursor-pointer hover:bg-blue-50 text-gray-700 font-semibold">
-//                         {/* Simulação: as letras seriam preenchidas dinamicamente pelo DB */}
-//                         {['A', 'B', 'C', 'D', 'E', 'F'][(dia + index) % 6]}
-//                       </td>
-//                     ))}
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         </section>
-
-//         {/* Painel de Efetivo / Despachantes */}
-//         <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-//           <h2 className="text-lg font-semibold mb-4">Efetivo por Guarnição (Despachantes)</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-//             {/* Componente base para renderizar os cartões das guarnições */}
-//             {['A', 'B', 'C', 'D', 'E', 'F'].map((guarnicao) => (
-//               <div key={guarnicao} className="border border-gray-200 rounded-md p-4 hover:shadow-md transition-shadow">
-//                 <div className="flex justify-between items-center border-b pb-2 mb-2">
-//                   <h3 className="font-bold text-blue-800 text-lg">Equipe {guarnicao}</h3>
-//                   <div className="flex space-x-2">
-//                     <button className="text-gray-400 hover:text-blue-600" title="Adicionar Militar">
-//                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-//                     </button>
-//                   </div>
-//                 </div>
-//                 <ul className="space-y-2 text-sm text-gray-600 max-h-40 overflow-y-auto pr-2">
-//                   <li className="flex justify-between items-center group">
-//                     <span>3° SGT FULANO (Exemplo)</span>
-//                     <button className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" title="Substituir/Remover">
-//                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-//                     </button>
-//                   </li>
-//                   <li className="flex justify-between items-center group">
-//                     <span>CB CICLANO (Exemplo)</span>
-//                     <button className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" title="Substituir/Remover">
-//                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-//                     </button>
-//                   </li>
-//                 </ul>
-//               </div>
-//             ))}
-//           </div>
-//         </section>
-
-//       </div>
-//     </div>
-//   );
-// }
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  Trash2,
+  FileText,
+  Calendar,
+  RefreshCw,
+  X,
+  UserPlus,
+} from "lucide-react";
 import api from "../../services/api";
 
-export default function TelaGerenciamentoEscala() {
-  // Estado atualizado para contemplar todos os campos solicitados
-  const [formData, setFormData] = useState({
-    nome_escala: '',
-    descricao_escala: '',
-    data_inicio: '',
-    data_fim: '',
-    fk_id_guarnicao: null, // Padrão null conforme o backend
-    fk_id_admin: '',       // Será preenchido via auth (login por CPF) no backend ou aqui se necessário
-    fk_id_setor: ''        // Pode ser omitido se o req.user.fk_id_setor assumir o controle no backend
-  });
-  
-  const [status, setStatus] = useState({ type: '', msg: '' });
+export default function TelaGerenciamentoEscala({ idEscalaAlvo = 100000 }) {
+  // Estados para gerenciar os dados da escala e equipes
+  const [guarnicoes, setGuarnicoes] = useState([]);
+  const [escalaInfo, setEscalaInfo] = useState(null);
+
+  // Estados para gerenciar alertas de sucesso/erro
+  const [status, setStatus] = useState({ type: "", msg: "" });
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const turnos = ['1º TURNO- 07h as 15h', '2º TURNO- 15h as 23h', '3º TURNO- 23h as 07h'];
-  const diasMes = Array.from({ length: 31 }, (_, i) => i + 1);
+  // Estados do Modal de Inclusão de Militar
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEquipe, setSelectedEquipe] = useState(null);
+  const [searchMilitarTerm, setSearchMilitarTerm] = useState("");
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedMilitarToInclude, setSelectedMilitarToInclude] =
+    useState(null);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const inicio = new Date(guarnicoes[0]?.data_inicio);
+  const fim = new Date(guarnicoes[0]?.data_fim);
+  const totalDias = Math.round((fim - inicio) / 86400000) + 1;
+  const diasMes = Array.from({ length: totalDias }, (_, i) => {
+    const data = new Date(inicio);
+    data.setDate(inicio.getDate() + i);
+    return data.getDate(); 
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setStatus({ type: '', msg: '' });
+  // Resultado será: [28, 29, 30, 31, 1, 2, 3...]
 
-    // Preparando o payload. Enviamos tanto os nomes solicitados na diretriz (nome_escala) 
-    // quanto os nomes que o seu código backend lê no req.body (req.body.nome).
-    const payload = {
-      nome_escala: formData.nome_escala,
-      descricao_escala: formData.descricao_escala,
-      data_inicio: formData.data_inicio,
-      data_fim: formData.data_fim,
-      fk_id_setor: 3000 // Se não fornecido, envia null
-    //   fk_id_setor: formData.fk_id_setor ? formData.fk_id_setor : 3000 // Se não fornecido, envia null
+  const turnosConfig = [
+    { label: "1ºT 07h as 15h", horaPrefix: "07" },
+    { label: "2ºT 15h as 23h", horaPrefix: "15" },
+    { label: "3ºT 23h as 07h", horaPrefix: "23" },
+  ];
+  // Busca inicial dos dados das guarnições da escala
+  useEffect(() => {
+    const fetchEscalaData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.post("/escalas/escala-guarnicoes", {
+          id: idEscalaAlvo,
+        });
+        console.log("Dados recebidos do backend:", response.data);
+        if (response.data && response.data.length > 0) {
+          setGuarnicoes(response.data);
+          setEscalaInfo({
+            nome: response.data[0].nome,
+            descricao: response.data[0].descricao,
+          });
+        }
+      } catch (error) {
+        setStatus({
+          type: "error",
+          msg:
+            error.response?.data?.msg ||
+            "Erro ao carregar dados das guarnições.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
- try {
-      // Usando a sua instância configurada (certifique-se de ter feito o import, ex: import api from '../services/api';)
-      const response = await api.post('/escala/criar-escala', payload);
+    fetchEscalaData();
+  }, [idEscalaAlvo]);
 
-      // Se passou pelo await sem cair no catch, é sucesso (status 200, 201)
-      setStatus({ 
-        type: 'success', 
-        msg: response.data.msg || 'Modelo de escala criado com sucesso!' 
-      });
-      
-      // Limpa o formulário após sucesso
-      setFormData(prev => ({
-        ...prev,
-        nome_escala: '',
-        descricao_escala: '',
-        data_inicio: '',
-        data_fim: ''
-      }));
+  // Função para abrir o modal e buscar todos os militares
+  const handleOpenModal = async (grupamento) => {
+    setSelectedEquipe(grupamento);
+    setIsModalOpen(true);
+    setSearchMilitarTerm("");
+    setSelectedMilitarToInclude(null);
 
+    try {
+      const response = await api.get("/admin/allusers");
+      setAllUsers(response.data);
     } catch (error) {
-      console.error("Erro na requisição:", error);
-      
-      // Verifica se o erro veio com uma resposta do backend (ex: 400 ou 409 mapeados no seu Node)
-      if (error.response && error.response.data) {
-        setStatus({ 
-          type: 'error', 
-          msg: error.response.data.msg || 'Erro ao criar escala. Verifique os dados.' 
-        });
-      } else {
-        // Erro de rede ou servidor fora do ar
-        setStatus({ 
-          type: 'error', 
-          msg: 'Erro de comunicação com o servidor. Verifique se o backend está rodando.' 
-        });
-      }
-    } finally {
-      setIsLoading(false);
+      console.error("Erro ao buscar lista de militares", error);
+      // Fallback de mock temporário caso a rota falhe
+      setAllUsers([
+        {
+          id_user: 20001,
+          nome_guerra: "SGT Silva",
+          graduacao: "3° SGT",
+          matricula: "12345",
+        },
+        {
+          id_user: 20002,
+          nome_guerra: "CB Oliveira",
+          graduacao: "CB",
+          matricula: "67890",
+        },
+        {
+          id_user: 20003,
+          nome_guerra: "SD Alves",
+          graduacao: "SD",
+          matricula: "54321",
+        },
+      ]);
     }
   };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEquipe(null);
+  };
+
+  const handleIncludeMilitar = async () => {
+    if (!selectedMilitarToInclude) return;
+
+    try {
+      /* Ponto de injeção da requisição pronta para inserir o militar na equipe
+      await api.post('/escalas/inserir-militar', {
+        id_escala: idEscalaAlvo,
+        grupamento: selectedEquipe,
+        id_user: selectedMilitarToInclude.id_user
+      });
+      */
+
+      setStatus({
+        type: "success",
+        msg: `Militar incluído na Equipe ${selectedEquipe} com sucesso!`,
+      });
+      handleCloseModal();
+    } catch {
+      setStatus({ type: "error", msg: "Falha ao incluir militar na equipe." });
+    }
+  };
+
+  const getFilteredAvailableUsers = () => {
+    const equipeAtual = guarnicoes.find((g) => g.grupamento === selectedEquipe);
+    const membrosAtuaisIds =
+      equipeAtual?.dados_guarnicao?.grupamento_escala?.map((m) => m.id_user) ||
+      [];
+
+    return allUsers.filter(
+      (user) =>
+        !membrosAtuaisIds.includes(user.id_user) &&
+        (user.nome_guerra
+          ?.toLowerCase()
+          .includes(searchMilitarTerm.toLowerCase()) ||
+          user.matricula?.includes(searchMilitarTerm)),
+    );
+  };
+  // console.log(guarnicoes[0]?.data_guarnicao);
+  // console.log(guarnicoes[0]?.data_inicio);
+  // Função central para popular o quadro de grade de distribuição das equipes
+  const getEquipePorDiaETurno = (dia, indexTurno) => {
+    const turnoInfo = turnosConfig[indexTurno];
+    const diaFormatado = dia.toString().padStart(2, "0");
+
+    // 1. Tenta extrair a guarnição real dos dados do backend
+    const guarnicaoEncontrada = guarnicoes?.data_guarnicao?.find((g) => {
+      if (!g.data_guarnicao || !g.hora_guarnicao) return false;
+      const dataParte = g.data_guarnicao.split("T")[0];
+      const diaGuarnicao = dataParte.split("-")[2];
+      const horaGuarnicao = g.hora_guarnicao.substring(0, 2);
+
+      return (
+        diaGuarnicao === diaFormatado && horaGuarnicao === turnoInfo.horaPrefix
+      );
+    });
+
+    if (guarnicaoEncontrada && guarnicaoEncontrada.grupamento) {
+      return guarnicaoEncontrada.grupamento;
+    }
+
+    // 2. Se não existir no backend, calcula o restante dinamicamente seguindo a regra das 6 equipes
+    const equipes = ["A", "B", "C", "D", "E", "F"];
+    // Fórmula para rotação: ex: equipe A (idx 0) faz D1 T1, D2 T2, D3 T3, folga, folga, folga
+    const indexCalculado = (indexTurno - dia + 1 + 60) % 6;
+    return equipes[indexCalculado];
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800 relative">
       <div className="max-w-7xl mx-auto space-y-6">
-        
         {/* Cabeçalho */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">E-Escala | Gerenciamento</h1>
-            <p className="text-sm text-gray-500">Centro Integrado de Operações de Segurança Pública</p>
-          </div>
-          <div className="mt-4 md:mt-0 relative w-full md:w-72">
-            <input
-              type="text"
-              placeholder="Buscar militares ou escalas..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
+            <h1 className="text-2xl font-bold text-gray-900">
+              E-Escala | Gerenciamento de Pessoal
+            </h1>
+            <p className="text-sm text-gray-500">
+              {escalaInfo
+                ? `${escalaInfo.nome} - ${escalaInfo.descricao}`
+                : "Carregando escala..."}
+            </p>
           </div>
         </header>
 
-        {/* Formulário de Criação de Escala */}
-        <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold border-b pb-2 mb-4">Nova Escala Base</h2>
-          
-          {status.msg && (
-            <div className={`p-4 mb-4 rounded-md ${status.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-              {status.msg}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Nome da Escala *</label>
-              <input
-                type="text"
-                name="nome_escala"
-                required
-                value={formData.nome_escala}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Escala COPOM Dez/Jan"
-              />
-            </div>
-            
-            <div className="space-y-1 lg:col-span-1">
-              <label className="text-sm font-medium text-gray-700">Descrição</label>
-              <input
-                type="text"
-                name="descricao_escala"
-                value={formData.descricao_escala}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Detalhes operacionais..."
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Data Início *</label>
-              <input
-                type="date"
-                name="data_inicio"
-                required
-                value={formData.data_inicio}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Data Fim *</label>
-              <input
-                type="date"
-                name="data_fim"
-                required
-                value={formData.data_fim}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="lg:col-span-4 flex justify-end mt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`px-6 py-2 rounded-md text-white font-medium flex items-center transition-colors ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
-              >
-                {isLoading ? 'Solicitando...' : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                    Gerar Modelo
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </section>
-
-        {/* Visualização da Grade da Escala */}
-        <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Distribuição de Guarnições</h2>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 px-3 py-1 rounded">
-              Editar Grade Ativa
+        {/* Alertas de Status */}
+        {status.msg && (
+          <div
+            className={`p-4 rounded-md flex justify-between items-center ${status.type === "success" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}
+          >
+            <span>{status.msg}</span>
+            <button
+              onClick={() => setStatus({ type: "", msg: "" })}
+              className="text-current hover:opacity-75"
+            >
+              <X size={18} />
             </button>
           </div>
-          
-          <div className="overflow-x-auto">
+        )}
+
+        {/* Visualização da Grade da Escala */}
+        <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-300 overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Escala</h2>
+            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 px-3 py-1 rounded transition-colors bg-white">
+              Editar
+            </button>
+          </div>
+
+          <div className="overflow-x-auto custom-scrollbar pb-2">
             <table className="min-w-full border-collapse text-center text-sm">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2 text-left w-48 sticky left-0 bg-gray-100 z-10">Dias do Mês</th>
-                  {diasMes.map(dia => (
-                    <th key={dia} className="border border-gray-300 p-2 min-w-[40px]">{dia}</th>
+                  <th className="border border-gray-300 p-2 text-left w-48 sticky left-0 bg-gray-100 z-10 shadow-[1px_0_0_0_#d1d5db]">
+                    Mês
+                  </th>
+                  {diasMes.map((dia) => (
+                    <th
+                      key={dia}
+                      className="border border-gray-300 p-2 min-w-[32px] text-gray-700"
+                    >
+                      {dia}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {turnos.map((turno, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="border border-gray-300 p-2 text-left font-medium text-xs sticky left-0 bg-white z-10">{turno}</td>
-                    {diasMes.map(dia => (
-                      <td key={dia} className="border border-gray-300 p-2 cursor-pointer hover:bg-blue-50 text-gray-700 font-semibold">
-                        {['A', 'B', 'C', 'D', 'E', 'F'][(dia + index) % 6]}
-                      </td>
-                    ))}
+                {turnosConfig.map((turno, indexTurno) => (
+                  <tr
+                    key={indexTurno}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="border border-gray-300 p-2 text-left font-medium text-xs sticky left-0 bg-white z-10 shadow-[1px_0_0_0_#d1d5db]">
+                      {turno.label}
+                    </td>
+                    {diasMes.map((dia) => {
+                      const equipeDesignada = getEquipePorDiaETurno(
+                        dia,
+                        indexTurno,
+                      );
+                      return (
+                        <td
+                          key={dia}
+                          className="border border-gray-300 p-2 cursor-pointer hover:bg-blue-100 text-gray-800 font-bold transition-colors"
+                        >
+                          {equipeDesignada}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -451,32 +273,187 @@ export default function TelaGerenciamentoEscala() {
 
         {/* Painel de Efetivo / Despachantes */}
         <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4">Efetivo por Guarnição (Despachantes)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {['A', 'B', 'C', 'D', 'E', 'F'].map((guarnicao) => (
-              <div key={guarnicao} className="border border-gray-200 rounded-md p-4 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-center border-b pb-2 mb-2">
-                  <h3 className="font-bold text-blue-800 text-lg">Equipe {guarnicao}</h3>
-                  <div className="flex space-x-2">
-                    <button className="text-gray-400 hover:text-blue-600" title="Adicionar Militar">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          <h2 className="text-lg font-semibold mb-6 pb-2 border-b">Efetivo</h2>
+
+          {isLoading ? (
+            <div className="flex justify-center p-8 text-blue-600">
+              <RefreshCw className="animate-spin" size={32} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {guarnicoes.map((guarnicao) => (
+                <div
+                  key={guarnicao.id_guarnicao}
+                  className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow flex flex-col"
+                >
+                  {/* Header do Card da Guarnição */}
+                  <div className="flex justify-between items-center border-b pb-3 mb-3">
+                    <h3 className="font-bold text-blue-800 text-lg flex items-center gap-2">
+                      Equipe {guarnicao.grupamento}
+                    </h3>
+                    <button
+                      onClick={() => handleOpenModal(guarnicao.grupamento)}
+                      className="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white p-1.5 rounded transition-colors"
+                      title={`Adicionar militar na Equipe ${guarnicao.grupamento}`}
+                    >
+                      <Plus size={20} strokeWidth={2.5} />
                     </button>
                   </div>
+
+                  {/* Lista de Militares na Guarnição */}
+                  <ul className="space-y-3 text-sm text-gray-700 flex-1 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                    {guarnicao.dados_guarnicao?.grupamento_escala?.map(
+                      (militar) => (
+                        <li
+                          key={militar.id_user}
+                          className="flex flex-col p-2 bg-gray-50 border border-gray-100 rounded-md group hover:border-blue-200 transition-colors"
+                        >
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="font-semibold">
+                              {militar.graduacao} {militar.nome_guerra}
+                            </span>
+                            <span className="text-xs font-mono text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">
+                              2/10 extras
+                            </span>
+                          </div>
+
+                          {/* Ações do Militar */}
+                          <div className="flex justify-end space-x-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button
+                              className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              title="Ver ficha"
+                            >
+                              <FileText size={16} />
+                            </button>
+                            <button
+                              className="p-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                              title="Ver dias de serviço"
+                            >
+                              <Calendar size={16} />
+                            </button>
+                            <button
+                              className="p-1 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                              title="Ver permutas"
+                            >
+                              <RefreshCw size={16} />
+                            </button>
+                            <button
+                              className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                              title="Excluir da escala"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </li>
+                      ),
+                    )}
+
+                    {(!guarnicao.dados_guarnicao?.grupamento_escala ||
+                      guarnicao.dados_guarnicao.grupamento_escala.length ===
+                        0) && (
+                      <p className="text-gray-400 text-center py-4 italic">
+                        Nenhum militar na equipe.
+                      </p>
+                    )}
+                  </ul>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-600 max-h-40 overflow-y-auto pr-2">
-                  <li className="flex justify-between items-center group">
-                    <span>3° SGT FULANO</span>
-                    <button className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity" title="Substituir/Remover">
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                    </button>
-                  </li>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* MODAL: Incluir Militar */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden">
+            {/* Header Modal */}
+            <div className="flex justify-between items-center p-5 border-b bg-gray-50">
+              <h3 className="font-bold text-lg text-gray-800">
+                Incluir militar na Equipe {selectedEquipe}
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Body Modal */}
+            <div className="p-5 flex-1 overflow-hidden flex flex-col space-y-4">
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-2.5 text-gray-400"
+                  size={18}
+                />
+                <input
+                  type="text"
+                  placeholder="Pesquisar por nome ou matrícula..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={searchMilitarTerm}
+                  onChange={(e) => setSearchMilitarTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg max-h-64">
+                <ul className="divide-y divide-gray-100">
+                  {getFilteredAvailableUsers().map((user) => (
+                    <li
+                      key={user.id_user}
+                      onClick={() => setSelectedMilitarToInclude(user)}
+                      className={`p-3 flex items-center justify-between cursor-pointer transition-colors ${selectedMilitarToInclude?.id_user === user.id_user ? "bg-blue-50 border-l-4 border-blue-500" : "hover:bg-gray-50"}`}
+                    >
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          {user.graduacao} {user.nome_guerra}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Mat: {user.matricula}
+                        </p>
+                      </div>
+                      {selectedMilitarToInclude?.id_user === user.id_user && (
+                        <div className="text-blue-600 bg-blue-100 p-1.5 rounded-full">
+                          <UserPlus size={16} />
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                  {getFilteredAvailableUsers().length === 0 && (
+                    <li className="p-4 text-center text-gray-500 text-sm">
+                      Nenhum militar disponível encontrado.
+                    </li>
+                  )}
                 </ul>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
-      </div>
+            {/* Footer Modal */}
+            <div className="p-4 border-t bg-gray-50 flex justify-end space-x-3">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleIncludeMilitar}
+                disabled={!selectedMilitarToInclude}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Incluir Militar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      `}</style>
     </div>
   );
 }
