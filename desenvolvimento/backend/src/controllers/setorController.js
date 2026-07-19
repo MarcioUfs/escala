@@ -2,25 +2,26 @@ const database = require("../database/db");
 
 // ================= CREATE =================
 async function createSetor(req, res) {
-  const { nome_setor, sigla } = req.body;
+  const { nome_setor, sigla } = req?.body;
 
-  if (!nome_setor || !sigla) {
-    return res
-      .status(400)
-      .json({ msg: "Dados incompletos! Envie nome_setor e sigla." });
+  if (!req.body?.nome_setor || req.body?.nome_setor === "") {
+    return res.status(400).json({ msg: "Nome é obrigatório!" });
+  }
+  if (!req.body?.sigla || req.body?.sigla === "") {
+    return res.status(400).json({ msg: "Sigla é obrigatória!" });
   }
 
   await database
     .select()
     .table("tbl_setores")
-    .where({ nome_setor: nome_setor })
+    .where({ nome_setor: nome_setor.toUpperCase() })
     .then(async (data) => {
       if (data.length >= 1) {
         return res.status(409).json({ msg: "Nome do setor já cadastrado!" });
       } else {
         const novoSetor = {
-          nome_setor: nome_setor,
-          sigla: sigla,
+          nome_setor: nome_setor.toUpperCase(),
+          sigla: sigla.toUpperCase(),
           is_active: true, // Default definido no schema
           created_at: new Date(),
           updated_at: new Date(),
@@ -41,14 +42,12 @@ async function createSetor(req, res) {
               });
             });
         } catch (error) {
-          return res
-            .status(500)
-            .json({ msg: "Erro interno do servidor", error: error });
+          return res.status(500).json({ msg: "Erro interno do servidor" });
         }
       }
     })
     .catch((err) => {
-      return res.status(502).json({ msg: "Erro do servidor", error: err });
+      return res.status(502).json({ msg: "Erro do servidor" });
     });
 }
 
@@ -64,7 +63,7 @@ async function readSetores(req, res) {
       "updated_at",
     )
     .from("tbl_setores")
-    .orderBy("id_setor", "asc")
+    .orderBy("nome_setor", "asc")
     .then((data) => {
       if (data.length > 0) {
         return res.status(200).json(data);
@@ -73,25 +72,29 @@ async function readSetores(req, res) {
       }
     })
     .catch((error) => {
-      return res.status(500).json({ msg: "Erro do servidor!", error: error });
+      return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
 
 // ================= UPDATE =================
 async function updateSetor(req, res) {
-  const { id } = req.params;
+  // const { id } = req.params;
   // Seguindo a sua lógica do adminController, recebendo o ID pelo body
-  const { id_setor, nome_setor, sigla, is_active } = req.body;
-  if (!id && id !== id_setor) {
-    return res.status(400).json({
-      msg: "Violação de integridade na solicitação!",
-    });
-  }
+  const { id_setor, nome_setor, sigla, is_active } = req?.body;
+  // console.log(`!id = ${!id} id = ${id} id_setor: ${id_setor} resultado = ${!id && Number(id) !== Number(id_setor)}`);
+  // if (!id || Number(id) !== Number(id_setor)) {
+  //   return res.status(400).json({
+  //     msg: "Violação de integridade na solicitação!",
+  //   });
+  // }
   if (!id_setor || isNaN(id_setor)) {
     return res.status(400).json({ msg: "ID inválido ou ausente" });
   }
-  if (!nome_setor || !sigla) {
-    return res.status(400).json({ msg: "Dados incompletos!" });
+  if (!nome_setor || nome_setor === "") {
+    return res.status(400).json({ msg: "Informe o nome do setor!" });
+  }
+  if (!sigla || sigla === "") {
+    return res.status(400).json({ msg: "Informe a sigla do setor!" });
   }
 
   try {
@@ -131,18 +134,59 @@ async function updateSetor(req, res) {
 
     return res.status(200).json({ msg: "Setor atualizado com sucesso!" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ msg: "Erro interno do servidor", error: error });
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
+async function activeSetor(req, res) {
+  try {
+    const { id, is_active } = req?.body;
+
+    if (!id || id === "" || isNaN(id) || !("id" in req?.body)) {
+      return res.status(400).json({ msg: "ID é obrigatório!" });
+    }
+
+    if (
+      !("is_active" in req?.body) ||
+      is_active === "" ||
+      typeof is_active !== "boolean"
+    ) {
+      return res
+        .status(400)
+        .json({ msg: "O atributo de verificação é obrigatório!" });
+    }
+
+    const setorExists = await database("tbl_setores")
+      .where({ id_setor: id })
+      .first();
+
+    if (!setorExists) {
+      return res.status(404).json({ msg: "Setor não encontrado" });
+    }
+
+    await database("tbl_setores")
+      .where({ id_setor: id })
+      .update({ is_active: is_active ? true : false, updated_at: new Date() });
+
+    return res.status(200).json({
+      msg: `Setor ${is_active ? "ativado" : "desativado"} com sucesso!`,
+    });
+  } catch (error) {
+    console.error("Erro ao desativar setor:", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
 // ================= DELETE =================
 async function deleteSetor(req, res) {
-  // Recebendo o ID por parâmetro da rota (ex: /setores/:id) assim como no deleteUser
   const { id } = req.params;
-
+  // console.log(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
+  
   try {
+    // const idAdmin = await database("admins")
+    //   .where({ id_admin: req.user.id_admin })
+    //   .first();
+    
+    // console.log("Admin:", idAdmin);
     const setorExists = await database("tbl_setores")
       .where({ id_setor: id })
       .first();
@@ -166,5 +210,6 @@ module.exports = {
   createSetor: createSetor,
   readSetores: readSetores,
   updateSetor: updateSetor,
-  deleteSetor: deleteSetor
+  activeSetor: activeSetor,
+  deleteSetor: deleteSetor,
 };
