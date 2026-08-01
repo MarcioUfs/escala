@@ -18,11 +18,11 @@ const router = express.Router();
 
 //*****************CRUD ESCALA********************* */
 // router.post("/gerar", verifyJwt, escalaController.gerarEscala);
-router.get("/listar", verifyJwt, modelos_escalas.listarEscalas);
-router.get("/listar/:id", verifyJwt, modelos_escalas.getEscalaById);
-router.delete("/excluir/:id", verifyJwt, modelos_escalas.deleteEscala);
-router.post("/criar", verifyJwt, modelos_escalas.createEscala);
-router.post("/escala-guarnicoes", verifyJwt, modelos_escalas.listarEscalaGuarnicoes);
+router.get("/read", verifyJwt, modelos_escalas.listarEscalas);
+router.get("/getescala/:id", verifyJwt, modelos_escalas.getEscalaById);
+router.delete("/delete/:id", verifyJwt, modelos_escalas.deleteEscala);
+router.post("/create", verifyJwt, modelos_escalas.createEscala);
+router.post("/guarnicoes", verifyJwt, modelos_escalas.listarEscalaGuarnicoes);
 
 //
 router.post("/guarnicao", verifyJwt, modelos_escalas.create_guarnicao);

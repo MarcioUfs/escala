@@ -11,6 +11,7 @@ const userRoute = require("./src/routes/userRoute");
 const adminRoute = require("./src/routes/adminroutes");
 const escalaRoutes = require("./src/routes/escalaRoutes");
 const setorRoutes = require("./src/routes/setorroutes");
+const guarnicaoRoutes = require("./src/routes/guarnicaoroutes");
 
 const app = express();
 
@@ -58,6 +59,8 @@ app.use("/",  userRoute);
 app.use("/admin",  adminRoute);
 app.use("/escalas", escalaRoutes);
 app.use("/setores", setorRoutes);
+app.use("/guarnicoes", guarnicaoRoutes);
+
 
 // ---------------------------------------------------
 // 4. PROCESSOS EM SEGUNDO PLANO
