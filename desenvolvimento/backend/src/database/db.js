@@ -5,7 +5,12 @@
 // module.exports = knex
 
 // db.js
-const knexfile = require('../../knexfile'); // Confirme se o knexfile está 2 pastas para trás
-const knex = require('knex')(knexfile['development']);
+// const knexfile = require('../../knexfile'); // Confirme se o knexfile está 2 pastas para trás
+// const knex = require('knex')(knexfile['development']);
 
+// module.exports = knex;
+
+const environment = process.env.NODE_ENV || "development";
+const config = require("../../knexfile")[environment];
+const knex = require("knex")(config);
 module.exports = knex;

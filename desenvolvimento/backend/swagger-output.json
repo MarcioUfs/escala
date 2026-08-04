@@ -571,9 +571,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
           }
         }
       }
@@ -666,7 +663,13 @@
             "schema": {
               "type": "object",
               "properties": {
+                "entrada": {
+                  "example": "any"
+                },
                 "id": {
+                  "example": "any"
+                },
+                "value": {
                   "example": "any"
                 }
               }

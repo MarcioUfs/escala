@@ -24,12 +24,16 @@ module.exports = {
   },
   production: {
     client: 'pg',
+    // connection: {
+    //   database: process.env.DATABASE,
+    //   user: process.env.DATABASE_USERNAME,
+    //   password: process.env.DATABASE_PASSWORD,
+    //   host: process.env.DATABASE_HOST,
+    //   port: process.env.DATABASE_PORT || 5432,
+    // },
     connection: {
-      database: process.env.DATABASE,
-      user: process.env.DATABASE_USERNAME,
-      password: process.env.DATABASE_PASSWORD,
-      host: process.env.DATABASE_HOST,
-      port: process.env.DATABASE_PORT || 5432,
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // obrigatório: o Postgres do Render exige SSL
     },
     pool: {
       min: 2,

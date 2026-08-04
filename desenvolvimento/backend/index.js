@@ -38,12 +38,12 @@
 const app = require('./app');
 const os = require('os');
 require('dotenv').config();
-const port = process.env.PORT || 3030;
+const PORT = process.env.PORT || 3030;
 
 const ip = getIPAddress();
 
-app.listen(port, () => {
-    console.log(`App running on http://${ip}:${port}`);
+app.listen(PORT, () => {
+    console.log(`App running on http://${ip}:${PORT}`);
 });
 
 function getIPAddress() {
