@@ -119,8 +119,7 @@ function App() {
               ROTAS PÚBLICAS DE LOGIN (FORA DE QUALQUER PROTECTED ROUTE)
              ============================================== */}
           <Route path="/admin/login" 
-          element={<div style={{ padding: 20 }}>Tela de Login Admin OK</div>}
-          // element={<AdminLogin />} 
+          element={<AdminLogin />} 
           />
           <Route path="/login" element={<Login />} />
 
