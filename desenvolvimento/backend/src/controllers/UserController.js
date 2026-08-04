@@ -114,7 +114,7 @@ async function getUser(req, res) {
               updated_at: data[0].updated_at,
               // patente: data[0].patente || "---",
               id: data[0].id_user,
-              perfil: data[0].role,
+              role: data[0].role,
             };
             return res.status(200).send(userData);
           }
