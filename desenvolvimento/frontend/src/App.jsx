@@ -118,7 +118,7 @@ function App() {
           {/* ==============================================
               ROTAS PÚBLICAS DE LOGIN (FORA DE QUALQUER PROTECTED ROUTE)
              ============================================== */}
-          <Route path="/admin/login" 
+          <Route path="/login-admin" 
           element={<AdminLogin />} 
           />
           <Route path="/login" element={<Login />} />
