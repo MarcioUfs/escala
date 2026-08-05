@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+require('dotenv').config();
 
 exports.seed = async function (knex) {
   await knex("tbl_escala_admin_autorizados").del();
@@ -10,7 +11,8 @@ exports.seed = async function (knex) {
   await knex("users").del();
 
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash("123456", salt);
+  const seedPassword = process.env.SEED_PASS; // Use a senha do .env ou um valor padrão
+  const hashedPassword = await bcrypt.hash(seedPassword, salt);
 
   const now = new Date().toISOString();
 
