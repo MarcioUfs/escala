@@ -127,7 +127,7 @@ exports.seed = async function (knex) {
     {
       id_patente: 16,
       nome_patente: "CABO",
-      sigla_patente: "CAB",
+      sigla_patente: "CB",
       is_active: true,
       created_at: now,
       updated_at: now

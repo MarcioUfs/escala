@@ -79,12 +79,13 @@ exports.seed = async function (knex) {
   // -----------------------------------------------------------------
   await knex("v2_usuario").insert([
     { id_usuario: 1, nome: "Marcos Lima Santos",        nome_guerra: "Marcos Lima", matricula: "200205000890", cpf: "10101010101", telefone: "11987654321", fk_id_patente: 13, fk_id_user: 100000, created_at: now, updated_at: now },
-    { id_usuario: 2, nome: "Jose Francisco de Assis",   nome_guerra: "Marcos Lima", matricula: "200207001891", cpf: "63542617415", telefone: "11987654321", fk_id_patente: 14, fk_id_user: 100001, created_at: now, updated_at: now },
-    { id_usuario: 3, nome: "Carlos Eduardo Silva",      nome_guerra: "Marcos Lima", matricula: "201507001234", cpf: "11122233344", telefone: null,           fk_id_patente: 16, fk_id_user: 100003, created_at: now, updated_at: now },
-    { id_usuario: 4, nome: "Ana Beatriz Oliveira",      nome_guerra: "Marcos Lima", matricula: "201007005678", cpf: "55566677788", telefone: "79987654321", fk_id_patente: 17, fk_id_user: 100004, created_at: now, updated_at: now },
-    { id_usuario: 5, nome: "Paulo Roberto Santos",      nome_guerra: "Marcos Lima", matricula: "199807009012", cpf: "99988877766", telefone: "11987654321", fk_id_patente: 12, fk_id_user: 100005, created_at: now, updated_at: now },
-    { id_usuario: 6, nome: "Marcos Vinícius Souza",     nome_guerra: "Marcos Lima", matricula: "200507003456", cpf: "44433322211", telefone: "11987654321", fk_id_patente: 15, fk_id_user: 100006, created_at: now, updated_at: now },
-  ]);
+    { id_usuario: 2, nome: "Jose Francisco de Assis",   nome_guerra: "Jose Francisco", matricula: "200207001891", cpf: "63542617415", telefone: "11987654321", fk_id_patente: 14, fk_id_user: 100001, created_at: now, updated_at: now },
+    { id_usuario: 3, nome: "Carlos Eduardo Silva",      nome_guerra: "Carlos Eduardo", matricula: "201507001234", cpf: "11122233344", telefone: null,           fk_id_patente: 16, fk_id_user: 100003, created_at: now, updated_at: now },
+    { id_usuario: 4, nome: "Ana Beatriz Oliveira",      nome_guerra: "Ana Beatriz", matricula: "201007005678", cpf: "55566677788", telefone: "79987654321", fk_id_patente: 17, fk_id_user: 100004, created_at: now, updated_at: now },
+    { id_usuario: 5, nome: "Paulo Roberto Santos",      nome_guerra: "Paulo Roberto", matricula: "199807009012", cpf: "99988877766", telefone: "11987654321", fk_id_patente: 12, fk_id_user: 100005, created_at: now, updated_at: now },
+    { id_usuario: 6, nome: "Marcos Vinícius Souza",     nome_guerra: "Marcos Vinícius", matricula: "200507003456", cpf: "44433322211", telefone: "11987654321", 
+      fk_id_patente: 15, fk_id_user: 100006, created_at: now, updated_at: now },
+  ]); 
 
   // -----------------------------------------------------------------
   // v2_grupamento_usuario (1 usuário de exemplo por grupamento, vínculo vigente
