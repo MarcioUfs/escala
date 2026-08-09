@@ -29,7 +29,7 @@ export default function AdminLogin() {
 
       // 2. Barreira de Segurança
       if (role !== "admin") {
-        signOut();
+        signOut(false); // Limpa o token e não redireciona
         setError(
           "Acesso negado. Este portal é exclusivo para Administradores.",
         );

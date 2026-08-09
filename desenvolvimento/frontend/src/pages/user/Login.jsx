@@ -39,7 +39,7 @@ const handleLogin = async (e) => {
       
       // 2. Se for admin, manda para o portal certo
       if (role === 'admin') {
-        signOut();
+        signOut(false); // Limpa o token e não redireciona
         setError('Administradores devem fazer login pelo portal restrito (/admin/login).');
         return;
       }
