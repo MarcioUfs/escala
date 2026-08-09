@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const helmet = require("helmet"); 
+const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerFile = require("./swagger-output.json");
 
@@ -20,10 +20,12 @@ const app = express();
 // ---------------------------------------------------
 // 0. CONFIGURAÇÃO DE SEGURANÇA DE REDE
 // ---------------------------------------------------
-// Dinâmico: Garante o teste local sem falsos bloqueios 
+// Dinâmico: Garante o teste local sem falsos bloqueios
 // e aplica a segurança real (1) no servidor de produção.
-// const isProduction = process.env.NODE_ENV === "production";
-// app.set('trust proxy', isProduction ? 1 : 'loopback');
+// Necessário no Render (está atrás de um proxy reverso) para que
+// o express-rate-limit e req.ip identifiquem o IP real do cliente.
+const isProduction = process.env.NODE_ENV === "production";
+app.set("trust proxy", isProduction ? 1 : "loopback");
 
 // ---------------------------------------------------
 // 1. MIDDLEWARES GLOBAIS (Ordem Crítica de Segurança)
@@ -33,20 +35,41 @@ const app = express();
 app.use(helmet());
 
 // 1.2 CORS: Bloqueia requisições de sites não autorizados
+// Lista de origens permitidas: produção + ambientes de desenvolvimento local.
+// FRONTEND_URL é opcional, útil para adicionar uma origem extra via variável
+// de ambiente sem precisar mexer no código (ex: ambiente de staging).
+const allowedOrigins = [
+  "https://e-escala.onrender.com", // produção
+  "http://localhost:5173", // dev local (Vite)
+  "http://192.168.56.1:5173", // dev local via IP de rede
+  process.env.FRONTEND_URL, // extra, configurável via .env
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "https://e-escala.onrender.com",
-    // origin: "*", // Permite todas as origens (ajuste conforme necessário)
+    origin: function (origin, callback) {
+      // Permite requisições sem "origin" (ex: Postman, apps mobile, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Não autorizado pelo CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 // 1.3 Parsers de Body: Obrigatório vir ANTES das rotas.
-// Sem isso, o `req.body.cpf` chegaria vazio no momento do login e 
+// Sem isso, o `req.body.cpf` chegaria vazio no momento do login e
 // o sistema não conseguiria bloquear tentativas de força bruta.
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// 1.4 Rate Limiter geral: protege toda a navegação básica do sistema
+app.use(generalLimiter);
 
 // ---------------------------------------------------
 // 2. DOCUMENTAÇÃO
@@ -56,9 +79,8 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // ---------------------------------------------------
 // 3. ROTAS (Acoplamento e Versionamento)
 // ---------------------------------------------------
-// O generalLimiter protege toda a navegação básica do sistema
-app.use("/",  userRoute);
-app.use("/admin",  adminRoute);
+app.use("/", userRoute);
+app.use("/admin", adminRoute);
 app.use("/escalas", escalaRoutes);
 app.use("/setores", setorRoutes);
 app.use("/guarnicoes", guarnicaoRoutes);
@@ -72,62 +94,3 @@ app.use("/v2", v2EscalaRoutes);
 iniciarAgendamentos();
 
 module.exports = app;
-
-
-// const express = require('express');
-// const cors = require('cors');
-// const app = express();
-// // const sendFileRoute = require('./src/routes/sendFileRoute');
-// // const dashBoardRoute = require('./src/routes/dashBoardRoute');
-// // const searchRoute = require('./src/routes/searchRoute');
-// // const tabuladorRoute = require('./src/routes/tabuladorRoute');
-// // const listaDados = require('./src/routes/listDadosRoute');
-// // const fichaRoute = require('./src/routes/fichaRoute');
-// const userRoute = require('./src/routes/userRoute');
-// const adminRoute = require('./src/routes/adminroutes');
-// // const verifyJWT = require('./src/middleware/verifyJWT');
-
-// app.use(express.urlencoded({ extended: false }))
-// app.use(express.json())
-// app.use(cors({
-//     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     // origin: "*",
-//     // methods: "PUT,PATCH,POST,UPDATE,DELETE,GET"
-// }));
-
-// // app.use('/databases', verifyJWT, sendFileRoute);
-// // app.use('/dashboard', verifyJWT, dashBoardRoute);
-// // app.use('/search', verifyJWT, searchRoute);
-// // app.use('/list', verifyJWT, listaDados);
-// // app.use('/ficha', verifyJWT, fichaRoute);
-// // app.use('/tabulador', verifyJWT, tabuladorRoute);
-// app.use('/', userRoute);
-// app.use('/admin', adminRoute);
-
-// module.exports = app;
-// // class App {
-// //     constructor() {
-// //         this.app = express();
-// //         this.middlewares();
-// //         this.routes();
-// //     }
-// //     middlewares() {
-// //         this.app.use(express.urlencoded({ extended: true }));
-// //         this.app.use(cors());
-// //         this.app.use(express.json());
-// //     }
-// //     routes() {
-// //         this.app.use('/upload', sendFileRoute);
-// //         this.app.use('/dashboard', dashBoardRoute);
-// //         this.app.use('/', dashBoardRoute);
-// //         this.app.use('/search', dashBoardSearchRoute);
-// //         this.app.use('/list', listaDados);
-// //         this.app.use('/tabulador', tabuladorRoute);
-// //         this.app.use('/', tabuladorRoute);
-// //         this.app.use('/ficha',fichaRoute);
-// //         this.app.use('/versaofinal',consultaRoute);
-// //     }
-// // }
-// // module.exports = new App().app;
