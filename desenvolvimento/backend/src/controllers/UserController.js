@@ -104,7 +104,7 @@ async function login(req, res) {
       id: user.id_user,
       role: user.role,
       nome: user.nome,
-      tokenUser: token,
+      token: token,
     });
   } catch (error) {
     return res.status(500).json({ msg: "Erro do servidor!" });
