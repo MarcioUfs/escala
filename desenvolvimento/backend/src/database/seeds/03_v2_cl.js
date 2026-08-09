@@ -69,7 +69,7 @@ exports.seed = async function (knex) {
   // Usei 2026-02-01 aqui só para casar com a "Ciosp 2026-02" já seedada.
   // -----------------------------------------------------------------
   await knex("v2_ciclo_escala_config").insert([
-    { id_config: 1, data_referencia: "2026-02-01", created_at: now, updated_at: now },
+    { id_config: 1, data_referencia: "2026-07-01", created_at: now, updated_at: now },
   ]);
 
   // -----------------------------------------------------------------
