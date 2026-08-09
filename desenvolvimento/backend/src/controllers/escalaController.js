@@ -28,7 +28,6 @@
 //       guarnicao,
 //     });
 //   } catch (error) {
-//     console.error("Erro ao criar guarnição:", error);
 
 //     if (error.message === "Já existe uma guarnição com esse código") {
 //       return res.status(409).json({ msg: error.message });
@@ -46,7 +45,6 @@
 
 //     return res.status(200).json(guarnicoes);
 //   } catch (error) {
-//     console.error("Erro ao listar guarnições:", error);
 //     return res.status(500).json({
 //       msg: "Erro interno do servidor",
 //     });
@@ -106,7 +104,6 @@
 //       escala,
 //     });
 //   } catch (error) {
-//     console.error("Erro ao gerar escala:", error);
 
 //     const errosConhecidos = [
 //       "Guarnição não encontrada",
@@ -136,7 +133,6 @@
 
 //     return res.status(200).json(modelos);
 //   } catch (error) {
-//     console.error("Erro ao listar modelos de escala:", error);
 //     return res.status(500).json({
 //       msg: "Erro interno do servidor",
 //     });

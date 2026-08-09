@@ -1,5 +1,4 @@
 // function limparEspacos(texto){
-//     console.log("Texto recebido para limpeza:", texto);
 //     if(!texto || typeof texto !== 'string'){
 //         return '';
 //     }

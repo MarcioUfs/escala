@@ -97,7 +97,6 @@ async function rasparListaAntiguidade() {
       return false; // <-- Avisa o agendador que a lista veio vazia
     }
   } catch (erro) {
-    console.error("Erro na automação:", erro.message);
     return false; // <-- Avisa o agendador se houver queda de internet/timeout
   } 
 }

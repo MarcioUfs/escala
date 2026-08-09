@@ -84,8 +84,8 @@
           "403": {
             "description": "Forbidden"
           },
-          "502": {
-            "description": "Bad Gateway"
+          "500": {
+            "description": "Internal Server Error"
           }
         }
       }
@@ -474,9 +474,6 @@
           "401": {
             "description": "Unauthorized"
           },
-          "403": {
-            "description": "Forbidden"
-          },
           "404": {
             "description": "Not Found"
           },
@@ -516,9 +513,6 @@
           },
           "401": {
             "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           },
           "500": {
             "description": "Internal Server Error"

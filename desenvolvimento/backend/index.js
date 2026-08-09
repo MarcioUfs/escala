@@ -17,7 +17,6 @@
 // const ip = getIPAddress();
 
 // app.listen(port, () => {
-//     console.log(`App running on http://${ip}:${port}`);
 //     // O aviso de agendador e o log de ambiente (dotenv) aparecerão aqui
 // });
 

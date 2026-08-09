@@ -7,7 +7,6 @@ const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
 const tratarTelefone = require("../functions/tratarTelefone");
 const validarEmail = require("../functions/validarEmail");
-const validateFields = require("../functions/validarCampos");
 const somenteTelefone = require("../functions/somenteTelefone");
 const limparEspacos = require("../functions/limparEspacos");
 
@@ -48,7 +47,7 @@ async function readUsers(req, res) {
             ativo: element.ativo ? "Ativo" : "Inativo",
             nome_guerra: element.nome_guerra || "Nome de Guerra não Cadastrado",
             id_patente: element.id_patente || "N/A",
-            ordem: element.ordem || Math.floor(Math.random() * 100000) + 100001,
+            ordem: element.ordem || element.id_user,
             nome_patente: element.nome_patente || "N/A",
             sigla_patente: element.sigla_patente || "N/A",
             patente_ativa: element.patente_ativa ? "Ativa" : "Inativa",
@@ -68,6 +67,48 @@ async function readUsers(req, res) {
 }
 
 async function createUser(req, res) {
+  if (!req.body?.nome || req.body?.nome === "") {
+    return res.status(400).json({ msg: "Nome é obrigatório!" });
+  }
+  if (!req.body?.nome_guerra || req.body?.nome_guerra === "") {
+    return res.status(400).json({ msg: "Nome de guerra é obrigatório!" });
+  }
+  if (!req.body?.cpf || req.body?.cpf === "") {
+    return res.status(400).json({ msg: "CPF é obrigatório!" });
+  }
+  if (!req.body?.password || req.body?.password === "") {
+    return res.status(400).json({ msg: "Senha é obrigatória!" });
+  }
+  if (req.body?.password.length < 6) {
+    return res
+      .status(400)
+      .json({ msg: "Senha deve ter pelo menos 6 caracteres!" });
+  }
+  if (somenteCpf(req.body?.cpf) === 0) {
+    return res.status(400).json({ msg: "CPF inválido!" });
+  }
+  if (somenteMatricula(req.body?.matricula) === null) {
+    return res.status(400).json({ msg: "Matrícula inválida!" });
+  }
+  if (somenteTelefone(req.body?.telefone) === 0) {
+    return res.status(400).json({ msg: "Telefone inválido!" });
+  }
+  if (validarEmail(req.body?.email) === false) {
+    return res.status(400).json({ msg: "Email inválido!" });
+  }
+  if(!Number.isInteger(Number(req.body?.id_patente))){
+    return res.status(400).json({ msg: "Patente não é um número inteiro!" });
+  }
+  if(!req.body?.id_patente || req.body?.id_patente === ""){
+    return res.status(400).json({ msg: "Patente é obrigatória!" });
+  }
+  if(req.body?.id_patente && isNaN(req.body?.id_patente)){
+    return res.status(400).json({ msg: "Patente inválida!" });
+  }
+  if(req.body?.id_patente > 21 || req.body?.id_patente < 1){
+    return res.status(400).json({ msg: "Patente fora do parametro!" });
+  }
+  
   await database
     .select()
     .table("users")
@@ -107,20 +148,18 @@ async function createUser(req, res) {
                 })
                 .catch((err) => {
                   return res
-                    .status(501)
-                    .json({ msg: "Erro interno do servidor", error: err });
+                    .status(500)
+                    .json({ msg: "Erro interno do servidor" });
                 });
             } catch (error) {
-              return res
-                .status(500)
-                .json({ msg: "Erro interno do servidor", error: error });
+              return res.status(500).json({ msg: "Erro interno do servidor" });
             }
           });
         });
       }
     })
     .catch((err) => {
-      return res.status(502).json({ msg: "Erro do servidor" });
+      return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
 
@@ -139,7 +178,6 @@ async function deleteUser(req, res) {
 
     return res.status(200).json({ msg: "Usuário deletado com sucesso!" });
   } catch (error) {
-    console.error("Erro ao deletar usuário:", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -172,7 +210,6 @@ async function activeuser(req, res) {
       msg: `Usuário ${is_active ? "ativado" : "desativado"} com sucesso!`,
     });
   } catch (error) {
-    console.error("Erro ao desativar usuário:", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -191,9 +228,9 @@ async function updateUser(req, res) {
   ) {
     return res.status(400).json({ msg: "CPF é obrigatório!" });
   }
-  if (!req.body?.password || req.body?.password === "") {
-    return res.status(400).json({ msg: "Senha é obrigatória!" });
-  }
+  // if (!req.body?.password || req.body?.password === "") {
+  //   return res.status(400).json({ msg: "Senha é obrigatória!" });
+  // }
   if (!req.body?.matricula || req.body?.matricula === "") {
     return res.status(400).json({ msg: "Matrícula é obrigatória!" });
   }
@@ -204,11 +241,11 @@ async function updateUser(req, res) {
   ) {
     return res.status(400).json({ msg: "Telefone é obrigatório!" });
   }
-  if (req.body?.password.length < 6) {
-    return res
-      .status(400)
-      .json({ msg: "Senha deve ter pelo menos 6 caracteres!" });
-  }
+  // if (req.body?.password.length < 6) {
+  //   return res
+  //     .status(400)
+  //     .json({ msg: "Senha deve ter pelo menos 6 caracteres!" });
+  // }
   if (req.body?.email && !validarEmail(req.body?.email)) {
     return res.status(400).json({ msg: "Email inválido!" });
   }
@@ -219,7 +256,7 @@ async function updateUser(req, res) {
     nome_guerra,
     cpf,
     email,
-    password,
+    // password,
     matricula,
     telefone,
     id_patente,
@@ -232,7 +269,7 @@ async function updateUser(req, res) {
     !nome ||
     !cpf ||
     !email ||
-    !password ||
+    // !password ||
     !matricula ||
     !id_patente ||
     !nome_guerra ||
@@ -284,20 +321,20 @@ async function updateUser(req, res) {
     }
 
     // 4. Hash da senha
-    const salt = await bcryptjs.genSalt(10);
-    const hash = await bcryptjs.hash(password, salt);
+    // const salt = await bcryptjs.genSalt(10);
+    // const hash = await bcryptjs.hash(password, salt);
 
     // 5. Executar o Update
     await database("users")
       .where({ id_user: id })
       .update({
         email: emailOnly,
-        password: hash,
+        // password: hash,
         nome: nomeOnly || "Nome não informado",
         id_patente: req.body.id_patente || null,
         cpf: cpfOnly,
         matricula: matriculaOnly,
-        telefone: telefoneOnly || 0,
+        telefone: telefoneOnly || "(00) 00000-0000",
         nome_guerra: nomeGuerraOnly || "Nome de Guerra não Cadastrado",
         updated_at: new Date(),
       });
@@ -362,7 +399,6 @@ async function readAllPatente(req, res) {
       }
     })
     .catch((error) => {
-      console.log(error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
@@ -482,8 +518,8 @@ async function createAdmin(req, res) {
                 })
                 .catch((err) => {
                   return res
-                    .status(501)
-                    .json({ msg: "Erro interno do servidor", error: err });
+                    .status(500)
+                    .json({ msg: "Erro interno do servidor" });
                 });
             } catch (error) {
               return res.status(500).json({ msg: "Erro interno do servidor" });
@@ -498,40 +534,34 @@ async function createAdmin(req, res) {
 }
 
 async function getAdmin(req, res) {
-  const token = req.headers.authorization.split(" ")[1];
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
-    } else {
-      await database
-        .table("admins")
-        .where({ id_admin: decoded.id_admin })
-        .then((data) => {
-          if (data.length <= 0) {
-            return res
-              .status(404)
-              .send({ msg: "Administrador não encontrado" });
-          } else {
-            const userData = {
-              id: data[0].id_admin,
-              nome: data[0].nome,
-              cpf: tratarCpf(data[0].cpf),
-              role: data[0].role,
-            };
-            console.log("Dados do Admin:", data);
-            return res.status(200).send(userData);
-          }
-        })
-        .catch((error) => {
-          return res.status(500).json({ msg: `Erro do servidor ${error}` });
-        });
-    }
-  });
+  const { id_admin } = req.user;
+  await database
+    .select("id_admin", "nome", "cpf", "role")
+    .table("admins")
+    .where({ id_admin: id_admin })
+    .then((data) => {
+      if (data.length <= 0) {
+        return res.status(404).send({ msg: "Administrador não encontrado" });
+      } else {
+        const userData = {
+          id: data[0].id_admin,
+          nome: data[0].nome,
+          cpf: tratarCpf(data[0].cpf),
+          role: data[0].role,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at,
+        };
+        return res.status(200).send(userData);
+      }
+    })
+    .catch((error) => {
+      return res.status(500).json({ msg: `Erro do servidor ${error}` });
+    });
 }
 
 async function allAdmins(req, res) {
   await database
-    .select("admins.*")
+    .select("id_admin", "nome", "cpf", "role", "created_at", "updated_at")
     .from("admins")
     .orderByRaw("admins.id_admin ASC NULLS LAST")
     .then((data) => {

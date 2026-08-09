@@ -36,7 +36,7 @@ async function createSetor(req, res) {
                 .json({ msg: "Setor cadastrado com sucesso!" });
             })
             .catch((err) => {
-              return res.status(501).json({
+              return res.status(500).json({
                 msg: "Erro interno do servidor ao inserir",
                 error: err,
               });
@@ -47,7 +47,7 @@ async function createSetor(req, res) {
       }
     })
     .catch((err) => {
-      return res.status(502).json({ msg: "Erro do servidor" });
+      return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
 
@@ -81,7 +81,6 @@ async function updateSetor(req, res) {
   // const { id } = req.params;
   // Seguindo a sua lógica do adminController, recebendo o ID pelo body
   const { id_setor, nome_setor, sigla, is_active } = req?.body;
-  // console.log(`!id = ${!id} id = ${id} id_setor: ${id_setor} resultado = ${!id && Number(id) !== Number(id_setor)}`);
   // if (!id || Number(id) !== Number(id_setor)) {
   //   return res.status(400).json({
   //     msg: "Violação de integridade na solicitação!",
@@ -172,21 +171,17 @@ async function activeSetor(req, res) {
       msg: `Setor ${is_active ? "ativado" : "desativado"} com sucesso!`,
     });
   } catch (error) {
-    console.error("Erro ao desativar setor:", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 // ================= DELETE =================
 async function deleteSetor(req, res) {
   const { id } = req.params;
-  // console.log(`Body: ${JSON.stringify(req.body)}, Params: ${JSON.stringify(req.params)}`);
-  
   try {
     // const idAdmin = await database("admins")
     //   .where({ id_admin: req.user.id_admin })
     //   .first();
     
-    // console.log("Admin:", idAdmin);
     const setorExists = await database("tbl_setores")
       .where({ id_setor: id })
       .first();
@@ -202,7 +197,7 @@ async function deleteSetor(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ msg: "Erro interno do servidor", error: error });
+      .json({ msg: "Erro interno do servidor"});
   }
 }
 

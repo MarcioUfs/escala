@@ -55,7 +55,6 @@ async function gerarEscalaV2(req, res) {
         data_fim: dataFim.objetoDate,
       });
     } catch (error) {
-      console.error("Erro ao gerar escala v2:", error);
       return res.status(500).json({
         msg: "Erro interno do servidor",
         error: error.message,
@@ -129,7 +128,6 @@ async function criarAjusteManualV2(req, res) {
 
       return res.status(201).json({ msg: "Ajuste manual registrado com sucesso" });
     } catch (error) {
-      console.error("Erro ao criar ajuste manual de escala v2:", error);
       return res.status(500).json({
         msg: "Erro interno do servidor",
         error: error.message,
@@ -210,7 +208,6 @@ async function listarEscalasV2(req, res) {
 
       return res.status(200).json(arrayDados);
     } catch (error) {
-      console.error("Erro ao listar escala v2 por mês:", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     }
   }
@@ -254,7 +251,6 @@ async function listarEscalasV2(req, res) {
 
       return res.status(200).json(data);
     } catch (error) {
-      console.error("Erro ao listar escala v2 por data:", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     }
   }
@@ -302,7 +298,7 @@ async function getEscalaV2ById(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ msg: "Erro interno do servidor", error: error.message });
+      .json({ msg: "Erro interno do servidor"});
   }
 }
 
@@ -354,7 +350,7 @@ async function reverterParaCicloV2(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ msg: "Erro interno do servidor", error: error.message });
+      .json({ msg: "Erro interno do servidor"});
   }
 }
 
@@ -412,7 +408,6 @@ async function vincularUsuarioGrupamentoV2(req, res) {
         .status(201)
         .json({ msg: "Usuário vinculado ao grupamento com sucesso!" });
     } catch (error) {
-      console.error("Erro ao vincular usuário ao grupamento:", error);
       return res.status(500).json({
         msg: "Erro interno do servidor",
         error: error.message,
@@ -451,7 +446,7 @@ async function desvincularUsuarioGrupamentoV2(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ msg: "Erro interno do servidor", error: error.message });
+      .json({ msg: "Erro interno do servidor"});
   }
 }
 
@@ -525,7 +520,6 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
       escalas: arrayDados,
     });
   } catch (error) {
-    console.error("Erro ao listar período estendido da escala v2:", error);
     return res.status(500).json({
       msg: "Erro interno do servidor",
       error: error.message,

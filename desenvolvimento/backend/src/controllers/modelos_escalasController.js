@@ -83,9 +83,7 @@ const processarDiaMes = require("../functions/filtroDiaMes");
 // // }
 
 async function createEscala(req, res) {
-  console.log("Dados recebidos para criação de modelo de escala:", req.body);
   const token = req.headers.authorization.split(" ")[1];
-  // console.log(req.user);
   jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
@@ -157,7 +155,6 @@ async function listarEscalas(req, res) {
   // return res.status(203).json({ msg: "Escala não encontrada + listarEscalas" });
   try {
     const tblGuarnicao = await database("tbl_guarnicao").select("*");
-    console.log(tblGuarnicao);
     const guarnicoes = await database("tbl_escala")
       .select(
         "id_escala",
@@ -182,7 +179,6 @@ async function listarEscalas(req, res) {
     }
     return res.status(200).json(guarnicoes);
   } catch (error) {
-    console.error("Erro ao listar guarnições:", error);
     return res.status(500).json({
       msg: "Erro interno do servidor",
     });
@@ -216,7 +212,7 @@ async function getEscalaById(req, res) {
   } catch (error) {
     return res
       .status(500)
-      .json({ msg: "Erro interno do servidor", error: error });
+      .json({ msg: "Erro interno do servidor"});
   }
 }
 
@@ -224,7 +220,6 @@ async function create_guarnicao(req, res) {
   return res
     .status(203)
     .json({ msg: "Escala não encontrada + create_guarnicao" });
-  // console.log("Dados recebidos para criação de guarnição:", req.body);
   // await database
   //   .select()
   //   .table("tbl_guarnicao")
@@ -253,25 +248,22 @@ async function create_guarnicao(req, res) {
   //           })
   //           .catch((err) => {
   //             return res
-  //               .status(501)
-  //               .json({ msg: "Erro interno do servidor", error: err });
+  //               .status(500)
+  //               .json({ msg: "Erro interno do servidor"});
   //           });
   //       } catch (error) {
   //         return res
   //           .status(500)
-  //           .json({ msg: "Erro interno do servidor", error: error });
+  //           .json({ msg: "Erro interno do servidor"});
   //       }
   //     }
   //   })
   //   .catch((err) => {
-  //     console.error("Erro ao verificar turno existente:", err);
-  //     return res.status(502).json({ msg: "Erro do servidor", error: err });
+  //     return res.status(500).json({ msg: "Erro do servidor"});
   //   });
 }
 
 async function listarEscalaGuarnicoes(req, res) {
-  console.log("ID recebido para listar guarnições da escala:", req?.body);
-
   if (!req?.body)
     return res.status(400).json({ msg: "Solicitação inválida ou ausente" });
 
@@ -286,7 +278,6 @@ async function listarEscalaGuarnicoes(req, res) {
   //por data
   //por dia
   if (value === "mes") {
-    console.log(req.body?.entrada);
     if (!req.body?.entrada || req.body?.entrada === "")
       return res.status(400).json({ msg: "Data inválida ou ausente" });
     try {
@@ -354,11 +345,9 @@ async function listarEscalaGuarnicoes(req, res) {
           }
         })
         .catch((error) => {
-          console.error("Erro ao listar escala :", error);
           return res.status(500).json({ msg: "Erro do servidor!" });
         });
     } catch (err){
-      console.log(err)
       return res.status(500).json({ msg: "Erro do servidor" });
     }
     // return res.status(200).json({ msg: "Mes" });
@@ -424,7 +413,6 @@ async function listarEscalaGuarnicoes(req, res) {
   //     }
   //   })
   //   .catch((error) => {
-  //     console.error("Erro ao listar escala :", error);
   //     return res.status(500).json({ msg: "Erro do servidor!" });
   //   });
 }

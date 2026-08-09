@@ -7,12 +7,10 @@ const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
 const tratarTelefone = require("../functions/tratarTelefone");
 const validarEmail = require("../functions/validarEmail");
-const validateFields = require("../functions/validarCampos");
 const somenteTelefone = require("../functions/somenteTelefone");
 const limparEspacos = require("../functions/limparEspacos");
 
 async function createGuarnicao(req, res) {
-  console.log("Dados recebidos para criação de guarnição:", req.body);
   const resultDados = false;
 
   if (!req.body?.data_guarnicao || req.body?.data_guarnicao === "") {
@@ -46,16 +44,7 @@ async function createGuarnicao(req, res) {
     grupamento,
     fk_id_escala,
   } = req?.body;
-  // console.log("resultG>>" + resultDados);
 
-  // "id_guarnicao":"",
-  // "data_guarnicao":"",
-  // "hora_guarnicao":"",
-  // "dados_guarnicao":"",
-  // "dayofyear":"",
-  // "turno":"",
-  // "grupamento":"",
-  // "fk_id_escala":"",
   await database
     .select()
     .table("tbl_guarnicao")
@@ -86,7 +75,7 @@ async function createGuarnicao(req, res) {
                 .json({ msg: "Guarnição cadastrada com sucesso!" });
             })
             .catch((err) => {
-              return res.status(501).json({
+              return res.status(500).json({
                 msg: "Erro interno do servidor ao inserir",
                 error: err,
               });
@@ -97,7 +86,7 @@ async function createGuarnicao(req, res) {
       }
     })
     .catch((err) => {
-      return res.status(502).json({ msg: "Erro do servidor" });
+      return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
 module.exports = {
