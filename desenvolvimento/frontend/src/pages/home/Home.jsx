@@ -17,8 +17,8 @@ export default function Home() {
           --text-main: #0f172a;
           --text-muted: #475569;
           --border-color: #e2e8f0;
-          --ad-bg: #f1f5f9;
-          --ad-border: #cbd5e1;
+          --panel-bg: #f1f5f9;
+          --panel-border: #cbd5e1;
           --radius: 8px;
           --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -113,11 +113,13 @@ export default function Home() {
           flex: 1;
         }
 
-        .home-page .aside-ad { display: block; }
+        /* Renomeado de .aside-ad -> .side-panel (evita filtro "ad" do AdBlock) */
+        .home-page .side-panel { display: block; }
 
-        .home-page .ad-card {
-          background-color: var(--ad-bg);
-          border: 1px dashed var(--ad-border);
+        /* Renomeado de .ad-card -> .panel-card */
+        .home-page .panel-card {
+          background-color: var(--panel-bg);
+          border: 1px dashed var(--panel-border);
           border-radius: var(--radius);
           padding: 1rem;
           text-align: center;
@@ -132,10 +134,11 @@ export default function Home() {
           align-items: center;
         }
 
-        .home-page .mobile-ad-banner {
+        /* Renomeado de .mobile-ad-banner -> .mobile-info-strip (evita "ad" e "banner") */
+        .home-page .mobile-info-strip {
           display: none;
-          background-color: var(--ad-bg);
-          border: 1px dashed var(--ad-border);
+          background-color: var(--panel-bg);
+          border: 1px dashed var(--panel-border);
           border-radius: var(--radius);
           padding: 0.5rem;
           text-align: center;
@@ -193,10 +196,10 @@ export default function Home() {
 
         @media (max-width: 1024px) {
           .home-page .layout-grid { grid-template-columns: 1fr; }
-          .home-page .aside-ad { display: none; }
+          .home-page .side-panel { display: none; }
           .home-page .auth-buttons-desktop { display: none; }
           .home-page .hamburger { display: block; }
-          .home-page .mobile-ad-banner { display: block; }
+          .home-page .mobile-info-strip { display: block; }
           .home-page .main-content { padding: 1.25rem; }
           .home-page .article-header { flex-direction: row; }
         }
@@ -242,10 +245,10 @@ export default function Home() {
 
       {/* GRID PRINCIPAL */}
       <div className="layout-grid">
-        <aside className="aside-ad">
-          <div className="ad-card">
-            <p><strong>Espaço Publicitário</strong></p>
-            <p>Google Ads / Banner Lateral (250x600)</p>
+        <aside className="side-panel">
+          <div className="panel-card">
+            <p><strong>Espaço Reservado</strong></p>
+            <p>Conteúdo Lateral</p>
           </div>
         </aside>
 
@@ -274,15 +277,15 @@ export default function Home() {
             </section>
           </article>
 
-          <div className="mobile-ad-banner">
-            <p><strong>Publicidade:</strong> Confira as melhores ofertas parceiras do mês.</p>
+          <div className="mobile-info-strip">
+            <p><strong>Aviso:</strong> Fique de olho nas atualizações do sistema.</p>
           </div>
         </main>
 
-        <aside className="aside-ad">
-          <div className="ad-card">
-            <p><strong>Espaço Publicitário</strong></p>
-            <p>Google Ads / Banner Lateral (250x600)</p>
+        <aside className="side-panel">
+          <div className="panel-card">
+            <p><strong>Espaço Reservado</strong></p>
+            <p>Conteúdo Lateral</p>
           </div>
         </aside>
       </div>
