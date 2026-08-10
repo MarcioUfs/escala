@@ -9,10 +9,7 @@ const iniciarAgendamentos = require("./src/jobs/scheduler");
 const { generalLimiter } = require("./src/middleware/rateLimiter");
 const userRoute = require("./src/routes/userRoute");
 const adminRoute = require("./src/routes/adminroutes");
-const escalaRoutes = require("./src/routes/escalaRoutes");
 const setorRoutes = require("./src/routes/setorroutes");
-const guarnicaoRoutes = require("./src/routes/guarnicaoroutes");
-const v2Routes = require("./src/routes/v2_cl_escalaroutes");
 const v2EscalaRoutes = require("./src/routes/v2EscalaRoutes");
 
 const app = express();
@@ -81,11 +78,8 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // ---------------------------------------------------
 app.use("/", userRoute);
 app.use("/admin", adminRoute);
-app.use("/escalas", escalaRoutes);
 app.use("/setores", setorRoutes);
-app.use("/guarnicoes", guarnicaoRoutes);
-app.use("/cl", v2Routes);
-app.use("/v2", v2EscalaRoutes);
+app.use("/escalas", v2EscalaRoutes);
 
 // ---------------------------------------------------
 // 4. PROCESSOS EM SEGUNDO PLANO
