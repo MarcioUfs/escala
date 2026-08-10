@@ -11,6 +11,7 @@ const {
   reverterParaCicloV2,
   vincularUsuarioGrupamentoV2,
   desvincularUsuarioGrupamentoV2,
+  listarMembrosGrupamentoV2
 } = require("../controllers/v2EscalaController");
 
 // -----------------------------------------------------------------------
@@ -42,6 +43,11 @@ router.get("/:id", verifyJwt, getEscalaV2ById);
 // PUT /escalas/:id/reverter
 // Desfaz um ajuste manual, devolvendo o grupamento que o ciclo determinaria
 router.put("/:id/reverter", verifyJwt, reverterParaCicloV2);
+
+
+// GET /escalas/grupamento/:id/membros
+router.get("/grupamento/:id/membros", verifyJwt, listarMembrosGrupamentoV2);
+
 
 // -----------------------------------------------------------------------
 // GRUPAMENTO_USUARIO

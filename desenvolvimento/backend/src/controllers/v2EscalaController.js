@@ -527,6 +527,31 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
   }
 }
 
+// -----------------------------------------------------------------------
+// 9) LISTAR MEMBROS ATIVOS DE UM GRUPAMENTO (vínculo aberto, sem data_fim)
+// -----------------------------------------------------------------------
+async function listarMembrosGrupamentoV2(req, res) {
+  const { id } = req.params; // id_grupamento
+
+  try {
+    const membros = await database("v2_grupamento_usuario")
+      .select(
+        "v2_grupamento_usuario.id_grupamento_usuario",
+        "v2_grupamento_usuario.data_inicio",
+        "users.id_user",
+        "users.nome",
+        "users.matricula",
+      )
+      .join("users", "users.id_user", "v2_grupamento_usuario.fk_id_usuario")
+      .where({ "v2_grupamento_usuario.fk_id_grupamento": id })
+      .whereNull("v2_grupamento_usuario.data_fim")
+      .orderBy("users.nome");
+
+    return res.status(200).json(membros);
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
 module.exports = {
   gerarEscalaV2: gerarEscalaV2, // substitui o createEscala em massa
   criarAjusteManualV2: criarAjusteManualV2, // troca pontual em um dia/turno
@@ -536,4 +561,5 @@ module.exports = {
   reverterParaCicloV2: reverterParaCicloV2, // substitui o deleteEscala
   vincularUsuarioGrupamentoV2: vincularUsuarioGrupamentoV2, // substitui o create_guarnicao (stub)
   desvincularUsuarioGrupamentoV2: desvincularUsuarioGrupamentoV2,
+  listarMembrosGrupamentoV2: listarMembrosGrupamentoV2,
 };
