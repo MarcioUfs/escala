@@ -1,245 +1,3 @@
-// // import { useState, useEffect } from "react";
-// // import { useNavigate } from "react-router-dom";
-// // import { ArrowBigLeft } from "lucide-react";
-// // import api from "../../services/api";
-
-// // export default function AdminListEscalas() {
-// //   return (
-// //     <div className="p-4 sm:p-8 w-full max-w-full overflow-hidden box-border">
-// //       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-5 sm:p-8">
-// //         {/* Cabeçalho */}
-// //         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-5 mb-6 gap-4">
-// //           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 break-words">
-// //             Lista de Escalas
-// //           </h1>
-// //         </div>
-// //       </div>
-// //     </div>
-// //   );
-// // }
-// import React, { useState, useEffect } from 'react';
-// // Lembre-se de importar sua instância de conexão
-// import api from "../../services/api";
-// import { useNavigate } from 'react-router-dom';
-
-// export default function TelaListarEscalas() {
-//   const [escalas, setEscalas] = useState([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const navigate = useNavigate();
-//   const [searchTerm, setSearchTerm] = useState('');
-
-//   // Busca os dados assim que o componente é montado
-//   useEffect(() => {
-//       const carregarEscalas = async () => {
-//     try {
-//       setIsLoading(true);
-//       setError(null);
-      
-//       // Utilizando a rota solicitada para buscar os dados
-//       const response = await api.get('/escalas/listar');
-      
-//       // Assumindo que seu backend retorna um array diretamente ou dentro de um objeto (ex: response.data.escalas)
-//       // Adapte 'response.data' conforme o formato exato do seu retorno JSON
-//       setEscalas(response.data || []);
-      
-//     } catch (err) {
-//       console.error("Erro ao carregar escalas:", err);
-//       setError("Não foi possível comunicar com o servidor para listar as escalas.");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//     carregarEscalas();
-//   }, []);
-
-
-
-//   // Funções de ação (Prontas para você conectar ao seu React Router ou modais)
-//   const handleVer = (id) => {
-//     console.log("Navegar para visualização da escala:", id);
-//     // Ex: navigate(`/admin/escala/${id}`);
-//     navigate(`/admin/create-escala`);
-//   };
-
-//   const handleEditar = (id) => {
-//     console.log("Navegar para edição da escala:", id);
-//     // Ex: navigate(`/admin/editar-escala/${id}`);
-//     navigate(`/admin/create-escala`);
-//   };
-
-//   const handleExcluir = async (id) => {
-//     if (window.confirm("Tem certeza que deseja excluir esta escala? Esta ação não pode ser desfeita.")) {
-//       try {
-//         await api.delete(`/escalas/excluir/${id}`);
-//         // Atualiza a lista removendo o item excluído visualmente
-//         setEscalas(escalas.filter(escala => escala.id_escala !== id));
-//       } catch {
-//         alert("Erro ao tentar excluir a escala.");
-//       }
-//     }
-//   };
-
-//   // Filtro de busca local para agilizar a experiência do usuário
-//   const escalasFiltradas = escalas.filter(escala => 
-//     escala.nome_escala?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//     escala.descricao_escala?.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   // Helper para formatar as datas vindas do PostgreSQL
-//   const formatarData = (dataStr) => {
-//     if (!dataStr) return '--/--/----';
-//     // O timezone offset compensa o horário de Brasília caso necessário
-//     const date = new Date(dataStr);
-//     return date.toLocaleDateString('pt-BR');
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-gray-800">
-//       <div className="max-w-7xl mx-auto space-y-6">
-        
-//         {/* Cabeçalho de Ações */}
-//         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-lg shadow-sm border border-gray-200 gap-4">
-//           <div>
-//             <h1 className="text-2xl font-bold text-gray-900">Gerenciar Escalas</h1>
-//             <p className="text-sm text-gray-500">Selecione uma escala para visualizar, editar ou remover.</p>
-//           </div>
-          
-//           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-//             <div className="relative w-full sm:w-64">
-//               <input
-//                 type="text"
-//                 placeholder="Buscar escala..."
-//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
-//               <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-//               </svg>
-//             </div>
-            
-//             {/* Botão que aponta para a rota de criação construída na etapa anterior */}
-//             <button 
-//               onClick={() => navigate("/admin/create-escala")}
-//               className="flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
-//             >
-//               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-//               </svg>
-//               Nova Escala
-//             </button>
-//           </div>
-//         </header>
-
-//         {/* Área de Mensagens / Loading */}
-//         {error && (
-//           <div className="p-4 bg-red-50 text-red-800 border border-red-200 rounded-md flex items-center">
-//             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-//             {error}
-//           </div>
-//         )}
-
-//         {/* Listagem de Escalas (Responsivo: Grid/Cards no mobile, Tabela no Desktop) */}
-//         <section className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          
-//           {isLoading ? (
-//             <div className="flex justify-center items-center p-12 text-gray-500">
-//               <svg className="animate-spin h-8 w-8 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-//                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-//                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-//               </svg>
-//               Carregando escalas...
-//             </div>
-//           ) : escalasFiltradas.length === 0 ? (
-//             <div className="text-center p-12 text-gray-500">
-//               Nenhuma escala encontrada.
-//             </div>
-//           ) : (
-//             <div className="overflow-x-auto">
-//               <table className="min-w-full divide-y divide-gray-200 hidden md:table">
-//                 <thead className="bg-gray-50">
-//                   <tr>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome da Escala</th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
-//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-//                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody className="bg-white divide-y divide-gray-200">
-//                   {escalasFiltradas.map((escala) => (
-//                     <tr key={escala.id_escala || escala.nome_escala} className="hover:bg-gray-50 transition-colors">
-//                       <td className="px-6 py-4 whitespace-nowrap">
-//                         <div className="text-sm font-semibold text-gray-900">{escala.nome_escala}</div>
-//                         <div className="text-sm text-gray-500 truncate max-w-xs">{escala.descricao_escala}</div>
-//                       </td>
-//                       <td className="px-6 py-4 whitespace-nowrap">
-//                         <div className="text-sm text-gray-900">{formatarData(escala.data_inicio)} até {formatarData(escala.data_fim)}</div>
-//                       </td>
-//                       <td className="px-6 py-4 whitespace-nowrap">
-//                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${escala.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-//                           {escala.is_active ? 'Ativa' : 'Inativa'}
-//                         </span>
-//                       </td>
-//                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-//                         <button onClick={() => handleVer(escala.id_escala)} className="text-blue-600 hover:text-blue-900 p-1" title="Ver Grade">
-//                           <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-//                         </button>
-//                         <button onClick={() => handleEditar(escala.id_escala)} className="text-amber-600 hover:text-amber-900 p-1" title="Editar Informações">
-//                           <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-//                         </button>
-//                         <button onClick={() => handleExcluir(escala.id_escala)} className="text-red-600 hover:text-red-900 p-1" title="Excluir Escala">
-//                           <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-//                         </button>
-//                       </td>
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-
-//               {/* Layout em Cards para Dispositivos Móveis (Escondido em telas md ou maiores) */}
-//               <div className="md:hidden flex flex-col divide-y divide-gray-200">
-//                 {escalasFiltradas.map((escala) => (
-//                   <div key={escala.id_escala || escala.nome_escala} className="p-4 space-y-3 bg-white">
-//                     <div className="flex justify-between items-start">
-//                       <div>
-//                         <h3 className="text-sm font-semibold text-gray-900">{escala.nome_escala}</h3>
-//                         <p className="text-xs text-gray-500 mt-1">{escala.descricao_escala}</p>
-//                       </div>
-//                       <span className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full ${escala.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-//                         {escala.is_active ? 'Ativa' : 'Inativa'}
-//                       </span>
-//                     </div>
-                    
-//                     <div className="text-xs text-gray-700 flex items-center">
-//                       <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-//                       {formatarData(escala.data_inicio)} até {formatarData(escala.data_fim)}
-//                     </div>
-                    
-//                     <div className="flex justify-end space-x-4 border-t pt-2 mt-2">
-//                       <button onClick={() => handleVer(escala.id_escala)} className="text-blue-600 text-sm font-medium flex items-center">
-//                         Ver
-//                       </button>
-//                       <button onClick={() => handleEditar(escala.id_escala)} className="text-amber-600 text-sm font-medium flex items-center">
-//                         Editar
-//                       </button>
-//                       <button onClick={() => handleExcluir(escala.id_escala)} className="text-red-600 text-sm font-medium flex items-center">
-//                         Excluir
-//                       </button>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           )}
-//         </section>
-
-//       </div>
-//     </div>
-//   );
-// }
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ShieldCheck,
@@ -252,33 +10,55 @@ import {
   Trash2,
   RefreshCw,
   AlertTriangle,
+  AlertCircle,
   Radio,
+  UserPlus,
+  ArrowLeftRight,
+  Search,
+  Lock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
 // ---------------------------------------------------------------------------
 // TOKENS DE DESIGN
-// Sala de operações / rádio-tático: fundo grafite escuro, âmbar como cor de
-// ação (referência a luz de alerta de central de operações), fonte mono pra
-// dados de grade (data, hora, sigla de grupamento) — evoca painel de
-// despacho, não um dashboard SaaS genérico.
+// Tema claro (fundo branco/slate-50), consistente com o restante do painel
+// administrativo. Azul como cor primária de ação, mono nos dados de grade
+// (data, hora, sigla de grupamento) pra reforçar a leitura tipo "painel de
+// despacho" sem depender de um fundo escuro pra isso.
 // ---------------------------------------------------------------------------
 const CORES_GRUPAMENTO = [
-  { bg: "bg-amber-500/15", text: "text-amber-300", ring: "ring-amber-500/40", dot: "bg-amber-400" },
-  { bg: "bg-sky-500/15", text: "text-sky-300", ring: "ring-sky-500/40", dot: "bg-sky-400" },
-  { bg: "bg-emerald-500/15", text: "text-emerald-300", ring: "ring-emerald-500/40", dot: "bg-emerald-400" },
-  { bg: "bg-fuchsia-500/15", text: "text-fuchsia-300", ring: "ring-fuchsia-500/40", dot: "bg-fuchsia-400" },
-  { bg: "bg-orange-500/15", text: "text-orange-300", ring: "ring-orange-500/40", dot: "bg-orange-400" },
-  { bg: "bg-teal-500/15", text: "text-teal-300", ring: "ring-teal-500/40", dot: "bg-teal-400" },
-  { bg: "bg-rose-500/15", text: "text-rose-300", ring: "ring-rose-500/40", dot: "bg-rose-400" },
-  { bg: "bg-indigo-500/15", text: "text-indigo-300", ring: "ring-indigo-500/40", dot: "bg-indigo-400" },
+  { bg: "bg-amber-100", text: "text-black", ring: "ring-amber-300", dot: "bg-amber-500" },
+  { bg: "bg-sky-100", text: "text-black", ring: "ring-sky-300", dot: "bg-sky-500" },
+  { bg: "bg-emerald-100", text: "text-black", ring: "ring-emerald-300", dot: "bg-emerald-500" },
+  { bg: "bg-fuchsia-100", text: "text-black", ring: "ring-fuchsia-300", dot: "bg-fuchsia-500" },
+  { bg: "bg-orange-100", text: "text-black", ring: "ring-orange-300", dot: "bg-orange-500" },
+  { bg: "bg-teal-100", text: "text-black", ring: "ring-teal-300", dot: "bg-teal-500" },
+  { bg: "bg-rose-100", text: "text-black", ring: "ring-rose-300", dot: "bg-rose-500" },
+  { bg: "bg-indigo-100", text: "text-black", ring: "ring-indigo-300", dot: "bg-indigo-500" },
 ];
 
 const DIAS_SEMANA_CURTO = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 function corDoGrupamento(sigla, mapaCores) {
   return mapaCores.get(sigla) || CORES_GRUPAMENTO[0];
+}
+
+// -----------------------------------------------------------------------
+// CORREÇÃO DE FUSO HORÁRIO
+// `new Date("2026-08-01")` é interpretado pelo navegador como UTC. Em
+// fusos negativos (Brasil, UTC-3) isso "puxa" a data um dia pra trás
+// (vira 31/07 21h local) — e foi exatamente isso que causava os
+// "buracos" na tabela: as colunas do calendário nasciam com a data
+// errada, deixavam de bater com a chave usada em `escalasPorDia` (que
+// vem direto da string, sem esse parsing), e a partir daí as duas
+// listas desalinhavam pro resto do período. A partir daqui, toda data
+// vinda do backend passa por esta função, que monta o Date sempre no
+// fuso local.
+// -----------------------------------------------------------------------
+function parseDataLocal(dataStr) {
+  const [ano, mes, dia] = dataStr.slice(0, 10).split("-").map(Number);
+  return new Date(ano, mes - 1, dia);
 }
 
 function formatarMesReferencia(date) {
@@ -310,9 +90,9 @@ function agruparPorDia(escalas) {
 // Quebra um intervalo de datas em blocos de 7 dias, começando no domingo da
 // semana do primeiro dia, pro calendário mobile ficar alinhado como um
 // calendário de verdade (não corta a semana no meio).
-function montarSemanas(dataInicio, dataFim) {
-  const inicio = new Date(dataInicio);
-  const fim = new Date(dataFim);
+function montarSemanas(dataInicioStr, dataFimStr) {
+  const inicio = parseDataLocal(dataInicioStr);
+  const fim = parseDataLocal(dataFimStr);
   const inicioAjustado = new Date(inicio);
   inicioAjustado.setDate(inicioAjustado.getDate() - inicioAjustado.getDay());
 
@@ -334,6 +114,17 @@ function chaveISO(date) {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function hojeISO() {
+  return chaveISO(new Date());
+}
+
+// "26020718549" -> "260.207.185-49" — mesmo padrão usado no documento
+// oficial da escala.
+function formatarCpf(cpf) {
+  if (!cpf || cpf.length !== 11) return cpf || "";
+  return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
 }
 
 export default function DashboardEscala() {
@@ -368,8 +159,8 @@ export default function DashboardEscala() {
       setPeriodo(data.periodo || null);
     } catch (err) {
       if (err.response?.status === 404) {
-        // Período sem nenhuma linha gerada ainda (fn_v2_gerar_escala não
-        // rodou pra essas datas) — não é um erro de sistema, é estado vazio.
+        // Período sem nenhuma linha gerada ainda — não é um erro de
+        // sistema, é estado vazio (ninguém rodou "gerar" pra esse mês).
         setEscalas([]);
         setPeriodo(null);
         setError("empty");
@@ -400,10 +191,175 @@ export default function DashboardEscala() {
     return mapa;
   }, [siglasGrupamento]);
 
+  // Sigla -> id_grupamento, derivado dos próprios dados da escala (não
+  // precisa de endpoint novo pra isso — cada linha já carrega os dois).
+  const idGrupamentoPorSigla = useMemo(() => {
+    const mapa = new Map();
+    for (const linha of escalas) {
+      if (linha.grupamento && linha.id_grupamento && !mapa.has(linha.grupamento)) {
+        mapa.set(linha.grupamento, linha.id_grupamento);
+      }
+    }
+    return mapa;
+  }, [escalas]);
+
+  // Efetivo (militares) de cada grupamento — busca única em lote (só 6
+  // grupamentos possíveis, cardinalidade fixa), não uma chamada por
+  // célula da tabela. É isso que "popula" cada turno com os componentes.
+  const [membrosPorGrupamento, setMembrosPorGrupamento] = useState(new Map());
+  const [carregandoMembros, setCarregandoMembros] = useState(false);
+
+  useEffect(() => {
+    if (idGrupamentoPorSigla.size === 0) return;
+
+    let cancelado = false;
+    async function carregarEfetivo() {
+      setCarregandoMembros(true);
+      const entradas = Array.from(idGrupamentoPorSigla.entries());
+      const resultados = await Promise.all(
+        entradas.map(async ([sigla, id]) => {
+          try {
+            const { data } = await api.get(`/escalas/grupamento/${id}/membros`);
+            return [sigla, data || []];
+          } catch {
+            return [sigla, []];
+          }
+        }),
+      );
+      if (!cancelado) {
+        setMembrosPorGrupamento(new Map(resultados));
+        setCarregandoMembros(false);
+      }
+    }
+    carregarEfetivo();
+    return () => {
+      cancelado = true;
+    };
+  }, [idGrupamentoPorSigla]);
+
+  // Recarrega o efetivo de UM grupamento específico (usado depois de
+  // adicionar/remover/trocar, pra não precisar recarregar os 6 de novo)
+  const recarregarEfetivoDoGrupamento = useCallback(async (sigla, id) => {
+    try {
+      const { data } = await api.get(`/escalas/grupamento/${id}/membros`);
+      setMembrosPorGrupamento((atual) => {
+        const novo = new Map(atual);
+        novo.set(sigla, data || []);
+        return novo;
+      });
+    } catch {
+      // se falhar, mantém o estado anterior — não derruba a tela por isso
+    }
+  }, []);
+
+  // Estados dos modais de gestão de efetivo
+  const [modalAdicionar, setModalAdicionar] = useState(null); // { sigla, idGrupamento }
+  const [modalTrocar, setModalTrocar] = useState(null); // { membro, siglaAtual, idAtual }
+  const [modalPermutar, setModalPermutar] = useState(null); // { membro, siglaAtual, idAtual }
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState(false);
+  const [erroGestaoEfetivo, setErroGestaoEfetivo] = useState(null);
+
+  // Adiciona um militar a um grupamento (vínculo a partir de hoje)
+  const adicionarMilitar = async (usuario, sigla, idGrupamento) => {
+    setAcaoEmAndamento(true);
+    setErroGestaoEfetivo(null);
+    try {
+      await api.post("/escalas/grupamento-usuario", {
+        fk_id_usuario: usuario.id_user || usuario.id,
+        fk_id_grupamento: idGrupamento,
+        data_inicio: hojeISO(),
+      });
+      await recarregarEfetivoDoGrupamento(sigla, idGrupamento);
+      setModalAdicionar(null);
+    } catch (err) {
+      setErroGestaoEfetivo(
+        err.response?.data?.msg ||
+          "Não foi possível adicionar o militar (ele pode já ter vínculo ativo em outro grupamento).",
+      );
+    } finally {
+      setAcaoEmAndamento(false);
+    }
+  };
+
+  // "Excluir da escala mensal" — encerra o vínculo do militar com o
+  // grupamento a partir de hoje (fica de fora dos próximos ciclos gerados)
+  const excluirDaEscalaMensal = async (membro, sigla, idGrupamento) => {
+    setAcaoEmAndamento(true);
+    setErroGestaoEfetivo(null);
+    try {
+      await api.put(`/escalas/grupamento-usuario/${membro.id_grupamento_usuario}/encerrar`);
+      await recarregarEfetivoDoGrupamento(sigla, idGrupamento);
+    } catch (err) {
+      setErroGestaoEfetivo(
+        err.response?.data?.msg || "Não foi possível remover o militar do grupamento.",
+      );
+    } finally {
+      setAcaoEmAndamento(false);
+    }
+  };
+
+  // Troca o militar de grupamento (encerra o vínculo atual, cria um novo
+  // no grupamento de destino a partir de hoje)
+  const trocarGrupamento = async (membro, siglaAtual, idAtual, siglaNova, idNovo) => {
+    setAcaoEmAndamento(true);
+    setErroGestaoEfetivo(null);
+    try {
+      await api.put(`/escalas/grupamento-usuario/${membro.id_grupamento_usuario}/encerrar`);
+      await api.post("/escalas/grupamento-usuario", {
+        fk_id_usuario: membro.id_user,
+        fk_id_grupamento: idNovo,
+        data_inicio: hojeISO(),
+      });
+      await Promise.all([
+        recarregarEfetivoDoGrupamento(siglaAtual, idAtual),
+        recarregarEfetivoDoGrupamento(siglaNova, idNovo),
+      ]);
+      setModalTrocar(null);
+    } catch (err) {
+      setErroGestaoEfetivo(
+        err.response?.data?.msg || "Não foi possível trocar o militar de grupamento.",
+      );
+    } finally {
+      setAcaoEmAndamento(false);
+    }
+  };
+
+  // Permuta dois militares entre grupamentos diferentes (composição de
+  // duas trocas — cada uma encerra o vínculo atual e abre um novo)
+  const permutarMilitares = async (membroA, siglaA, idA, membroB, siglaB, idB) => {
+    setAcaoEmAndamento(true);
+    setErroGestaoEfetivo(null);
+    try {
+      await api.put(`/escalas/grupamento-usuario/${membroA.id_grupamento_usuario}/encerrar`);
+      await api.put(`/escalas/grupamento-usuario/${membroB.id_grupamento_usuario}/encerrar`);
+      await api.post("/escalas/grupamento-usuario", {
+        fk_id_usuario: membroA.id_user,
+        fk_id_grupamento: idB,
+        data_inicio: hojeISO(),
+      });
+      await api.post("/escalas/grupamento-usuario", {
+        fk_id_usuario: membroB.id_user,
+        fk_id_grupamento: idA,
+        data_inicio: hojeISO(),
+      });
+      await Promise.all([
+        recarregarEfetivoDoGrupamento(siglaA, idA),
+        recarregarEfetivoDoGrupamento(siglaB, idB),
+      ]);
+      setModalPermutar(null);
+    } catch (err) {
+      setErroGestaoEfetivo(
+        err.response?.data?.msg || "Não foi possível permutar os militares.",
+      );
+    } finally {
+      setAcaoEmAndamento(false);
+    }
+  };
+
   const diasDoPeriodo = useMemo(() => {
     if (!periodo) return [];
-    const inicio = new Date(periodo.data_inicio);
-    const fim = new Date(periodo.data_fim);
+    const inicio = parseDataLocal(periodo.data_inicio);
+    const fim = parseDataLocal(periodo.data_fim);
     const dias = [];
     let cursor = new Date(inicio);
     while (cursor <= fim) {
@@ -419,6 +375,13 @@ export default function DashboardEscala() {
   }, [periodo]);
 
   const turnosDoDia = (date) => escalasPorDia.get(chaveISO(date)) || [];
+
+  // Dias dentro do período que ainda não têm nenhuma linha gerada no banco
+  // — usado só pra avisar o admin, nunca pra desenhar dado fictício na tela.
+  const diasSemEscala = useMemo(
+    () => diasDoPeriodo.filter((d) => !escalasPorDia.has(chaveISO(d))),
+    [diasDoPeriodo, escalasPorDia],
+  );
 
   // -------------------------------------------------------------------
   // Navegação de mês
@@ -456,23 +419,23 @@ export default function DashboardEscala() {
     }
   };
 
-  const diaSelecionadoDate = diaSelecionado ? new Date(diaSelecionado) : null;
+  const diaSelecionadoDate = diaSelecionado ? parseDataLocal(diaSelecionado) : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* ------------------------------------------------------------- */}
       {/* CABEÇALHO */}
       {/* ------------------------------------------------------------- */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
         <div className="px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-amber-500/15 ring-1 ring-amber-500/40 p-2 rounded-lg">
-              <Radio className="text-amber-400 size-5" />
+            <div className="bg-indigo-50 ring-1 ring-indigo-200 p-2 rounded-lg">
+              <Radio className="text-indigo-600 size-5" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+              <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
                 E-Escala
-                <span className="text-slate-500 font-normal text-sm">
+                <span className="text-slate-400 font-normal text-sm">
                   · Gestão de Efetivo
                 </span>
               </h1>
@@ -485,30 +448,30 @@ export default function DashboardEscala() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/admin")}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="flex items-center gap-2 px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition shadow-sm"
             >
               <ArrowLeft size={16} />
-              Voltar
+              Voltar a gestão
             </button>
           </div>
         </div>
 
         {/* Navegação de mês + ação de edição mensal */}
         <div className="px-4 md:px-8 pb-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
             <button
               onClick={() => irParaMes(-1)}
-              className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition"
               aria-label="Mês anterior"
             >
               <ChevronLeft size={18} />
             </button>
-            <span className="px-3 text-sm font-semibold text-slate-100 font-mono capitalize min-w-[9rem] text-center">
+            <span className="px-3 text-sm font-semibold text-slate-800 font-mono capitalize min-w-[9rem] text-center">
               {nomeDoMes(mesReferencia)}
             </span>
             <button
               onClick={() => irParaMes(1)}
-              className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition"
               aria-label="Próximo mês"
             >
               <ChevronRight size={18} />
@@ -518,7 +481,7 @@ export default function DashboardEscala() {
           <button
             onClick={() => setConfirmandoEdicaoMes(true)}
             disabled={!periodo || loading}
-            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 text-sm font-bold rounded-lg transition"
+            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition shadow-sm"
           >
             <RefreshCw size={16} />
             <span className="hidden sm:inline">Editar escala do mês</span>
@@ -530,21 +493,21 @@ export default function DashboardEscala() {
       <main className="px-4 md:px-8 py-6">
         {loading && (
           <div className="flex h-64 items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-700 border-t-amber-400" />
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-indigo-600" />
           </div>
         )}
 
         {!loading && error && error !== "empty" && (
-          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg flex items-center gap-3 text-sm">
-            <AlertTriangle size={18} className="flex-shrink-0" />
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded flex items-center gap-3 text-sm">
+            <AlertCircle size={18} className="flex-shrink-0" />
             {error}
           </div>
         )}
 
         {!loading && error === "empty" && (
           <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
-            <ShieldCheck className="text-slate-700" size={40} />
-            <p className="text-slate-400 text-sm max-w-sm">
+            <ShieldCheck className="text-slate-300" size={40} />
+            <p className="text-slate-500 text-sm max-w-sm">
               Nenhuma escala gerada para este período ainda. Use "Editar
               escala do mês" para gerar os dias a partir do ciclo.
             </p>
@@ -553,6 +516,25 @@ export default function DashboardEscala() {
 
         {!loading && !error && periodo && (
           <>
+            {/* Aviso de dias sem escala gerada dentro do período visível */}
+            {diasSemEscala.length > 0 && (
+              <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                <span className="text-indigo-800">
+                  <strong>{diasSemEscala.length}</strong>{" "}
+                  {diasSemEscala.length === 1
+                    ? "dia deste período ainda não tem"
+                    : "dias deste período ainda não têm"}{" "}
+                  escala gerada no banco.
+                </span>
+                <button
+                  onClick={() => setConfirmandoEdicaoMes(true)}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition whitespace-nowrap"
+                >
+                  Gerar agora
+                </button>
+              </div>
+            )}
+
             {/* ----------------------------------------------------- */}
             {/* DESKTOP — tabela mensal completa (igual ao modelo impresso) */}
             {/* ----------------------------------------------------- */}
@@ -561,6 +543,7 @@ export default function DashboardEscala() {
                 dias={diasDoPeriodo}
                 turnosDoDia={turnosDoDia}
                 mapaCoresGrupamento={mapaCoresGrupamento}
+                membrosPorGrupamento={membrosPorGrupamento}
                 onSelecionarDia={(date) => setDiaSelecionado(chaveISO(date))}
               />
             </div>
@@ -581,24 +564,132 @@ export default function DashboardEscala() {
               ))}
             </div>
 
-            {/* Legenda de grupamentos */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              {siglasGrupamento.map((sigla) => {
-                const cor = corDoGrupamento(sigla, mapaCoresGrupamento);
-                return (
-                  <span
+            {/* Efetivo por grupamento — cards mais largos, ocupando toda a
+                largura disponível. Só vira 2 colunas em telas realmente
+                grandes (xl); antes disso fica em 1 coluna só, sem
+                espremer os botões de ação. */}
+            <div className="mt-8">
+              <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 text-center">
+                Efetivo por Grupamento
+              </h2>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {siglasGrupamento.map((sigla) => (
+                  <GrupamentoRosterCard
                     key={sigla}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring}`}
-                  >
-                    <span className={`size-1.5 rounded-full ${cor.dot}`} />
-                    Grupamento {sigla}
-                  </span>
-                );
-              })}
+                    sigla={sigla}
+                    idGrupamento={idGrupamentoPorSigla.get(sigla)}
+                    cor={corDoGrupamento(sigla, mapaCoresGrupamento)}
+                    membros={membrosPorGrupamento.get(sigla) || []}
+                    carregando={carregandoMembros}
+                    onAdicionar={() =>
+                      setModalAdicionar({ sigla, idGrupamento: idGrupamentoPorSigla.get(sigla) })
+                    }
+                    onExcluirMensal={(membro) =>
+                      excluirDaEscalaMensal(membro, sigla, idGrupamentoPorSigla.get(sigla))
+                    }
+                    onTrocar={(membro) =>
+                      setModalTrocar({ membro, siglaAtual: sigla, idAtual: idGrupamentoPorSigla.get(sigla) })
+                    }
+                    onPermutar={(membro) =>
+                      setModalPermutar({ membro, siglaAtual: sigla, idAtual: idGrupamentoPorSigla.get(sigla) })
+                    }
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}
       </main>
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL — adicionar militar ao grupamento */}
+      {/* ------------------------------------------------------------- */}
+      {modalAdicionar && (
+        <ModalBuscaMilitar
+          titulo={`Adicionar militar ao Grupamento ${modalAdicionar.sigla}`}
+          excluirIds={new Set(
+            (membrosPorGrupamento.get(modalAdicionar.sigla) || []).map((m) => m.id_user),
+          )}
+          confirmando={acaoEmAndamento}
+          erro={erroGestaoEfetivo}
+          onFechar={() => {
+            setModalAdicionar(null);
+            setErroGestaoEfetivo(null);
+          }}
+          onSelecionar={(usuario) =>
+            adicionarMilitar(usuario, modalAdicionar.sigla, modalAdicionar.idGrupamento)
+          }
+          rotuloAcao="Adicionar"
+        />
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL — trocar militar de grupamento (definitivo, a partir de hoje) */}
+      {/* ------------------------------------------------------------- */}
+      {modalTrocar && (
+        <ModalTrocarGrupamento
+          membro={modalTrocar.membro}
+          siglaAtual={modalTrocar.siglaAtual}
+          grupamentosDisponiveis={siglasGrupamento
+            .filter((s) => s !== modalTrocar.siglaAtual)
+            .map((s) => ({ sigla: s, id: idGrupamentoPorSigla.get(s) }))}
+          confirmando={acaoEmAndamento}
+          erro={erroGestaoEfetivo}
+          onFechar={() => {
+            setModalTrocar(null);
+            setErroGestaoEfetivo(null);
+          }}
+          onConfirmar={(siglaNova, idNovo) =>
+            trocarGrupamento(modalTrocar.membro, modalTrocar.siglaAtual, modalTrocar.idAtual, siglaNova, idNovo)
+          }
+        />
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL — permutar com outro militar (troca cruzada de grupamento) */}
+      {/* ------------------------------------------------------------- */}
+      {modalPermutar && (
+        <ModalBuscaMilitar
+          titulo={`Permutar ${modalPermutar.membro.nome_guerra || modalPermutar.membro.nome} com...`}
+          excluirIds={new Set([modalPermutar.membro.id_user])}
+          confirmando={acaoEmAndamento}
+          erro={erroGestaoEfetivo}
+          onFechar={() => {
+            setModalPermutar(null);
+            setErroGestaoEfetivo(null);
+          }}
+          onSelecionar={(usuario) => {
+            // O militar-alvo pode estar em qualquer grupamento — descobre
+            // qual, entre os já carregados, pra montar a troca cruzada.
+            let siglaB = null;
+            let idB = null;
+            let membroB = null;
+            for (const [sigla, membros] of membrosPorGrupamento.entries()) {
+              const encontrado = membros.find((m) => m.id_user === (usuario.id_user || usuario.id));
+              if (encontrado) {
+                siglaB = sigla;
+                idB = idGrupamentoPorSigla.get(sigla);
+                membroB = encontrado;
+                break;
+              }
+            }
+            if (!membroB) {
+              setErroGestaoEfetivo("Esse militar não está vinculado a nenhum grupamento no momento.");
+              return;
+            }
+            permutarMilitares(
+              modalPermutar.membro,
+              modalPermutar.siglaAtual,
+              modalPermutar.idAtual,
+              membroB,
+              siglaB,
+              idB,
+            );
+          }}
+          rotuloAcao="Permutar"
+          apenasVinculados
+        />
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* PAINEL DO DIA — turnos + grupamento, com edição por turno */}
@@ -608,8 +699,14 @@ export default function DashboardEscala() {
           data={diaSelecionadoDate}
           turnos={turnosDoDia(diaSelecionadoDate)}
           mapaCoresGrupamento={mapaCoresGrupamento}
+          membrosPorGrupamento={membrosPorGrupamento}
+          carregandoMembros={carregandoMembros}
+          idGrupamentoPorSigla={idGrupamentoPorSigla}
           onFechar={() => setDiaSelecionado(null)}
           onEditarTurno={(linha) => setTurnoEmEdicao(linha)}
+          onAdicionarMes={(sigla, idGrupamento) => setModalAdicionar({ sigla, idGrupamento })}
+          onExcluirMes={(membro, sigla, idGrupamento) => excluirDaEscalaMensal(membro, sigla, idGrupamento)}
+          onTrocarMes={(membro, siglaAtual, idAtual) => setModalTrocar({ membro, siglaAtual, idAtual })}
         />
       )}
 
@@ -642,7 +739,7 @@ export default function DashboardEscala() {
 // ===========================================================================
 // TABELA DESKTOP
 // ===========================================================================
-function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia }) {
+function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, membrosPorGrupamento, onSelecionarDia }) {
   const turnosLabel = [
     { numero: 1, label: "1º Turno" },
     { numero: 2, label: "2º Turno" },
@@ -650,26 +747,26 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia
   ];
 
   return (
-    <div className="overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/50">
+    <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
       <table className="min-w-full border-collapse font-mono text-sm">
         <thead>
           <tr>
-            <th className="sticky left-0 bg-slate-900 border-b border-r border-slate-800 px-3 py-2 text-left text-xs text-slate-500 font-semibold uppercase tracking-wide">
+            <th className="sticky left-0 bg-white border-b border-r border-slate-200 px-3 py-2 text-left text-xs text-slate-500 font-semibold uppercase tracking-wide">
               Turno
             </th>
             {dias.map((dia, idx) => (
               <th
                 key={idx}
-                className="border-b border-slate-800 px-1 py-2 text-center min-w-[44px]"
+                className="border-b border-slate-200 px-0.5 py-1.5 text-center min-w-[34px]"
               >
                 <button
                   onClick={() => onSelecionarDia(dia)}
-                  className="w-full flex flex-col items-center gap-0.5 py-1 rounded-md hover:bg-slate-800 transition group"
+                  className="w-full flex flex-col items-center gap-0.5 py-1 rounded-md hover:bg-slate-100 transition group"
                 >
-                  <span className="text-[10px] text-slate-600 group-hover:text-slate-400">
+                  <span className="text-[10px] text-slate-400 group-hover:text-slate-600">
                     {DIAS_SEMANA_CURTO[dia.getDay()]}
                   </span>
-                  <span className="text-slate-200 font-bold group-hover:text-amber-300">
+                  <span className="text-slate-700 font-bold group-hover:text-indigo-600">
                     {dia.getDate()}
                   </span>
                 </button>
@@ -679,8 +776,8 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia
         </thead>
         <tbody>
           {turnosLabel.map((t) => (
-            <tr key={t.numero} className="odd:bg-slate-900/30">
-              <td className="sticky left-0 bg-slate-900 border-r border-slate-800 px-3 py-2 text-xs text-slate-400 font-semibold whitespace-nowrap">
+            <tr key={t.numero} className="odd:bg-slate-50">
+              <td className="sticky left-0 bg-white border-r border-slate-200 px-3 py-2 text-xs text-slate-500 font-semibold whitespace-nowrap">
                 {t.label}
               </td>
               {dias.map((dia, idx) => {
@@ -688,21 +785,31 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia
                 const cor = linha
                   ? corDoGrupamento(linha.grupamento, mapaCoresGrupamento)
                   : null;
+                const membros = linha ? membrosPorGrupamento.get(linha.grupamento) : null;
+                const efetivo = membros?.length;
+                const nomesTooltip = membros?.length
+                  ? membros.map((m) => m.nome).join(", ")
+                  : "Nenhum militar vinculado a este grupamento";
                 return (
-                  <td key={idx} className="border-t border-slate-800/60 text-center p-0.5">
+                  <td key={idx} className="border-t border-slate-100 text-center p-0.5">
                     {linha ? (
                       <button
                         onClick={() => onSelecionarDia(dia)}
-                        className={`w-full py-1.5 rounded-md font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring} hover:brightness-125 transition`}
-                        title={`${linha.hora_inicio} às ${linha.hora_fim}${linha.origem === "AJUSTE_MANUAL" ? " · ajuste manual" : ""}`}
+                        className={`w-full py-1 rounded-md font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring} hover:brightness-95 transition flex flex-col items-center leading-tight`}
+                        title={`Grupamento ${linha.grupamento} · ${linha.hora_inicio} às ${linha.hora_fim}${linha.origem === "AJUSTE_MANUAL" ? " · ajuste manual" : ""} · ${nomesTooltip}`}
                       >
-                        {linha.grupamento}
-                        {linha.origem === "AJUSTE_MANUAL" && (
-                          <span className="ml-0.5 text-[8px] align-top">*</span>
-                        )}
+                        <span>
+                          {linha.grupamento}
+                          {linha.origem === "AJUSTE_MANUAL" && (
+                            <span className="ml-0.5 text-[8px] align-top">*</span>
+                          )}
+                        </span>
+                        <span className="text-[9px] font-normal opacity-70">
+                          ({efetivo !== undefined ? efetivo : "?"})
+                        </span>
                       </button>
                     ) : (
-                      <span className="text-slate-700">—</span>
+                      <span className="text-slate-300">—</span>
                     )}
                   </td>
                 );
@@ -711,7 +818,7 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia
           ))}
         </tbody>
       </table>
-      <p className="px-3 py-2 text-[11px] text-slate-600 border-t border-slate-800">
+      <p className="px-3 py-2 text-[11px] text-slate-400 border-t border-slate-200">
         * ajuste manual pontual — clique em um dia para ver detalhes
       </p>
     </div>
@@ -723,10 +830,10 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, onSelecionarDia
 // ===========================================================================
 function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupamento, onSelecionarDia }) {
   return (
-    <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/50">
-      <div className="grid grid-cols-7 bg-slate-900 border-b border-slate-800">
+    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+      <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
         {DIAS_SEMANA_CURTO.map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold text-slate-500 py-1.5">
+          <div key={i} className="text-center text-[10px] font-semibold text-slate-400 py-1.5">
             {d}
           </div>
         ))}
@@ -739,11 +846,11 @@ function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupame
             <button
               key={idx}
               onClick={() => onSelecionarDia(dia)}
-              className={`flex flex-col items-center gap-1 py-2.5 border-t border-r border-slate-800/60 last:border-r-0 transition ${
-                foraDoMes ? "opacity-30" : "hover:bg-slate-800"
+              className={`flex flex-col items-center gap-1 py-2.5 border-t border-r border-slate-100 last:border-r-0 transition ${
+                foraDoMes ? "opacity-30" : "hover:bg-slate-50"
               }`}
             >
-              <span className="text-xs font-mono font-bold text-slate-200">
+              <span className="text-xs font-mono font-bold text-slate-700">
                 {dia.getDate()}
               </span>
               <div className="flex gap-0.5">
@@ -763,17 +870,29 @@ function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupame
 // ===========================================================================
 // PAINEL LATERAL / BOTTOM SHEET — detalhe do dia
 // ===========================================================================
-function PainelDoDia({ data, turnos, mapaCoresGrupamento, onFechar, onEditarTurno }) {
+function PainelDoDia({
+  data,
+  turnos,
+  mapaCoresGrupamento,
+  membrosPorGrupamento,
+  carregandoMembros,
+  idGrupamentoPorSigla,
+  onFechar,
+  onEditarTurno,
+  onAdicionarMes,
+  onExcluirMes,
+  onTrocarMes,
+}) {
   return (
     <div className="fixed inset-0 z-40 flex items-end lg:items-center lg:justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onFechar} />
-      <div className="relative w-full lg:max-w-md bg-slate-900 border-t lg:border border-slate-800 rounded-t-2xl lg:rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/40" onClick={onFechar} />
+      <div className="relative w-full lg:max-w-lg bg-white border-t lg:border border-slate-200 rounded-t-2xl lg:rounded-2xl p-5 max-h-[85vh] overflow-y-auto shadow-xl">
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-xs text-slate-500 font-mono uppercase">
               {data.toLocaleDateString("pt-BR", { weekday: "long" })}
             </p>
-            <h2 className="text-xl font-bold text-slate-100">
+            <h2 className="text-xl font-bold text-slate-800">
               {data.toLocaleDateString("pt-BR", {
                 day: "2-digit",
                 month: "long",
@@ -783,7 +902,7 @@ function PainelDoDia({ data, turnos, mapaCoresGrupamento, onFechar, onEditarTurn
           </div>
           <button
             onClick={onFechar}
-            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
             aria-label="Fechar"
           >
             <X size={20} />
@@ -792,40 +911,120 @@ function PainelDoDia({ data, turnos, mapaCoresGrupamento, onFechar, onEditarTurn
 
         <div className="space-y-3">
           {turnos.length === 0 && (
-            <p className="text-sm text-slate-500 py-6 text-center">
+            <p className="text-sm text-slate-400 py-6 text-center">
               Nenhum turno gerado para este dia.
             </p>
           )}
           {turnos.map((linha) => {
             const cor = corDoGrupamento(linha.grupamento, mapaCoresGrupamento);
+            const membros = membrosPorGrupamento.get(linha.grupamento) || [];
+            const idGrupamento = idGrupamentoPorSigla.get(linha.grupamento);
             return (
               <div
                 key={linha.turno}
-                className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50"
+                className="p-3 rounded-lg border border-slate-200 bg-slate-50"
               >
-                <div>
-                  <p className="text-xs text-slate-500 font-mono">
-                    {linha.turno}º Turno · {linha.hora_inicio} às {linha.hora_fim}
-                  </p>
-                  <span
-                    className={`inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-xs font-mono font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring}`}
-                  >
-                    <span className={`size-1.5 rounded-full ${cor.dot}`} />
-                    Grupamento {linha.grupamento}
-                  </span>
-                  {linha.observacao && linha.observacao !== "Sem observação" && (
-                    <p className="text-xs text-slate-500 mt-1 italic">
-                      {linha.observacao}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {linha.turno}º Turno · {linha.hora_inicio} às {linha.hora_fim}
                     </p>
+                    <span
+                      className={`inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full text-xs font-mono font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring}`}
+                    >
+                      <span className={`size-1.5 rounded-full ${cor.dot}`} />
+                      Grupamento {linha.grupamento}
+                    </span>
+                    {linha.observacao && linha.observacao !== "Sem observação" && (
+                      <p className="text-xs text-slate-500 mt-1 italic">
+                        {linha.observacao}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => onEditarTurno(linha)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-600 hover:text-white border border-slate-200 text-slate-600 text-xs font-semibold rounded-md transition"
+                  >
+                    <Pencil size={13} />
+                    Editar
+                  </button>
+                </div>
+
+                {/* Ações de adicionar — nível do turno (não precisam de um
+                    militar já selecionado) */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => onAdicionarMes(linha.grupamento, idGrupamento)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md transition"
+                  >
+                    <UserPlus size={13} />
+                    Adicionar (mês inteiro)
+                  </button>
+                  <button
+                    disabled
+                    title="Depende de uma tabela de substituição pontual por dia, ainda não implementada no backend"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded-md cursor-not-allowed"
+                  >
+                    <Lock size={13} />
+                    Adicionar (só hoje)
+                  </button>
+                </div>
+
+                {/* Componentes (militares) do grupamento, cada um com suas
+                    próprias ações — sempre visíveis, sem menu suspenso
+                    (evita o bug de recorte dentro de área com scroll) */}
+                <div className="mt-3 pt-3 border-t border-slate-200/70 space-y-2">
+                  {carregandoMembros ? (
+                    <p className="text-xs text-slate-400">Carregando efetivo...</p>
+                  ) : membros.length === 0 ? (
+                    <p className="text-xs text-slate-400">
+                      Nenhum militar vinculado a este grupamento ainda.
+                    </p>
+                  ) : (
+                    membros.map((m) => (
+                      <div
+                        key={m.id_user}
+                        className="p-2 bg-white border border-slate-200 rounded-lg"
+                      >
+                        <p className="text-xs font-semibold text-slate-700 mb-1.5">{m.nome}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            onClick={() => onExcluirMes(m, linha.grupamento, idGrupamento)}
+                            title="Excluir da escala mensal"
+                            className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-[11px] font-semibold rounded transition"
+                          >
+                            <Trash2 size={11} />
+                            Excluir (mês)
+                          </button>
+                          <button
+                            disabled
+                            title="Depende de uma tabela de substituição pontual por dia, ainda não implementada no backend"
+                            className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-300 text-[11px] font-semibold rounded cursor-not-allowed"
+                          >
+                            <Lock size={11} />
+                            Excluir (dia)
+                          </button>
+                          <button
+                            onClick={() => onTrocarMes(m, linha.grupamento, idGrupamento)}
+                            title="Trocar de grupamento (mês inteiro)"
+                            className="flex items-center gap-1 px-2 py-1 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 text-[11px] font-semibold rounded transition"
+                          >
+                            <ArrowLeftRight size={11} />
+                            Permutar (mês)
+                          </button>
+                          <button
+                            disabled
+                            title="Depende de uma tabela de substituição pontual por dia, ainda não implementada no backend"
+                            className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-300 text-[11px] font-semibold rounded cursor-not-allowed"
+                          >
+                            <Lock size={11} />
+                            Permutar (dia)
+                          </button>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
-                <button
-                  onClick={() => onEditarTurno(linha)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 text-xs font-semibold rounded-md transition"
-                >
-                  <Pencil size={13} />
-                  Editar
-                </button>
               </div>
             );
           })}
@@ -836,16 +1035,271 @@ function PainelDoDia({ data, turnos, mapaCoresGrupamento, onFechar, onEditarTurn
 }
 
 // ===========================================================================
+// CARD DE EFETIVO DE UM GRUPAMENTO
+// Lista os militares no formato de credencial do documento oficial
+// (patente + matrícula + nome + CPF), com menu de ações por militar.
+// ===========================================================================
+function GrupamentoRosterCard({
+  sigla,
+  idGrupamento,
+  cor,
+  membros,
+  carregando,
+  onAdicionar,
+  onExcluirMensal,
+  onTrocar,
+  onPermutar,
+}) {
+  const confirmarExclusao = (membro) => {
+    const nome = membro.nome_guerra || membro.nome;
+    if (window.confirm(`Remover ${nome} do Grupamento ${sigla}? Isso encerra o vínculo dele com este grupamento.`)) {
+      onExcluirMensal(membro);
+    }
+  };
+
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-visible">
+      <div className={`flex items-center justify-between px-4 py-3 ${cor.bg} ring-1 ${cor.ring}`}>
+        <span className={`inline-flex items-center gap-1.5 text-sm font-mono font-bold ${cor.text}`}>
+          <span className={`size-2 rounded-full ${cor.dot}`} />
+          Grupamento {sigla}
+          <span className="opacity-70">· {membros.length}</span>
+        </span>
+        <button
+          onClick={onAdicionar}
+          disabled={!idGrupamento}
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-white/90 hover:bg-white text-slate-700 text-xs font-semibold rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <UserPlus size={13} />
+          Adicionar
+        </button>
+      </div>
+
+      <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+        {carregando && <p className="px-4 py-3 text-xs text-slate-400">Carregando...</p>}
+        {!carregando && membros.length === 0 && (
+          <p className="px-4 py-3 text-xs text-slate-400">Nenhum militar vinculado.</p>
+        )}
+        {membros.map((m) => (
+          <div key={m.id_user} className="px-4 py-3">
+            <p className="text-base font-bold text-slate-900 leading-snug">
+              {(m.nome_guerra || m.nome || "").toUpperCase()}
+            </p>
+            <p className="text-sm text-slate-600 font-mono mt-0.5 mb-2">
+              {m.sigla_patente || "—"} · Mat. {m.matricula} · CPF {formatarCpf(m.cpf)}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => onTrocar(m)}
+                title="Trocar de grupamento (definitivo)"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 text-xs font-semibold rounded transition"
+              >
+                <ArrowLeftRight size={13} />
+                Trocar
+              </button>
+              <button
+                onClick={() => onPermutar(m)}
+                title="Permutar com outro militar"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 text-xs font-semibold rounded transition"
+              >
+                <ArrowLeftRight size={13} />
+                Permutar
+              </button>
+              <button
+                onClick={() => confirmarExclusao(m)}
+                title="Excluir da escala mensal"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-xs font-semibold rounded transition"
+              >
+                <Trash2 size={13} />
+                Excluir
+              </button>
+              <button
+                disabled
+                title="Depende de uma tabela de substituição pontual por dia, ainda não implementada no backend"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded cursor-not-allowed"
+              >
+                <Lock size={13} />
+                Excluir (dia)
+              </button>
+              <button
+                disabled
+                title="Depende de uma tabela de substituição pontual por dia, ainda não implementada no backend"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded cursor-not-allowed"
+              >
+                <Lock size={13} />
+                Permutar (dia)
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ===========================================================================
+// MODAL DE BUSCA DE MILITAR
+// Reutilizado tanto pra "adicionar militar ao grupamento" quanto pra
+// "permutar com outro militar". Busca por nome, CPF, matrícula, e-mail,
+// telefone ou nome de guerra — filtro em memória sobre /admin/allusers
+// (lista pequena o bastante pra isso ser instantâneo).
+// ===========================================================================
+function ModalBuscaMilitar({ titulo, excluirIds, confirmando, erro, onFechar, onSelecionar, rotuloAcao }) {
+  const [busca, setBusca] = useState("");
+  const [resultados, setResultados] = useState([]);
+  const [todosUsuarios, setTodosUsuarios] = useState(null);
+
+  useEffect(() => {
+    async function carregarBase() {
+      try {
+        const { data } = await api.get("/admin/allusers");
+        setTodosUsuarios(Array.isArray(data) ? data : []);
+      } catch {
+        setTodosUsuarios([]);
+      }
+    }
+    carregarBase();
+  }, []);
+
+  useEffect(() => {
+    if (!todosUsuarios) return;
+    const termo = busca.trim().toLowerCase();
+    if (termo.length < 2) {
+      setResultados([]);
+      return;
+    }
+    const filtrados = todosUsuarios.filter((u) => {
+      if (excluirIds?.has(u.id)) return false;
+      const campos = [u.nome, u.cpf, u.matricula, u.email, u.telefone, u.nome_guerra]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase());
+      return campos.some((c) => c.includes(termo));
+    });
+    setResultados(filtrados.slice(0, 8));
+  }, [busca, todosUsuarios, excluirIds]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onFechar} />
+      <div className="relative w-full lg:max-w-lg bg-white border-t lg:border border-slate-200 rounded-t-2xl lg:rounded-2xl p-5 max-h-[85vh] overflow-y-auto shadow-xl">
+        <div className="flex items-start justify-between mb-4">
+          <h2 className="text-base font-bold text-slate-800 pr-4">{titulo}</h2>
+          <button
+            onClick={onFechar}
+            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition flex-shrink-0"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {erro && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{erro}</div>
+        )}
+
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            autoFocus
+            type="text"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Nome, CPF, matrícula, e-mail, telefone ou nome de guerra..."
+            className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div className="mt-3 space-y-1.5">
+          {busca.trim().length >= 2 && resultados.length === 0 && (
+            <p className="text-xs text-slate-400 py-3 text-center">Nenhum militar encontrado.</p>
+          )}
+          {resultados.map((u) => (
+            <button
+              key={u.id}
+              disabled={confirmando}
+              onClick={() => onSelecionar(u)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-lg transition text-left disabled:opacity-50"
+            >
+              <div className="min-w-0">
+                <p className="text-sm text-slate-700 truncate">{u.nome}</p>
+                <p className="text-[11px] text-slate-400 font-mono truncate">
+                  {u.patente_sigla ? `${u.patente_sigla} · ` : ""}
+                  {u.matricula} · {formatarCpf(u.cpf)}
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-indigo-600 flex-shrink-0">{rotuloAcao}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===========================================================================
+// MODAL — trocar militar de grupamento (definitivo, a partir de hoje)
+// ===========================================================================
+function ModalTrocarGrupamento({ membro, siglaAtual, grupamentosDisponiveis, confirmando, erro, onFechar, onConfirmar }) {
+  const [alvo, setAlvo] = useState(null); // { sigla, id }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onFechar} />
+      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl">
+        <h3 className="text-base font-bold text-slate-800 mb-1">Trocar de grupamento</h3>
+        <p className="text-sm text-slate-500 mb-4">
+          {membro.nome_guerra || membro.nome} sai do Grupamento {siglaAtual} e passa a integrar o
+          grupamento escolhido a partir de hoje.
+        </p>
+
+        {erro && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{erro}</div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {grupamentosDisponiveis.map((g) => (
+            <button
+              key={g.sigla}
+              onClick={() => setAlvo(g)}
+              className={`py-2 rounded-lg text-sm font-mono font-bold border transition ${
+                alvo?.sigla === g.sigla
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-slate-700 border-slate-200 hover:border-indigo-300"
+              }`}
+            >
+              {g.sigla}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onFechar}
+            disabled={confirmando}
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => alvo && onConfirmar(alvo.sigla, alvo.id)}
+            disabled={!alvo || confirmando}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition"
+          >
+            {confirmando ? "Aplicando..." : "Confirmar troca"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===========================================================================
 // EDITOR DE MILITARES DE UM TURNO/GRUPAMENTO
 //
-// ATENÇÃO — depende de um endpoint que ainda não existe no backend:
-//   GET /escalas/grupamento/:id/membros
-// Até esse endpoint ser criado, a lista de militares fica vazia e o
-// componente mostra o aviso abaixo em vez de travar a tela.
-// A adição de militar usa POST /escalas/grupamento-usuario (já existe),
-// mas isso vincula o militar ao grupamento por período — não é uma troca
-// pontual só daquele dia. Se a intenção for substituição pontual (só
-// aquele plantão), o modelo de dados atual não suporta isso ainda.
+// Depende de GET /escalas/grupamento/:id/membros (já implementado no
+// backend). A adição usa POST /escalas/grupamento-usuario (também já
+// existe), mas isso vincula o militar ao grupamento por período — não é
+// uma troca pontual só daquele dia. Permuta pontual (substituição só
+// naquele plantão) é um módulo separado, planejado pra próxima etapa.
 // ===========================================================================
 function EditorMilitares({ linha, onFechar }) {
   const [membros, setMembros] = useState([]);
@@ -859,12 +1313,11 @@ function EditorMilitares({ linha, onFechar }) {
     async function carregar() {
       try {
         setCarregando(true);
-        // Endpoint alvo — ainda não implementado no backend (ver aviso acima)
         const { data } = await api.get(
           `/escalas/grupamento/${linha.id_grupamento || linha.grupamento}/membros`,
         );
         setMembros(data || []);
-      } catch {
+      } catch (err) {
         setEndpointIndisponivel(true);
       } finally {
         setCarregando(false);
@@ -899,10 +1352,10 @@ function EditorMilitares({ linha, onFechar }) {
 
   const adicionarMilitar = async (usuario) => {
     // Checagem local best-effort da regra "não escalar duas vezes no mesmo
-    // dia+turno". A validação definitiva precisa vir do backend (constraint
-    // de banco), esta é só uma proteção de UX pra evitar o erro óbvio.
-    const jaEscaladoNoTurno = membros.some((m) => m.id_user === usuario.id);
-    if (jaEscaladoNoTurno) {
+    // dia+turno". A validação definitiva vem do backend (409 quando o
+    // militar já tem vínculo ativo em outro grupamento).
+    const jaEscalado = membros.some((m) => m.id_user === usuario.id);
+    if (jaEscalado) {
       setErro("Este militar já está escalado neste grupamento/turno.");
       return;
     }
@@ -937,39 +1390,38 @@ function EditorMilitares({ linha, onFechar }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center">
-      <div className="absolute inset-0 bg-black/70" onClick={onFechar} />
-      <div className="relative w-full lg:max-w-lg bg-slate-900 border-t lg:border border-slate-800 rounded-t-2xl lg:rounded-2xl p-5 max-h-[85vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/50" onClick={onFechar} />
+      <div className="relative w-full lg:max-w-lg bg-white border-t lg:border border-slate-200 rounded-t-2xl lg:rounded-2xl p-5 max-h-[85vh] overflow-y-auto shadow-xl">
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-xs text-slate-500 font-mono">
               {linha.turno}º Turno · Grupamento {linha.grupamento}
             </p>
-            <h2 className="text-lg font-bold text-slate-100">
+            <h2 className="text-lg font-bold text-slate-800">
               Militares escalados
             </h2>
           </div>
           <button
             onClick={onFechar}
-            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
           >
             <X size={20} />
           </button>
         </div>
 
         {endpointIndisponivel && (
-          <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 flex gap-2">
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex gap-2">
             <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
             <span>
-              O backend ainda não expõe a lista de militares por grupamento
-              (endpoint <code className="font-mono">GET /escalas/grupamento/:id/membros</code> pendente).
-              A busca e o vínculo abaixo já funcionam; a lista atual só não
-              carrega os nomes já escalados até esse endpoint existir.
+              Não foi possível carregar a lista de militares deste
+              grupamento agora. A busca e o vínculo abaixo continuam
+              funcionando normalmente.
             </span>
           </div>
         )}
 
         {erro && (
-          <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-300">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
             {erro}
           </div>
         )}
@@ -977,22 +1429,22 @@ function EditorMilitares({ linha, onFechar }) {
         {/* Lista atual */}
         <div className="space-y-2 mb-5">
           {carregando && (
-            <p className="text-sm text-slate-500 py-4 text-center">Carregando...</p>
+            <p className="text-sm text-slate-400 py-4 text-center">Carregando...</p>
           )}
           {!carregando && membros.length === 0 && !endpointIndisponivel && (
-            <p className="text-sm text-slate-500 py-4 text-center">
+            <p className="text-sm text-slate-400 py-4 text-center">
               Nenhum militar escalado ainda.
             </p>
           )}
           {membros.map((m) => (
             <div
               key={m.id_user}
-              className="flex items-center justify-between px-3 py-2 bg-slate-950/50 border border-slate-800 rounded-lg"
+              className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg"
             >
-              <span className="text-sm text-slate-200">{m.nome}</span>
+              <span className="text-sm text-slate-700">{m.nome}</span>
               <button
                 onClick={() => removerMilitar(m)}
-                className="p-1.5 rounded-md hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition"
+                className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition"
                 aria-label={`Remover ${m.nome}`}
               >
                 <Trash2 size={14} />
@@ -1011,18 +1463,18 @@ function EditorMilitares({ linha, onFechar }) {
             value={busca}
             onChange={(e) => buscarMilitares(e.target.value)}
             placeholder="Buscar por nome ou matrícula..."
-            className="mt-1.5 w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="mt-1.5 w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           {resultadosBusca.length > 0 && (
-            <div className="mt-2 border border-slate-800 rounded-lg overflow-hidden divide-y divide-slate-800">
+            <div className="mt-2 border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100">
               {resultadosBusca.map((u) => (
                 <button
                   key={u.id}
                   onClick={() => adicionarMilitar(u)}
-                  className="w-full flex items-center justify-between px-3 py-2 bg-slate-950/50 hover:bg-slate-800 transition text-left"
+                  className="w-full flex items-center justify-between px-3 py-2 bg-white hover:bg-slate-50 transition text-left"
                 >
-                  <span className="text-sm text-slate-200">{u.nome}</span>
-                  <Plus size={14} className="text-amber-400" />
+                  <span className="text-sm text-slate-700">{u.nome}</span>
+                  <Plus size={14} className="text-indigo-600" />
                 </button>
               ))}
             </div>
@@ -1039,22 +1491,22 @@ function EditorMilitares({ linha, onFechar }) {
 function ModalConfirmacao({ titulo, descricao, confirmando, onCancelar, onConfirmar }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/70" onClick={onCancelar} />
-      <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5">
-        <h3 className="text-base font-bold text-slate-100 mb-2">{titulo}</h3>
-        <p className="text-sm text-slate-400 mb-5">{descricao}</p>
+      <div className="absolute inset-0 bg-black/50" onClick={onCancelar} />
+      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl">
+        <h3 className="text-base font-bold text-slate-800 mb-2">{titulo}</h3>
+        <p className="text-sm text-slate-500 mb-5">{descricao}</p>
         <div className="flex gap-2 justify-end">
           <button
             onClick={onCancelar}
             disabled={confirmando}
-            className="px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 rounded-lg transition disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirmar}
             disabled={confirmando}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-sm font-bold rounded-lg transition"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition"
           >
             {confirmando ? "Aplicando..." : "Confirmar edição"}
           </button>
