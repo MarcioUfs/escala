@@ -169,6 +169,7 @@ async function listarEscalasV2(req, res) {
           "v2_turno.numero AS turno",
           "v2_turno.hora_inicio",
           "v2_turno.hora_fim",
+          "v2_grupamento.id_grupamento",
           "v2_grupamento.sigla AS grupamento",
         )
         .join("v2_turno", "v2_turno.id_turno", "v2_escala.fk_id_turno")
@@ -201,6 +202,7 @@ async function listarEscalasV2(req, res) {
         turno: element.turno || 1,
         hora_inicio: element.hora_inicio || "00:00",
         hora_fim: element.hora_fim || "00:00",
+        id_grupamento: element.id_grupamento || null,
         grupamento: element.grupamento || "Nenhum grupamento cadastrado",
         origem: element.origem || "CICLO",
         observacao: element.observacao || "Sem observação",
@@ -232,6 +234,7 @@ async function listarEscalasV2(req, res) {
           "v2_escala.data",
           "v2_escala.origem",
           "v2_turno.numero AS turno",
+          "v2_grupamento.id_grupamento",
           "v2_grupamento.sigla AS grupamento",
         )
         .join("v2_turno", "v2_turno.id_turno", "v2_escala.fk_id_turno")
@@ -480,6 +483,7 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
         "v2_turno.numero AS turno",
         "v2_turno.hora_inicio",
         "v2_turno.hora_fim",
+        "v2_grupamento.id_grupamento",
         "v2_grupamento.sigla AS grupamento",
       )
       .join("v2_turno", "v2_turno.id_turno", "v2_escala.fk_id_turno")
@@ -509,6 +513,7 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
       turno: element.turno || 1,
       hora_inicio: element.hora_inicio || "00:00",
       hora_fim: element.hora_fim || "00:00",
+      id_grupamento: element.id_grupamento || null,
       grupamento: element.grupamento || "Nenhum grupamento cadastrado",
       origem: element.origem || "CICLO",
       observacao: element.observacao || "Sem observação",
@@ -529,6 +534,8 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
 
 // -----------------------------------------------------------------------
 // 9) LISTAR MEMBROS ATIVOS DE UM GRUPAMENTO (vínculo aberto, sem data_fim)
+//    Usado pela tela de escala pra mostrar quem já está escalado antes de
+//    permitir adicionar/remover militares daquele grupamento.
 // -----------------------------------------------------------------------
 async function listarMembrosGrupamentoV2(req, res) {
   const { id } = req.params; // id_grupamento
@@ -540,9 +547,13 @@ async function listarMembrosGrupamentoV2(req, res) {
         "v2_grupamento_usuario.data_inicio",
         "users.id_user",
         "users.nome",
+        "users.nome_guerra",
         "users.matricula",
+        "users.cpf",
+        "tbl_patentes.sigla_patente",
       )
       .join("users", "users.id_user", "v2_grupamento_usuario.fk_id_usuario")
+      .leftJoin("tbl_patentes", "tbl_patentes.id_patente", "users.id_patente")
       .where({ "v2_grupamento_usuario.fk_id_grupamento": id })
       .whereNull("v2_grupamento_usuario.data_fim")
       .orderBy("users.nome");
@@ -552,6 +563,7 @@ async function listarMembrosGrupamentoV2(req, res) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
+
 module.exports = {
   gerarEscalaV2: gerarEscalaV2, // substitui o createEscala em massa
   criarAjusteManualV2: criarAjusteManualV2, // troca pontual em um dia/turno
@@ -561,5 +573,5 @@ module.exports = {
   reverterParaCicloV2: reverterParaCicloV2, // substitui o deleteEscala
   vincularUsuarioGrupamentoV2: vincularUsuarioGrupamentoV2, // substitui o create_guarnicao (stub)
   desvincularUsuarioGrupamentoV2: desvincularUsuarioGrupamentoV2,
-  listarMembrosGrupamentoV2: listarMembrosGrupamentoV2,
+  listarMembrosGrupamentoV2: listarMembrosGrupamentoV2, // membros ativos de um grupamento
 };

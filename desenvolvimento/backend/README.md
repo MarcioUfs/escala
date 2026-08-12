@@ -28,4 +28,9 @@
  # atulizar o swagger
  node swagger.js ou se script salvo "sw": "node swagger.js" -> npm run sw
 
+ # script nodemon+swagger
+ use>> npm run dev
+ "dev": "node swagger.js && nodemon index.js"
+ atualizar o swagger e deixa o nodemon rodando
+
  

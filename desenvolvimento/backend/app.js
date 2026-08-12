@@ -62,10 +62,17 @@ app.use(
 // 1.3 Parsers de Body: Obrigatório vir ANTES das rotas.
 // Sem isso, o `req.body.cpf` chegaria vazio no momento do login e
 // o sistema não conseguiria bloquear tentativas de força bruta.
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Limite explícito de tamanho (1mb) evita que um payload gigante sirva
+// como vetor simples de negação de serviço.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 
-// 1.4 Rate Limiter geral: protege toda a navegação básica do sistema
+// 1.4 Rate Limiter geral: protege toda a navegação básica do sistema.
+// Funciona em camada com os limiters específicos de cada rota
+// (authenticatedLimiter, strictLimiter) — este aqui é o teto por IP,
+// os outros são o teto por usuário/ação. As duas camadas são
+// intencionais: uma protege a capacidade geral do servidor, a outra
+// protege contra abuso de uma conta específica.
 app.use(generalLimiter);
 
 // ---------------------------------------------------
@@ -82,9 +89,46 @@ app.use("/setores", setorRoutes);
 app.use("/escalas", v2EscalaRoutes);
 
 // ---------------------------------------------------
-// 4. PROCESSOS EM SEGUNDO PLANO
+// 4. ROTA NÃO ENCONTRADA (404)
 // ---------------------------------------------------
-// O scraper rodará independentemente das requisições web
-iniciarAgendamentos();
+// Sem isso, uma URL inexistente cai no handler padrão do Express (HTML,
+// "Cannot GET /..."), inconsistente com o resto da API, que sempre
+// responde em JSON.
+app.use((req, res) => {
+  res.status(404).json({ msg: "Rota não encontrada" });
+});
+
+// const rasparListaAntiguidade = require("./src/services/scraperAntiguidade");
+// rasparListaAntiguidade().then((sucesso) => console.log("Resultado:", sucesso));
+
+// ---------------------------------------------------
+// 5. HANDLER DE ERRO GLOBAL
+// ---------------------------------------------------
+// Precisa ser o ÚLTIMO app.use e ter exatamente 4 parâmetros (err, req,
+// res, next) — é assim que o Express reconhece um error handler.
+// Sem isso, qualquer erro não tratado (incluindo o `callback(new
+// Error(...))` do CORS acima) cai no handler padrão do Express, que em
+// desenvolvimento devolve o stack trace completo pro cliente — vazando
+// caminho de arquivos, nomes de função e versão de dependências.
+app.use((err, req, res, next) => {
+  if (err.message === "Não autorizado pelo CORS") {
+    return res.status(403).json({ msg: "Origem não autorizada." });
+  }
+
+  console.error(err); // loga o erro real só no servidor, nunca no cliente
+
+  return res.status(500).json({ msg: "Erro interno do servidor." });
+});
+
+// ---------------------------------------------------
+// 6. PROCESSOS EM SEGUNDO PLANO
+// ---------------------------------------------------
+// O scraper rodará independentemente das requisições web.
+// Não roda em ambiente de teste, pra não disparar jobs reais (envio de
+// notificação, geração de escala, etc.) toda vez que os testes importam
+// este arquivo.
+if (process.env.NODE_ENV !== "test") {
+  iniciarAgendamentos();
+}
 
 module.exports = app;
