@@ -564,6 +564,366 @@ async function listarMembrosGrupamentoV2(req, res) {
   }
 }
 
+// -----------------------------------------------------------------------
+// Helpers internos (não exportados) — validação compartilhada pelas 3
+// funções de criação de substituição abaixo. Mesmo padrão de
+// "valida e devolve 404 amigável" já usado em criarAjusteManualV2.
+// -----------------------------------------------------------------------
+async function validarTurnoEGrupamento(fk_id_turno, fk_id_grupamento) {
+  const turnoExiste = await database("v2_turno")
+    .where({ id_turno: fk_id_turno, is_active: true })
+    .first();
+  if (!turnoExiste) {
+    return { valido: false, msg: "Turno não encontrado" };
+  }
+
+  const grupamentoExiste = await database("v2_grupamento")
+    .where({ id_grupamento: fk_id_grupamento, is_active: true })
+    .first();
+  if (!grupamentoExiste) {
+    return { valido: false, msg: "Grupamento não encontrado" };
+  }
+
+  return { valido: true };
+}
+
+async function validarUsuarioExiste(id_user, rotulo) {
+  const usuario = await database("users")
+    .where({ id_user, is_active: true })
+    .first();
+  if (!usuario) {
+    return { valido: false, msg: `${rotulo} não encontrado ou inativo` };
+  }
+  return { valido: true };
+}
+
+// Impede empilhar duas exceções contraditórias pro mesmo militar no mesmo
+// data+turno (ex: adicionar o mesmo cara duas vezes, ou excluir quem já
+// tem exclusão registrada ali).
+async function existeSubstituicaoParaUsuario(data, fk_id_turno, id_user) {
+  return database("v2_escala_substituicao")
+    .where({ data, fk_id_turno })
+    .andWhere(function () {
+      this.where({ fk_id_usuario_sai: id_user }).orWhere({
+        fk_id_usuario_entra: id_user,
+      });
+    })
+    .first();
+}
+
+// -----------------------------------------------------------------------
+// 10) SUBSTITUIÇÃO PONTUAL — ADIÇÃO (militar extra só naquele dia+turno,
+//     sem mexer no vínculo mensal dele em nenhum grupamento)
+// -----------------------------------------------------------------------
+async function criarSubstituicaoAdicaoV2(req, res) {
+  const token = req.headers.authorization.split(" ")[1];
+
+  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ msg: "Token inválido ou expirado" });
+    }
+
+    try {
+      const { fk_id_turno, fk_id_grupamento, fk_id_usuario_entra, observacao } =
+        req.body;
+
+      if (!req.body.data || !fk_id_turno || !fk_id_grupamento || !fk_id_usuario_entra) {
+        return res.status(400).json({
+          msg: "data, fk_id_turno, fk_id_grupamento e fk_id_usuario_entra são obrigatórios",
+        });
+      }
+
+      const dataSubstituicao = validarDataUsuario(formatarDataEscala(req.body.data));
+      if (!dataSubstituicao.valido) {
+        return res.status(400).json({ msg: dataSubstituicao.motivo });
+      }
+
+      const validacao = await validarTurnoEGrupamento(fk_id_turno, fk_id_grupamento);
+      if (!validacao.valido) {
+        return res.status(404).json({ msg: validacao.msg });
+      }
+
+      const usuarioValido = await validarUsuarioExiste(fk_id_usuario_entra, "Militar");
+      if (!usuarioValido.valido) {
+        return res.status(404).json({ msg: usuarioValido.msg });
+      }
+
+      const jaExiste = await existeSubstituicaoParaUsuario(
+        dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_usuario_entra,
+      );
+      if (jaExiste) {
+        return res.status(409).json({
+          msg: "Já existe uma substituição registrada pra esse militar nesse dia/turno. Reverta a existente antes de criar outra.",
+        });
+      }
+
+      await database("v2_escala_substituicao").insert({
+        data: dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_grupamento,
+        fk_id_usuario_sai: null,
+        fk_id_usuario_entra,
+        tipo: "ADICAO",
+        observacao: limparEspaco(observacao || "") || null,
+        fk_id_admin: decoded.id_admin || null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      return res
+        .status(201)
+        .json({ msg: "Militar adicionado à escala apenas nesse dia com sucesso!" });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Erro interno do servidor",
+        error: error.message,
+      });
+    }
+  });
+}
+
+// -----------------------------------------------------------------------
+// 11) SUBSTITUIÇÃO PONTUAL — EXCLUSÃO (militar de folga só naquele
+//     dia+turno, sem mexer no vínculo mensal)
+// -----------------------------------------------------------------------
+async function criarSubstituicaoExclusaoV2(req, res) {
+  const token = req.headers.authorization.split(" ")[1];
+
+  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ msg: "Token inválido ou expirado" });
+    }
+
+    try {
+      const { fk_id_turno, fk_id_grupamento, fk_id_usuario_sai, observacao } = req.body;
+
+      if (!req.body.data || !fk_id_turno || !fk_id_grupamento || !fk_id_usuario_sai) {
+        return res.status(400).json({
+          msg: "data, fk_id_turno, fk_id_grupamento e fk_id_usuario_sai são obrigatórios",
+        });
+      }
+
+      const dataSubstituicao = validarDataUsuario(formatarDataEscala(req.body.data));
+      if (!dataSubstituicao.valido) {
+        return res.status(400).json({ msg: dataSubstituicao.motivo });
+      }
+
+      const validacao = await validarTurnoEGrupamento(fk_id_turno, fk_id_grupamento);
+      if (!validacao.valido) {
+        return res.status(404).json({ msg: validacao.msg });
+      }
+
+      const usuarioValido = await validarUsuarioExiste(fk_id_usuario_sai, "Militar");
+      if (!usuarioValido.valido) {
+        return res.status(404).json({ msg: usuarioValido.msg });
+      }
+
+      const jaExiste = await existeSubstituicaoParaUsuario(
+        dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_usuario_sai,
+      );
+      if (jaExiste) {
+        return res.status(409).json({
+          msg: "Já existe uma substituição registrada pra esse militar nesse dia/turno. Reverta a existente antes de criar outra.",
+        });
+      }
+
+      await database("v2_escala_substituicao").insert({
+        data: dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_grupamento,
+        fk_id_usuario_sai,
+        fk_id_usuario_entra: null,
+        tipo: "EXCLUSAO",
+        observacao: limparEspaco(observacao || "") || null,
+        fk_id_admin: decoded.id_admin || null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      return res
+        .status(201)
+        .json({ msg: "Militar excluído da escala apenas nesse dia com sucesso!" });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Erro interno do servidor",
+        error: error.message,
+      });
+    }
+  });
+}
+
+// -----------------------------------------------------------------------
+// 12) SUBSTITUIÇÃO PONTUAL — PERMUTA (troca entre dois militares só
+//     naquele dia+turno, sem mexer no vínculo mensal de nenhum dos dois)
+// -----------------------------------------------------------------------
+async function criarSubstituicaoPermutaV2(req, res) {
+  const token = req.headers.authorization.split(" ")[1];
+
+  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ msg: "Token inválido ou expirado" });
+    }
+
+    try {
+      const { fk_id_turno, fk_id_grupamento, fk_id_usuario_sai, fk_id_usuario_entra, observacao } =
+        req.body;
+
+      if (
+        !req.body.data ||
+        !fk_id_turno ||
+        !fk_id_grupamento ||
+        !fk_id_usuario_sai ||
+        !fk_id_usuario_entra
+      ) {
+        return res.status(400).json({
+          msg: "data, fk_id_turno, fk_id_grupamento, fk_id_usuario_sai e fk_id_usuario_entra são obrigatórios",
+        });
+      }
+
+      if (fk_id_usuario_sai === fk_id_usuario_entra) {
+        return res
+          .status(400)
+          .json({ msg: "fk_id_usuario_sai e fk_id_usuario_entra não podem ser o mesmo militar" });
+      }
+
+      const dataSubstituicao = validarDataUsuario(formatarDataEscala(req.body.data));
+      if (!dataSubstituicao.valido) {
+        return res.status(400).json({ msg: dataSubstituicao.motivo });
+      }
+
+      const validacao = await validarTurnoEGrupamento(fk_id_turno, fk_id_grupamento);
+      if (!validacao.valido) {
+        return res.status(404).json({ msg: validacao.msg });
+      }
+
+      const saiValido = await validarUsuarioExiste(fk_id_usuario_sai, "Militar que sai");
+      if (!saiValido.valido) {
+        return res.status(404).json({ msg: saiValido.msg });
+      }
+
+      const entraValido = await validarUsuarioExiste(fk_id_usuario_entra, "Militar que entra");
+      if (!entraValido.valido) {
+        return res.status(404).json({ msg: entraValido.msg });
+      }
+
+      const conflitoSai = await existeSubstituicaoParaUsuario(
+        dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_usuario_sai,
+      );
+      const conflitoEntra = await existeSubstituicaoParaUsuario(
+        dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_usuario_entra,
+      );
+      if (conflitoSai || conflitoEntra) {
+        return res.status(409).json({
+          msg: "Um dos dois militares já tem substituição registrada nesse dia/turno. Reverta a existente antes de criar outra.",
+        });
+      }
+
+      await database("v2_escala_substituicao").insert({
+        data: dataSubstituicao.objetoDate,
+        fk_id_turno,
+        fk_id_grupamento,
+        fk_id_usuario_sai,
+        fk_id_usuario_entra,
+        tipo: "PERMUTA",
+        observacao: limparEspaco(observacao || "") || null,
+        fk_id_admin: decoded.id_admin || null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      return res
+        .status(201)
+        .json({ msg: "Permuta registrada com sucesso apenas para esse dia!" });
+    } catch (error) {
+      return res.status(500).json({
+        msg: "Erro interno do servidor",
+        error: error.message,
+      });
+    }
+  });
+}
+
+// -----------------------------------------------------------------------
+// 13) LISTAR SUBSTITUIÇÕES DE UM DIA (todas as exceções pontuais
+//     registradas pra uma data, com nome dos militares envolvidos)
+// -----------------------------------------------------------------------
+async function listarSubstituicoesDoDiaV2(req, res) {
+  const { data } = req.params;
+
+  try {
+    const dataConsulta = validarDataUsuario(formatarDataEscala(data));
+    if (!dataConsulta.valido) {
+      return res.status(400).json({ msg: dataConsulta.motivo });
+    }
+
+    const substituicoes = await database("v2_escala_substituicao")
+      .select(
+        "v2_escala_substituicao.id_substituicao",
+        "v2_escala_substituicao.data",
+        "v2_escala_substituicao.tipo",
+        "v2_escala_substituicao.observacao",
+        "v2_turno.numero AS turno",
+        "v2_grupamento.sigla AS grupamento",
+        "u_sai.id_user AS id_usuario_sai",
+        "u_sai.nome AS nome_usuario_sai",
+        "u_entra.id_user AS id_usuario_entra",
+        "u_entra.nome AS nome_usuario_entra",
+      )
+      .join("v2_turno", "v2_turno.id_turno", "v2_escala_substituicao.fk_id_turno")
+      .join(
+        "v2_grupamento",
+        "v2_grupamento.id_grupamento",
+        "v2_escala_substituicao.fk_id_grupamento",
+      )
+      .leftJoin("users AS u_sai", "u_sai.id_user", "v2_escala_substituicao.fk_id_usuario_sai")
+      .leftJoin(
+        "users AS u_entra",
+        "u_entra.id_user",
+        "v2_escala_substituicao.fk_id_usuario_entra",
+      )
+      .where("v2_escala_substituicao.data", dataConsulta.objetoDate)
+      .orderBy("v2_turno.numero");
+
+    return res.status(200).json(substituicoes);
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
+// -----------------------------------------------------------------------
+// 14) REVERTER SUBSTITUIÇÃO (apaga a exceção — a ausência da linha já
+//     significa "sem desvio, vale o vínculo mensal normal daquele dia")
+// -----------------------------------------------------------------------
+async function reverterSubstituicaoV2(req, res) {
+  const { id } = req.params;
+
+  try {
+    const substituicao = await database("v2_escala_substituicao")
+      .where({ id_substituicao: id })
+      .first();
+
+    if (!substituicao) {
+      return res.status(404).json({ msg: "Substituição não encontrada" });
+    }
+
+    await database("v2_escala_substituicao").where({ id_substituicao: id }).del();
+
+    return res
+      .status(200)
+      .json({ msg: "Substituição revertida — volta a valer o vínculo mensal normal" });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
 module.exports = {
   gerarEscalaV2: gerarEscalaV2, // substitui o createEscala em massa
   criarAjusteManualV2: criarAjusteManualV2, // troca pontual em um dia/turno
@@ -574,4 +934,9 @@ module.exports = {
   vincularUsuarioGrupamentoV2: vincularUsuarioGrupamentoV2, // substitui o create_guarnicao (stub)
   desvincularUsuarioGrupamentoV2: desvincularUsuarioGrupamentoV2,
   listarMembrosGrupamentoV2: listarMembrosGrupamentoV2, // membros ativos de um grupamento
+  criarSubstituicaoAdicaoV2: criarSubstituicaoAdicaoV2, // exceção pontual: adicionar só um dia
+  criarSubstituicaoExclusaoV2: criarSubstituicaoExclusaoV2, // exceção pontual: excluir só um dia
+  criarSubstituicaoPermutaV2: criarSubstituicaoPermutaV2, // exceção pontual: permutar só um dia
+  listarSubstituicoesDoDiaV2: listarSubstituicoesDoDiaV2,
+  reverterSubstituicaoV2: reverterSubstituicaoV2, // apaga a exceção pontual
 };

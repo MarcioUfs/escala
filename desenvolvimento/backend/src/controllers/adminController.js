@@ -29,9 +29,25 @@ async function readUsers(req, res) {
       "tbl_patentes.is_active AS patente_ativa",
       "tbl_patentes.created_at AS patente_criado_em",
       "tbl_patentes.updated_at AS patente_atualizado_em",
+      "v2_grupamento.id_grupamento AS id_grupamento_atual",
+      "v2_grupamento.sigla AS grupamento_atual",
     )
     .from("users")
     .leftJoin("tbl_patentes", "users.id_patente", "tbl_patentes.id_patente")
+    // Vínculo mensal em aberto (data_fim IS NULL) — é essa a mesma condição
+    // que vincularUsuarioGrupamentoV2 checa antes de rejeitar um novo
+    // vínculo. Trazer aqui permite ao frontend já saber, antes de tentar
+    // adicionar, que o militar está lotado em outro grupamento.
+    .leftJoin("v2_grupamento_usuario", function () {
+      this.on("v2_grupamento_usuario.fk_id_usuario", "=", "users.id_user").andOnNull(
+        "v2_grupamento_usuario.data_fim",
+      );
+    })
+    .leftJoin(
+      "v2_grupamento",
+      "v2_grupamento.id_grupamento",
+      "v2_grupamento_usuario.fk_id_grupamento",
+    )
     .then((data) => {
       const arrayDados = [];
       if (data.length > 0) {
@@ -54,6 +70,8 @@ async function readUsers(req, res) {
             patente_criado_em: element.patente_criado_em || "01/01/1900",
             patente_atualizado_em:
               element.patente_atualizado_em || "01/01/1900",
+            id_grupamento_atual: element.id_grupamento_atual || null,
+            grupamento_atual: element.grupamento_atual || null,
           });
         }
         return res.status(200).json(arrayDados);

@@ -13,6 +13,11 @@ const {
   vincularUsuarioGrupamentoV2,
   desvincularUsuarioGrupamentoV2,
   listarMembrosGrupamentoV2,
+  criarSubstituicaoAdicaoV2,
+  criarSubstituicaoExclusaoV2,
+  criarSubstituicaoPermutaV2,
+  listarSubstituicoesDoDiaV2,
+  reverterSubstituicaoV2,
 } = require("../controllers/v2EscalaController");
 
 // -----------------------------------------------------------------------
@@ -90,6 +95,57 @@ router.get(
   isAdmin,
   authenticatedLimiter,
   listarMembrosGrupamentoV2,
+);
+
+// -----------------------------------------------------------------------
+// SUBSTITUIÇÃO PONTUAL
+// Exceções por data+turno que não mexem no vínculo mensal (v2_grupamento_
+// usuario) de ninguém — usadas pelo painel do dia no frontend.
+// -----------------------------------------------------------------------
+
+// POST /escalas/substituicao/adicionar
+router.post(
+  "/substituicao/adicionar",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  criarSubstituicaoAdicaoV2,
+);
+
+// POST /escalas/substituicao/excluir
+router.post(
+  "/substituicao/excluir",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  criarSubstituicaoExclusaoV2,
+);
+
+// POST /escalas/substituicao/permutar
+router.post(
+  "/substituicao/permutar",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  criarSubstituicaoPermutaV2,
+);
+
+// GET /escalas/substituicao/dia/:data
+router.get(
+  "/substituicao/dia/:data",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  listarSubstituicoesDoDiaV2,
+);
+
+// DELETE /escalas/substituicao/:id
+router.delete(
+  "/substituicao/:id",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  reverterSubstituicaoV2,
 );
 
 module.exports = router;
