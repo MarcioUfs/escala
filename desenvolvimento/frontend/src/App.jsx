@@ -200,11 +200,10 @@ import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
 import DashboardEscalas from "./pages/escala/DashboardEscala";
 import EscalaEdit from "./pages/escala/EscalaEdit";
 import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
-import AdminListEscalas from "./pages/admin/AdminListEscalas";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter useTransitions={false}>
       <AuthProvider>
         <Routes>
           {/* ==============================================
@@ -229,7 +228,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<Navigate to="escala-dashboard" replace />} />
+            <Route path="escala-dashboard" element={<AdminDashboard />} />
             <Route path="sign-up" element={<AdminSignUp />} />
             <Route path="users" element={<AdminListUsers />} />
             <Route path="edit-user" element={<AdminEditUser />} />
@@ -240,7 +240,6 @@ function App() {
             <Route path="escalas" element={<DashboardEscalas />} />
             <Route path="edit-escala" element={<EscalaEdit />} />
             <Route path="create-escala" element={<AdminCreateEscala />} />
-            <Route path="list-escalas" element={<AdminListEscalas />} />
           </Route>
 
           {/* ==============================================
