@@ -1,10 +1,30 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigate } from "react-router-dom";
+import { ArrowLeftRight } from "lucide-react";
+import api from "../../services/api";
 
 export default function UserDashboard() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const [pendenciasPermuta, setPendenciasPermuta] = useState(0);
+
+  useEffect(() => {
+    let cancelado = false;
+    async function carregarPendencias() {
+      try {
+        const { data } = await api.get("/permutas/pendencias");
+        if (!cancelado) setPendenciasPermuta(data.total || 0);
+      } catch {
+        // badge é informativo — se falhar, só não mostra o número
+      }
+    }
+    carregarPendencias();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   return (
     <div className="p-4 sm:p-8">
@@ -76,7 +96,10 @@ export default function UserDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           {/* Card: Escala de Serviço */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-emerald-300 transition cursor-pointer group">
+          <div
+            onClick={() => navigate("/user/escala")}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-emerald-300 transition cursor-pointer group"
+          >
             <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -84,6 +107,23 @@ export default function UserDashboard() {
             </div>
             <h4 className="text-xl font-bold text-gray-900 mb-2">Escala de Serviço</h4>
             <p className="text-sm text-gray-600">Visualize as suas escalas, horários e locais de serviço agendados.</p>
+          </div>
+
+          {/* Card: Permutas */}
+          <div
+            onClick={() => navigate("/user/permutas")}
+            className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-purple-300 transition cursor-pointer group"
+          >
+            {pendenciasPermuta > 0 && (
+              <span className="absolute top-4 right-4 min-w-[1.5rem] h-6 px-1.5 flex items-center justify-center rounded-full bg-purple-600 text-white text-xs font-bold">
+                {pendenciasPermuta}
+              </span>
+            )}
+            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition">
+              <ArrowLeftRight className="w-6 h-6" />
+            </div>
+            <h4 className="text-xl font-bold text-gray-900 mb-2">Minhas Permutas</h4>
+            <p className="text-sm text-gray-600">Solicite trocas de dia de serviço e acompanhe suas solicitações.</p>
           </div>
 
           {/* Card: Avisos/Notificações */}

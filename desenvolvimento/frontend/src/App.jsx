@@ -20,6 +20,9 @@ import AdminListAdmins from "./pages/admin/AdminListAdmins";
 import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
 import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
 import AdminEscala from "./pages/admin/AdminEscala";
+import AdminPermutas from "./pages/admin/AdminPermutas";
+import UserEscala from "./pages/user/UserEscala";
+import UserPermutas from "./pages/user/UserPermutas";
 
 function App() {
   return (
@@ -58,6 +61,7 @@ function App() {
             <Route path="admins" element={<AdminListAdmins />} />
             <Route path="create-escala" element={<AdminCreateEscala />} />
             <Route path="escala" element={<AdminEscala />} />
+            <Route path="permutas" element={<AdminPermutas />} />
           </Route>
 
           {/* ==============================================
@@ -73,6 +77,8 @@ function App() {
           >
             <Route index element={<UserDashboard />} />
             <Route path="reset-password" element={<UserResetPassword />} />
+            <Route path="escala" element={<UserEscala />} />
+            <Route path="permutas" element={<UserPermutas />} />
           </Route>
 
           {/* REDIRECIONAMENTO PADRÃO -> agora vai pra Home, não mais pro login */}

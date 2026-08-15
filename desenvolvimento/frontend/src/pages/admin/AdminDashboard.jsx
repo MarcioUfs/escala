@@ -1,9 +1,28 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import api from "../../services/api";
 
 export default function AdminDashboard() {
   const { user, signOut } = useContext(AuthContext);
+
+  const [pendentesPermuta, setPendentesPermuta] = useState(0);
+
+  useEffect(() => {
+    let cancelado = false;
+    async function carregarPendencias() {
+      try {
+        const { data } = await api.get("/permutas/admin/pendencias");
+        if (!cancelado) setPendentesPermuta(data.pendentes || 0);
+      } catch {
+        // badge é informativo — se falhar, só não mostra o número
+      }
+    }
+    carregarPendencias();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   return (
     <div className="p-4 sm:p-8 w-full max-w-full overflow-hidden box-border">
@@ -108,6 +127,17 @@ export default function AdminDashboard() {
                 className="w-full sm:w-auto text-center px-5 py-2.5 bg-green-800 text-white font-medium rounded-lg hover:bg-green-900 transition-colors shadow-sm"
               >
                 Gerir Escalas
+              </Link>
+              <Link
+                to="/admin/permutas"
+                className="relative w-full sm:w-auto text-center px-5 py-2.5 bg-purple-700 text-white font-medium rounded-lg hover:bg-purple-800 transition-colors shadow-sm"
+              >
+                Solicitações de Permuta
+                {pendentesPermuta > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-white text-purple-700 text-xs font-bold">
+                    {pendentesPermuta}
+                  </span>
+                )}
               </Link>
               {/* <Link
                 to="/admin/#"
