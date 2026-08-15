@@ -7,7 +7,7 @@ const swaggerFile = require("./swagger-output.json");
 // Importação de Rotas e Serviços
 const iniciarAgendamentos = require("./src/jobs/scheduler");
 const { generalLimiter } = require("./src/middleware/rateLimiter");
-const userRoute = require("./src/routes/userRoute");
+const userRoute = require("./src/routes/userroutes");
 const adminRoute = require("./src/routes/adminroutes");
 const setorRoutes = require("./src/routes/setorroutes");
 const v2EscalaRoutes = require("./src/routes/v2EscalaRoutes");
