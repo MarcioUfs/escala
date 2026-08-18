@@ -502,8 +502,12 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
     const data = await query;
 
     if (data.length <= 0) {
+      // Devolve o período calculado mesmo vazio — o frontend usa isso pra
+      // oferecer "gerar automaticamente" sem precisar recalcular a mesma
+      // conta de dias no client.
       return res.status(404).json({
         msg: "Nenhuma escala encontrada nesse período. Rode fn_v2_gerar_escala pro intervalo antes de consultar.",
+        periodo: { data_inicio, data_fim },
       });
     }
 

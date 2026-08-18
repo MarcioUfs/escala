@@ -364,36 +364,88 @@ async function updateUser(req, res) {
 }
 
 /*************LISTAR ALL****************/
+// A sigla de patente vinda do raspador (efetivo_antiguidade.patente) nem
+// sempre bate literalmente com tbl_patentes.sigla_patente — o raspador usa
+// abreviações próprias da fonte original. Mapeamento manual só pros casos
+// que checamos e realmente divergem; o resto cai no fallback (maiúsculas,
+// sem espaço/hífen) e o que não bater fica null — o admin escolhe na mão,
+// nunca adivinhamos errado silenciosamente.
+const ALIAS_SIGLA_PATENTE_ANTIGUIDADE = {
+  TC: "TEN-CEL",
+  "CAD 1º": "CAD-1º",
+  "SD 1ª CL": "SD-1ª",
+  "SD 2ª CL": "SD-2ª",
+  "SD 3ª CL": "SD-3ª",
+};
+
+function normalizarSiglaPatente(sigla) {
+  return (sigla || "").toUpperCase().replace(/[\s-]/g, "");
+}
+
+function sugerirPatente(siglaAntiguidade, listaPatentes) {
+  const siglaEquivalente = ALIAS_SIGLA_PATENTE_ANTIGUIDADE[siglaAntiguidade] || siglaAntiguidade;
+  const alvo = normalizarSiglaPatente(siglaEquivalente);
+  return (
+    listaPatentes.find((p) => normalizarSiglaPatente(p.sigla_patente) === alvo) || null
+  );
+}
+
+// GET /admin/allpm?busca=termo — pré-cadastro a partir da lista de
+// antiguidade. Busca por nome, matrícula ou CPF; exclui quem já tem
+// cadastro em `users` (é pré-cadastro de gente NOVA, não duplicidade); e
+// sugere a patente correspondente (sem travar o campo — o admin sempre
+// pode trocar no formulário).
 async function readAllPm(req, res) {
-  return res.status(201).json({ msg: "Função em desenvolvimento!" });
-  // await database
-  //   .select("efetivo_antiguidade.*")
-  //   .from("efetivo_antiguidade")
-  //   .orderByRaw("efetivo_antiguidade.ordem ASC NULLS LAST")
-  //   .then((data) => {
-  //     const arrayDados = [];
-  //     if (data.length > 0) {
-  //       for (let element of data) {
-  //         arrayDados.push({
-  //           id: element.id,
-  //           nome: element.nome,
-  //           ordem: element.ordem,
-  //           patente: element.patente,
-  //           matricula: tratarMatricula(element.matricula),
-  //           quadro: element.quadro,
-  //           patente: element.patente,
-  //           data_promocao: element.data_promocao,
-  //           tempo_promocao: element.tempo_promocao,
-  //         });
-  //       }
-  //       return res.status(200).json(arrayDados);
-  //     } else {
-  //       return res.status(404).json({ msg: "Nenhum usuário encontrado!" });
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     return res.status(500).json({ msg: "Erro do servidor!" });
-  //   });
+  try {
+    const busca = limparEspacos((req.query.busca || "").toString());
+
+    if (busca.length < 2) {
+      return res.status(400).json({ msg: "Informe pelo menos 2 caracteres para buscar" });
+    }
+
+    const buscaDigitos = busca.replace(/\D/g, "");
+
+    const resultados = await database("efetivo_antiguidade")
+      .select(
+        "efetivo_antiguidade.id",
+        "efetivo_antiguidade.nome",
+        "efetivo_antiguidade.matricula",
+        "efetivo_antiguidade.cpf",
+        "efetivo_antiguidade.patente",
+        "efetivo_antiguidade.quadro",
+      )
+      .leftJoin("users", "users.cpf", "efetivo_antiguidade.cpf")
+      .whereNull("users.id_user")
+      .andWhere(function () {
+        this.whereRaw("LOWER(efetivo_antiguidade.nome) LIKE ?", [`%${busca.toLowerCase()}%`]);
+        if (buscaDigitos) {
+          this.orWhereRaw("REPLACE(efetivo_antiguidade.matricula, '-', '') LIKE ?", [
+            `%${buscaDigitos}%`,
+          ]).orWhere("efetivo_antiguidade.cpf", "like", `%${buscaDigitos}%`);
+        }
+      })
+      .orderBy("efetivo_antiguidade.nome")
+      .limit(15);
+
+    const listaPatentes = await database("tbl_patentes").select("id_patente", "sigla_patente");
+
+    const arrayDados = resultados.map((element) => {
+      const patenteSugerida = sugerirPatente(element.patente, listaPatentes);
+      return {
+        id: element.id,
+        nome: element.nome,
+        matricula: tratarMatricula(element.matricula),
+        cpf: tratarCpf(element.cpf),
+        patente_sigla_origem: element.patente,
+        quadro: element.quadro,
+        id_patente_sugerido: patenteSugerida?.id_patente || null,
+      };
+    });
+
+    return res.status(200).json(arrayDados);
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
 }
 
 async function readAllPatente(req, res) {

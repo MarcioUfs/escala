@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   ShieldCheck,
   ArrowLeft,
@@ -126,12 +126,17 @@ function formatarCpf(cpf) {
 }
 
 // "200200000098" -> "2002000000-98" — mesmo padrão usado no documento
-// oficial da escala.
+// oficial da escala. Normaliza pra dígitos puros antes de formatar (em
+// vez de só cortar os 2 últimos caracteres) porque as duas fontes que
+// alimentam essa função devolvem formatos diferentes: /escalas/grupamento
+// manda a matrícula crua, /admin/allusers já manda formatada com traço —
+// sem normalizar primeiro, reformatar a segunda duplicava o traço
+// ("2002000000--98").
 function formatarMatricula(matricula) {
   if (!matricula) return matricula || "";
-  const str = String(matricula);
-  if (str.length < 3) return str;
-  return `${str.slice(0, -2)}-${str.slice(-2)}`;
+  const digitos = String(matricula).replace(/\D/g, "");
+  if (digitos.length < 3) return String(matricula);
+  return `${digitos.slice(0, -2)}-${digitos.slice(-2)}`;
 }
 
 export default function DashboardEscala() {
@@ -193,6 +198,20 @@ export default function DashboardEscala() {
   const [confirmandoEdicaoMes, setConfirmandoEdicaoMes] = useState(false);
   const [salvandoMes, setSalvandoMes] = useState(false);
 
+  // Período vazio detectado no 404 (o backend calcula e devolve
+  // data_inicio/data_fim mesmo sem nenhuma linha) — usado só pra oferecer
+  // a geração automática abaixo, sem duplicar a conta de dias no front.
+  const [periodoParaGerar, setPeriodoParaGerar] = useState(null);
+  // true assim que a única tentativa automática pro período atual termina
+  // (com sucesso ou não) — controla se mostra "gerando..." ou o aviso de
+  // fallback com o botão manual.
+  const [autoGeracaoConcluida, setAutoGeracaoConcluida] = useState(false);
+  // Garante 1 tentativa automática por período (chave data_inicio+data_fim),
+  // mesmo que o efeito rode de novo por outro motivo — evita loop se a
+  // geração "funcionar" mas continuar vazia (ex: nenhuma regra de ciclo
+  // cadastrada ainda).
+  const tentativaAutoGeracaoRef = useRef(null);
+
   // -------------------------------------------------------------------
   // Carregamento dos dados do período (mês + N dias anteriores)
   // -------------------------------------------------------------------
@@ -206,6 +225,7 @@ export default function DashboardEscala() {
       });
       setEscalas(data.escalas || []);
       setPeriodo(data.periodo || null);
+      setPeriodoParaGerar(null);
     } catch (err) {
       if (err.response?.status === 404) {
         // Período sem nenhuma linha gerada ainda — não é um erro de
@@ -213,8 +233,19 @@ export default function DashboardEscala() {
         setEscalas([]);
         setPeriodo(null);
         setError("empty");
+        const periodoDevolvido = err.response?.data?.periodo || null;
+        // Novo período vazio (chave diferente da última tentativa) ->
+        // reseta o "já tentei" pra permitir a geração automática dele.
+        const chave = periodoDevolvido
+          ? `${periodoDevolvido.data_inicio}_${periodoDevolvido.data_fim}`
+          : null;
+        if (chave && tentativaAutoGeracaoRef.current !== chave) {
+          setAutoGeracaoConcluida(false);
+        }
+        setPeriodoParaGerar(periodoDevolvido);
       } else {
         setError("Não foi possível carregar a escala. Tente novamente.");
+        setPeriodoParaGerar(null);
       }
     } finally {
       setLoading(false);
@@ -224,6 +255,43 @@ export default function DashboardEscala() {
   useEffect(() => {
     carregarEscalas();
   }, [carregarEscalas]);
+
+  // -------------------------------------------------------------------
+  // Geração automática — só dispara quando o mês está completamente
+  // vazio. Mês já populado nunca é auto-regenerado (evita sobrescrever
+  // ajustes manuais em silêncio); pra esse caso o admin continua usando
+  // o botão "Editar escala do mês" com a confirmação normal.
+  // -------------------------------------------------------------------
+  useEffect(() => {
+    if (error !== "empty" || !periodoParaGerar) return;
+
+    const chave = `${periodoParaGerar.data_inicio}_${periodoParaGerar.data_fim}`;
+    if (tentativaAutoGeracaoRef.current === chave) return;
+    tentativaAutoGeracaoRef.current = chave;
+
+    let cancelado = false;
+    (async () => {
+      try {
+        await api.post("/escalas/gerar", {
+          data_inicio: periodoParaGerar.data_inicio,
+          data_fim: periodoParaGerar.data_fim,
+        });
+        if (!cancelado) await carregarEscalas();
+      } catch (err) {
+        if (!cancelado) {
+          setError(
+            err.response?.data?.msg || "Não foi possível gerar a escala automaticamente.",
+          );
+        }
+      } finally {
+        if (!cancelado) setAutoGeracaoConcluida(true);
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [error, periodoParaGerar, carregarEscalas]);
 
   const escalasPorDia = useMemo(() => agruparPorDia(escalas), [escalas]);
 
@@ -641,12 +709,21 @@ export default function DashboardEscala() {
           </div>
         )}
 
-        {!loading && error === "empty" && (
+        {!loading && error === "empty" && !autoGeracaoConcluida && (
+          <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 border-t-indigo-600" />
+            <p className="text-slate-500 text-sm max-w-sm">
+              Gerando a escala deste período automaticamente...
+            </p>
+          </div>
+        )}
+
+        {!loading && error === "empty" && autoGeracaoConcluida && (
           <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
             <ShieldCheck className="text-slate-300" size={40} />
             <p className="text-slate-500 text-sm max-w-sm">
-              Nenhuma escala gerada para este período ainda. Use "Editar
-              escala do mês" para gerar os dias a partir do ciclo.
+              Não foi possível gerar a escala automaticamente para este período. Use "Editar
+              escala do mês" para tentar novamente.
             </p>
           </div>
         )}
@@ -1313,8 +1390,8 @@ function GrupamentoRosterCard({
           <p className="px-4 py-3 text-xs text-slate-400">Nenhum militar vinculado.</p>
         )}
         {membros.map((m) => (
-          <div key={m.id_user} className="px-4 py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="flex-1 min-w-0 leading-snug">
+          <div key={m.id_user} className="px-4 py-3">
+            <p className="leading-snug mb-2">
               <span className="text-base font-bold text-slate-900">
                 {(m.nome_guerra || m.nome || "").toUpperCase()}
               </span>
@@ -1324,11 +1401,17 @@ function GrupamentoRosterCard({
                 {formatarCpf(m.cpf)}
               </span>
             </p>
-            <div className="flex flex-wrap gap-1.5 flex-shrink-0">
+            {/* Grade sempre abaixo do texto (nunca ao lado — era isso que
+                causava a distorção). Colunas se ajustam sozinhas: cabe
+                quantos botões couberem numa linha (mín. 100px cada); em
+                telas largas os 3 ficam numa linha só, e só quebra quando
+                não há espaço — sem precisar de regra por breakpoint, e
+                novos botões (4º, 5º...) só preenchem a grade. */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-1.5">
               <button
                 onClick={() => onTrocar(m)}
                 title="Trocar de grupamento (definitivo)"
-                className="w-[95px] flex items-center justify-center gap-1 px-2 py-1 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 text-xs font-semibold rounded transition"
+                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 text-xs font-semibold rounded transition"
               >
                 <ArrowLeftRight size={13} />
                 Trocar
@@ -1336,7 +1419,7 @@ function GrupamentoRosterCard({
               <button
                 onClick={() => onPermutar(m)}
                 title="Permutar com outro militar"
-                className="w-[95px] flex items-center justify-center gap-1 px-2 py-1 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 text-xs font-semibold rounded transition"
+                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 text-xs font-semibold rounded transition"
               >
                 <ArrowLeftRight size={13} />
                 Permutar
@@ -1344,7 +1427,7 @@ function GrupamentoRosterCard({
               <button
                 onClick={() => confirmarExclusao(m)}
                 title="Excluir da escala mensal"
-                className="w-[95px] flex items-center justify-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-xs font-semibold rounded transition"
+                className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-xs font-semibold rounded transition"
               >
                 <Trash2 size={13} />
                 Excluir

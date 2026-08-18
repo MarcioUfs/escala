@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search, X } from "lucide-react";
 import api from "../../services/api";
 
 export default function AdminCreateUser() {
@@ -19,6 +20,53 @@ export default function AdminCreateUser() {
   // Estado para armazenar a lista de patentes vindas do backend
   const [patentes, setPatentes] = useState([]);
   const [status, setStatus] = useState({ type: "", message: "" });
+
+  // ================= PRÉ-CADASTRO VIA LISTA DE ANTIGUIDADE =================
+  const [buscaAntiguidade, setBuscaAntiguidade] = useState("");
+  const [resultadosAntiguidade, setResultadosAntiguidade] = useState([]);
+  const [buscandoAntiguidade, setBuscandoAntiguidade] = useState(false);
+  const [militarPreenchido, setMilitarPreenchido] = useState(null); // { nome, patente_sigla_origem }
+  const [patenteNaoIdentificada, setPatenteNaoIdentificada] = useState(false);
+
+  // Debounce simples: só busca 400ms depois que o admin parar de digitar,
+  // evitando 1 request por tecla.
+  useEffect(() => {
+    if (buscaAntiguidade.trim().length < 2) {
+      setResultadosAntiguidade([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        setBuscandoAntiguidade(true);
+        const { data } = await api.get("/admin/allpm", {
+          params: { busca: buscaAntiguidade.trim() },
+        });
+        setResultadosAntiguidade(Array.isArray(data) ? data : []);
+      } catch {
+        setResultadosAntiguidade([]);
+      } finally {
+        setBuscandoAntiguidade(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [buscaAntiguidade]);
+
+  // Preenche o formulário a partir de um resultado da lista de antiguidade.
+  // Nunca trava os campos — o admin sempre pode editar/corrigir depois,
+  // inclusive a patente quando ela não foi identificada automaticamente.
+  const selecionarMilitarAntiguidade = (militar) => {
+    setFormData((atual) => ({
+      ...atual,
+      nome: militar.nome,
+      cpf: militar.cpf,
+      matricula: militar.matricula,
+      id_patente: militar.id_patente_sugerido ? String(militar.id_patente_sugerido) : atual.id_patente,
+    }));
+    setPatenteNaoIdentificada(!militar.id_patente_sugerido);
+    setMilitarPreenchido({ nome: militar.nome, patente_sigla_origem: militar.patente_sigla_origem });
+    setBuscaAntiguidade("");
+    setResultadosAntiguidade([]);
+  };
 
   // ================= BUSCA DE PATENTES (BACKEND) =================
   useEffect(() => {
@@ -191,6 +239,75 @@ export default function AdminCreateUser() {
             {status.message}
           </div>
         )}
+
+        {/* ================= BUSCA NA LISTA DE ANTIGUIDADE ================= */}
+        <div className="mb-5 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+            Pré-cadastro via lista de antiguidade (opcional)
+          </label>
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={buscaAntiguidade}
+              onChange={(e) => setBuscaAntiguidade(e.target.value)}
+              placeholder="Nome, matrícula ou CPF..."
+              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {buscandoAntiguidade && (
+            <p className="text-xs text-slate-400 mt-2">Buscando...</p>
+          )}
+
+          {!buscandoAntiguidade && buscaAntiguidade.trim().length >= 2 && resultadosAntiguidade.length === 0 && (
+            <p className="text-xs text-slate-400 mt-2">
+              Nenhum militar encontrado (ou já está cadastrado no sistema).
+            </p>
+          )}
+
+          {resultadosAntiguidade.length > 0 && (
+            <div className="mt-2 space-y-1 max-h-56 overflow-y-auto">
+              {resultadosAntiguidade.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => selecionarMilitarAntiguidade(m)}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-md transition text-left"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm text-slate-700 truncate">{m.nome}</p>
+                    <p className="text-[11px] text-slate-400 font-mono truncate">
+                      {m.patente_sigla_origem} · {m.matricula} · {m.cpf}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-blue-600 flex-shrink-0">Usar</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {militarPreenchido && (
+            <div className="mt-2 flex items-center justify-between gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-md">
+              <p className="text-xs text-emerald-700">
+                Dados de <strong>{militarPreenchido.nome}</strong> preenchidos abaixo.
+                {patenteNaoIdentificada && (
+                  <span className="block text-amber-600 mt-0.5">
+                    Patente "{militarPreenchido.patente_sigla_origem}" não identificada automaticamente —
+                    selecione manualmente.
+                  </span>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => setMilitarPreenchido(null)}
+                className="p-1 rounded hover:bg-emerald-100 text-emerald-600 flex-shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 w-full">
           <div>
