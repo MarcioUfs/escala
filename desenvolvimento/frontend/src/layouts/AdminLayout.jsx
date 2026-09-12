@@ -8,8 +8,10 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* NAVBAR FIXA DO ADMIN */}
-      <header className="bg-blue-900 text-white shadow-md sticky top-0 z-50">
+      {/* NAVBAR FIXA DO ADMIN — some na impressão/PDF de qualquer página
+          (ex: Boletim do Efetivo); nenhuma tela do portal deve sair
+          impressa com essa barra. */}
+      <header className="bg-blue-900 text-white shadow-md sticky top-0 z-50 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition"

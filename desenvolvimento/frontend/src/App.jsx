@@ -21,6 +21,8 @@ import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
 import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
 import AdminEscala from "./pages/admin/AdminEscala";
 import AdminPermutas from "./pages/admin/AdminPermutas";
+import AdminAfastamentos from "./pages/admin/AdminAfastamentos";
+import AdminBoletimEfetivo from "./pages/admin/AdminBoletimEfetivo";
 import UserEscala from "./pages/user/UserEscala";
 import UserPermutas from "./pages/user/UserPermutas";
 
@@ -62,6 +64,8 @@ function App() {
             <Route path="create-escala" element={<AdminCreateEscala />} />
             <Route path="escala" element={<AdminEscala />} />
             <Route path="permutas" element={<AdminPermutas />} />
+            <Route path="afastamentos" element={<AdminAfastamentos />} />
+            <Route path="boletim-efetivo" element={<AdminBoletimEfetivo />} />
           </Route>
 
           {/* ==============================================

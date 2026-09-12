@@ -7,6 +7,7 @@ export default function AdminDashboard() {
   const { user, signOut } = useContext(AuthContext);
 
   const [pendentesPermuta, setPendentesPermuta] = useState(0);
+  const [afastamentosAtivos, setAfastamentosAtivos] = useState(0);
 
   useEffect(() => {
     let cancelado = false;
@@ -18,7 +19,16 @@ export default function AdminDashboard() {
         // badge é informativo — se falhar, só não mostra o número
       }
     }
+    async function carregarAfastamentos() {
+      try {
+        const { data } = await api.get("/afastamentos/contagem-ativos");
+        if (!cancelado) setAfastamentosAtivos(data.ativos || 0);
+      } catch {
+        // idem — badge informativo
+      }
+    }
     carregarPendencias();
+    carregarAfastamentos();
     return () => {
       cancelado = true;
     };
@@ -139,12 +149,23 @@ export default function AdminDashboard() {
                   </span>
                 )}
               </Link>
-              {/* <Link
-                to="/admin/#"
-                className="w-full sm:w-auto text-center px-5 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-sm"
+              <Link
+                to="/admin/afastamentos"
+                className="relative w-full sm:w-auto text-center px-5 py-2.5 bg-orange-700 text-white font-medium rounded-lg hover:bg-orange-800 transition-colors shadow-sm"
               >
-                + Novo Administrador
-              </Link> */}
+                Afastamentos e Restrições
+                {afastamentosAtivos > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-white text-orange-700 text-xs font-bold">
+                    {afastamentosAtivos}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/admin/boletim-efetivo"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-teal-700 text-white font-medium rounded-lg hover:bg-teal-800 transition-colors shadow-sm"
+              >
+                Boletim do Efetivo
+              </Link>
             </div>
           </div>
           <div className="p-5 sm:p-6 bg-gray-50 border border-gray-200 rounded-xl">

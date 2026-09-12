@@ -14,6 +14,8 @@ import {
   UserPlus,
   ArrowLeftRight,
   Search,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -37,6 +39,32 @@ const CORES_GRUPAMENTO = [
 ];
 
 const DIAS_SEMANA_CURTO = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+// Categorias fixas do módulo de Afastamentos (mesma lista do backend/
+// AdminAfastamentos) — usadas só pra rotular e colorir os quadros abaixo
+// do efetivo por grupamento. Gerenciar continua na tela dedicada.
+const TIPOS_AFASTAMENTO = [
+  { valor: "FERIAS", rotulo: "Férias regulamentares", cor: "amber" },
+  { valor: "FERIAS_LEI_109", rotulo: "Férias/LE — Lei 109", cor: "amber" },
+  { valor: "LICENCA_ESPECIAL", rotulo: "Licença especial", cor: "sky" },
+  { valor: "CURSO", rotulo: "Curso", cor: "indigo" },
+  { valor: "RESTRICAO_GERAL", rotulo: "Restrição geral", cor: "slate" },
+  { valor: "RESTRICAO_NOTURNA", rotulo: "Restrição noturna", cor: "purple" },
+  { valor: "ESCALA_DIFERENCIADA", rotulo: "Escala diferenciada", cor: "rose" },
+  { valor: "REDUCAO_CARGA", rotulo: "Redução de carga horária", cor: "teal" },
+  { valor: "AFASTAMENTO", rotulo: "Afastamento", cor: "orange" },
+];
+
+const CORES_TIPO_AFASTAMENTO = {
+  amber: { bg: "bg-amber-50", text: "text-amber-800", ring: "ring-amber-200" },
+  sky: { bg: "bg-sky-50", text: "text-sky-800", ring: "ring-sky-200" },
+  indigo: { bg: "bg-indigo-50", text: "text-indigo-800", ring: "ring-indigo-200" },
+  slate: { bg: "bg-slate-100", text: "text-slate-700", ring: "ring-slate-200" },
+  purple: { bg: "bg-purple-50", text: "text-purple-800", ring: "ring-purple-200" },
+  rose: { bg: "bg-rose-50", text: "text-rose-800", ring: "ring-rose-200" },
+  teal: { bg: "bg-teal-50", text: "text-teal-800", ring: "ring-teal-200" },
+  orange: { bg: "bg-orange-50", text: "text-orange-800", ring: "ring-orange-200" },
+};
 
 function corDoGrupamento(sigla, mapaCores) {
   return mapaCores.get(sigla) || CORES_GRUPAMENTO[0];
@@ -293,6 +321,21 @@ export default function DashboardEscala() {
     };
   }, [error, periodoParaGerar, carregarEscalas]);
 
+  // -------------------------------------------------------------------
+  // Preenchimento automático de lacunas — diferente da geração do mês
+  // vazio acima: aqui o período já tem alguma escala, só faltam alguns
+  // dias pontuais (normalmente a borda do período estendido). Chamar
+  // /escalas/gerar de novo é seguro mesmo com o mês já populado — a
+  // função no banco usa "ON CONFLICT (data, turno) DO NOTHING", ou seja,
+  // só insere o que está faltando; nunca sobrescreve um dia que já
+  // existe (nem os do ciclo, nem ajustes manuais). Por isso, ao contrário
+  // do botão "Editar escala do mês" (que regenera o período inteiro e por
+  // isso pede confirmação), preencher só as lacunas não precisa perguntar
+  // nada ao administrador.
+  const [preenchendoLacunas, setPreenchendoLacunas] = useState(false);
+  const [tentouPreencherLacunas, setTentouPreencherLacunas] = useState(false);
+  const chaveLacunasRef = useRef(null);
+
   const escalasPorDia = useMemo(() => agruparPorDia(escalas), [escalas]);
 
   const siglasGrupamento = useMemo(() => {
@@ -368,6 +411,45 @@ export default function DashboardEscala() {
       // se falhar, mantém o estado anterior — não derruba a tela por isso
     }
   }, []);
+
+  // Efetivo agrupado por categoria de afastamento (férias, licença, curso,
+  // restrições, escala diferenciada...) — fotografia de hoje, mesma lógica
+  // do resumo do efetivo. Carregado uma vez; não depende do mês navegado
+  // na tabela (é sobre a situação atual dos militares, não sobre o
+  // calendário sendo visualizado).
+  const [afastamentosPorTipo, setAfastamentosPorTipo] = useState({});
+  const [carregandoAfastamentos, setCarregandoAfastamentos] = useState(true);
+
+  const carregarAfastamentosAtivos = useCallback(async () => {
+    try {
+      setCarregandoAfastamentos(true);
+      const hoje = new Date().toISOString().slice(0, 10);
+      const { data } = await api.get("/afastamentos", { params: { vigente_em: hoje } });
+      const agrupado = {};
+      (data || []).forEach((a) => {
+        if (!agrupado[a.tipo]) agrupado[a.tipo] = [];
+        agrupado[a.tipo].push(a);
+      });
+      setAfastamentosPorTipo(agrupado);
+    } catch {
+      setAfastamentosPorTipo({});
+    } finally {
+      setCarregandoAfastamentos(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarAfastamentosAtivos();
+  }, [carregarAfastamentosAtivos]);
+
+  // Só as categorias em que o militar CONTINUA disponível pra escala (com
+  // alguma condição) entram como sugestão no painel do dia. Férias,
+  // licença, curso e afastamento significam "ausente" — esses nunca
+  // aparecem aqui, mesmo sendo informativos nos quadros acima.
+  const afastamentosDisponiveisParaEscala = useMemo(() => {
+    const tiposDisponiveis = ["RESTRICAO_GERAL", "RESTRICAO_NOTURNA", "ESCALA_DIFERENCIADA", "REDUCAO_CARGA"];
+    return tiposDisponiveis.flatMap((tipo) => afastamentosPorTipo[tipo] || []);
+  }, [afastamentosPorTipo]);
 
   // Estados dos modais de gestão de efetivo
   const [modalAdicionar, setModalAdicionar] = useState(null); // { sigla, idGrupamento }
@@ -479,6 +561,9 @@ export default function DashboardEscala() {
   const [modalPermutarDia, setModalPermutarDia] = useState(null); // { diaISO, linha, membro }
   const [substituicaoEmAndamento, setSubstituicaoEmAndamento] = useState(false);
   const [erroSubstituicaoDia, setErroSubstituicaoDia] = useState(null);
+  // Avisos de restrição/afastamento (módulo é informativo — nunca bloqueia
+  // a ação, só alerta depois que ela já foi concluída).
+  const [avisosRestricao, setAvisosRestricao] = useState([]);
 
   // Adiciona um militar à escala só naquele dia+turno — não mexe no
   // vínculo mensal (v2_grupamento_usuario) de ninguém.
@@ -490,12 +575,13 @@ export default function DashboardEscala() {
     setSubstituicaoEmAndamento(true);
     setErroSubstituicaoDia(null);
     try {
-      await api.post("/escalas/substituicao/adicionar", {
+      const { data } = await api.post("/escalas/substituicao/adicionar", {
         data: diaISO,
         fk_id_turno: linha.turno,
         fk_id_grupamento: linha.id_grupamento,
         fk_id_usuario_entra: usuario.id_user || usuario.id,
       });
+      setAvisosRestricao(data?.avisos || []);
       await carregarSubstituicoesDoDia(diaISO);
       setModalAdicionarDia(null);
     } catch (err) {
@@ -543,13 +629,14 @@ export default function DashboardEscala() {
     setSubstituicaoEmAndamento(true);
     setErroSubstituicaoDia(null);
     try {
-      await api.post("/escalas/substituicao/permutar", {
+      const { data } = await api.post("/escalas/substituicao/permutar", {
         data: diaISO,
         fk_id_turno: linha.turno,
         fk_id_grupamento: linha.id_grupamento,
         fk_id_usuario_sai: membroSai.id_user,
         fk_id_usuario_entra: usuarioEntra.id_user || usuarioEntra.id,
       });
+      setAvisosRestricao(data?.avisos || []);
       await carregarSubstituicoesDoDia(diaISO);
       setModalPermutarDia(null);
     } catch (err) {
@@ -587,6 +674,39 @@ export default function DashboardEscala() {
     () => diasDoPeriodo.filter((d) => !escalasPorDia.has(chaveISO(d))),
     [diasDoPeriodo, escalasPorDia],
   );
+
+  useEffect(() => {
+    if (!periodo || loading || diasSemEscala.length === 0) return;
+
+    const chave = `${periodo.data_inicio}_${periodo.data_fim}`;
+    if (chaveLacunasRef.current === chave) return; // já tentou preencher esse período
+    chaveLacunasRef.current = chave;
+    setTentouPreencherLacunas(false);
+
+    let cancelado = false;
+    (async () => {
+      setPreenchendoLacunas(true);
+      try {
+        await api.post("/escalas/gerar", {
+          data_inicio: periodo.data_inicio,
+          data_fim: periodo.data_fim,
+        });
+        if (!cancelado) await carregarEscalas();
+      } catch {
+        // Silencioso — se não der certo (ex: falta regra de ciclo pra
+        // algum dia), o aviso com o botão manual serve de fallback.
+      } finally {
+        if (!cancelado) {
+          setPreenchendoLacunas(false);
+          setTentouPreencherLacunas(true);
+        }
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [periodo, diasSemEscala.length, loading, carregarEscalas]);
 
   // -------------------------------------------------------------------
   // Navegação de mês
@@ -652,6 +772,20 @@ export default function DashboardEscala() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => navigate("/admin/afastamentos")}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-700 text-white text-sm font-medium rounded-lg hover:bg-orange-800 transition shadow-sm"
+            >
+              <ClipboardList size={16} />
+              <span className="hidden sm:inline">Afastamentos</span>
+            </button>
+            <button
+              onClick={() => navigate("/admin/boletim-efetivo")}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm"
+            >
+              <FileText size={16} />
+              <span className="hidden sm:inline">Boletim</span>
+            </button>
+            <button
               onClick={() => navigate("/admin")}
               className="flex items-center gap-2 px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition shadow-sm"
             >
@@ -660,9 +794,15 @@ export default function DashboardEscala() {
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Navegação de mês + ação de edição mensal */}
-        <div className="px-4 md:px-8 pb-4 flex items-center justify-between gap-3">
+      <main className="px-4 md:px-8 py-6">
+        {/* Navegação de mês + ação de edição mensal — fica logo acima da
+            própria escala (tabela/calendário), não mais solta no
+            cabeçalho, pra ficar visualmente junto do que ela controla.
+            Centralizado: o mês/ano é o elemento âncora, o botão de
+            renovar escala fica ao lado dele, não nas pontas. */}
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
           <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
             <button
               onClick={() => irParaMes(-1)}
@@ -693,9 +833,34 @@ export default function DashboardEscala() {
             <span className="sm:hidden">Editar mês</span>
           </button>
         </div>
-      </header>
 
-      <main className="px-4 md:px-8 py-6">
+        {avisosRestricao.length > 0 && (
+          <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded text-sm text-amber-800">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-1">
+                    Ação concluída, mas atenção — restrição ativa encontrada:
+                  </p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {avisosRestricao.map((a, i) => (
+                      <li key={i}>{a.mensagem}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <button
+                onClick={() => setAvisosRestricao([])}
+                className="text-amber-600 hover:text-amber-900 flex-shrink-0"
+                aria-label="Fechar aviso"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="flex h-64 items-center justify-center">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-indigo-600" />
@@ -730,22 +895,16 @@ export default function DashboardEscala() {
 
         {!loading && !error && periodo && (
           <>
-            {/* Aviso de dias sem escala gerada dentro do período visível */}
-            {diasSemEscala.length > 0 && (
-              <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-                <span className="text-indigo-800">
-                  <strong>{diasSemEscala.length}</strong>{" "}
-                  {diasSemEscala.length === 1
-                    ? "dia deste período ainda não tem"
-                    : "dias deste período ainda não têm"}{" "}
-                  escala gerada no banco.
-                </span>
-                <button
-                  onClick={() => setConfirmandoEdicaoMes(true)}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition whitespace-nowrap"
-                >
-                  Gerar agora
-                </button>
+            {/* Dias sem escala dentro do período visível são preenchidos
+                automaticamente (sem ação do administrador). Só existe
+                indicação visual enquanto isso está em andamento — não há
+                botão em nenhuma circunstância; se sobrar alguma lacuna
+                genuína (ex: falta regra de ciclo pro dia), o administrador
+                ainda tem o "Editar escala do mês" centralizado acima. */}
+            {(preenchendoLacunas || (diasSemEscala.length > 0 && !tentouPreencherLacunas)) && (
+              <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center gap-2 text-sm text-indigo-800">
+                <span className="size-3.5 rounded-full border-2 border-indigo-300 border-t-indigo-700 animate-spin" />
+                Completando a escala deste período automaticamente...
               </div>
             )}
 
@@ -807,6 +966,37 @@ export default function DashboardEscala() {
                     onPermutar={(membro) =>
                       setModalPermutar({ membro, siglaAtual: sigla, idAtual: idGrupamentoPorSigla.get(sigla) })
                     }
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Efetivo por categoria de afastamento — férias, licença,
+                curso, restrições e escala diferenciada. Mesmo padrão visual
+                dos quadros de grupamento acima, só que somático (não é
+                sobre "onde" o militar está, é sobre a situação dele hoje) e
+                sem ações diretas — gerenciar continua na tela dedicada. */}
+            <div className="mt-8">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide text-center">
+                  Efetivo por Categoria de Afastamento
+                </h2>
+                <button
+                  onClick={() => navigate("/admin/afastamentos")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-sm"
+                >
+                  <ClipboardList size={13} />
+                  Gerenciar
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {TIPOS_AFASTAMENTO.map((t) => (
+                  <AfastamentoCategoriaCard
+                    key={t.valor}
+                    titulo={t.rotulo}
+                    cor={t.cor}
+                    itens={afastamentosPorTipo[t.valor] || []}
+                    carregando={carregandoAfastamentos}
                   />
                 ))}
               </div>
@@ -969,9 +1159,13 @@ export default function DashboardEscala() {
           mapaCoresGrupamento={mapaCoresGrupamento}
           membrosPorGrupamento={membrosPorGrupamento}
           substituicoesDoDia={substituicoesDoDia}
+          afastamentosDisponiveis={afastamentosDisponiveisParaEscala}
           carregandoMembros={carregandoMembros || carregandoSubstituicoes}
           onFechar={() => setDiaSelecionado(null)}
           onAdicionarDia={(diaISO, linha) => setModalAdicionarDia({ diaISO, linha })}
+          onAdicionarRapido={(afastamento, diaISO, linha) =>
+            substituirAdicaoDia({ id_user: afastamento.fk_id_usuario }, diaISO, linha)
+          }
           onExcluirDia={(membro, diaISO, linha) => substituirExclusaoDia(membro, diaISO, linha)}
           onPermutarDia={(membro, diaISO, linha) => setModalPermutarDia({ diaISO, linha, membro })}
           onReverterSubstituicao={(idSubstituicao) => reverterSubstituicao(idSubstituicao)}
@@ -1134,14 +1328,37 @@ function PainelDoDia({
   mapaCoresGrupamento,
   membrosPorGrupamento,
   substituicoesDoDia,
+  afastamentosDisponiveis = [],
   carregandoMembros,
   onFechar,
   onAdicionarDia,
+  onAdicionarRapido,
   onExcluirDia,
   onPermutarDia,
   onReverterSubstituicao,
 }) {
   const diaISO = chaveISO(data);
+
+  // Dos militares em afastamento/restrição ainda disponíveis pra escala
+  // (nunca inclui férias/licença/curso/afastamento — esses estão ausentes),
+  // filtra quem é compatível com ESTE turno+grupamento específico: se a
+  // restrição lista equipe(s), só entra se este grupamento estiver na
+  // lista; se lista turno(s), respeita o modo (SOMENTE só permite os
+  // listados, EXCETO permite todos menos os listados).
+  function candidatosParaLinha(linha, idsJaNoEfetivo) {
+    return afastamentosDisponiveis.filter((a) => {
+      if (idsJaNoEfetivo.has(a.fk_id_usuario)) return false;
+      if (a.grupamentos?.length > 0 && !a.grupamentos.some((g) => g.sigla === linha.grupamento)) {
+        return false;
+      }
+      if (a.turnos?.length > 0) {
+        const turnoNaLista = a.turnos.some((t) => t.numero === linha.turno);
+        if (a.modo_restricao === "SOMENTE" && !turnoNaLista) return false;
+        if (a.modo_restricao === "EXCETO" && turnoNaLista) return false;
+      }
+      return true;
+    });
+  }
 
   // Mescla o vínculo mensal (membrosPorGrupamento) com as substituições
   // pontuais desse dia, pra mostrar o efetivo REAL de hoje, não o
@@ -1256,7 +1473,7 @@ function PainelDoDia({
                         key={m.id_user}
                         className="p-2 bg-white border border-slate-200 rounded-lg"
                       >
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center justify-between gap-2 mb-1">
                           <p className="text-xs font-semibold text-slate-700">{m.nome}</p>
                           {m._idSubstituicao && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-semibold whitespace-nowrap">
@@ -1264,6 +1481,20 @@ function PainelDoDia({
                             </span>
                           )}
                         </div>
+                        {m.afastamentos_ativos?.length > 0 && (
+                          <div className="mb-1.5 flex flex-wrap gap-1">
+                            {m.afastamentos_ativos.map((a) => (
+                              <span
+                                key={a.id_afastamento}
+                                title={a.mensagem}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold cursor-help"
+                              >
+                                <AlertTriangle size={10} />
+                                {a.rotulo}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-1.5">
                           {m._idSubstituicao ? (
                             // Veio de um ajuste pontual (adição ou lado
@@ -1334,6 +1565,57 @@ function PainelDoDia({
                     </div>
                   </div>
                 )}
+
+                {/* Militares em afastamento/restrição que ainda podem ser
+                    escalados aqui (compatíveis com este turno+equipe) —
+                    nunca inclui quem está de férias/licença/curso/
+                    afastamento, esses estão ausentes de verdade. Puramente
+                    uma sugestão pra agilizar; a inclusão em si passa pela
+                    mesma rota de sempre, então continua 100% reversível. */}
+                {(() => {
+                  const idsJaNoEfetivo = new Set(efetivo.map((m) => m.id_user));
+                  const candidatos = candidatosParaLinha(linha, idsJaNoEfetivo);
+                  if (candidatos.length === 0) return null;
+                  return (
+                    <div className="mt-3 pt-3 border-t border-slate-200/70">
+                      <p className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide mb-1.5">
+                        Disponíveis com restrição
+                      </p>
+                      <div className="space-y-1.5">
+                        {candidatos.map((a) => (
+                          <div
+                            key={a.id_afastamento}
+                            className="flex items-center justify-between gap-2 px-2 py-1.5 bg-amber-50/60 border border-amber-100 rounded-lg"
+                          >
+                            <span className="text-xs text-slate-700 min-w-0 truncate">
+                              {(a.nome_guerra || a.nome || "").toUpperCase()}
+                              <span
+                                title={a.observacao || ""}
+                                className="ml-1.5 text-[10px] text-amber-700 font-semibold"
+                              >
+                                (
+                                {a.turnos?.length > 0
+                                  ? `${a.modo_restricao === "SOMENTE" ? "só" : "exceto"} ${a.turnos
+                                      .map((t) => `${t.numero}º`)
+                                      .join("/")}`
+                                  : "restrição"}
+                                )
+                              </span>
+                            </span>
+                            <button
+                              onClick={() => onAdicionarRapido(a, diaISO, linha)}
+                              title="Adicionar esse militar a este turno, só neste dia"
+                              className="flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded transition flex-shrink-0"
+                            >
+                              <UserPlus size={11} />
+                              Adicionar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -1348,6 +1630,57 @@ function PainelDoDia({
 // Lista os militares no formato de credencial do documento oficial
 // (patente + matrícula + nome + CPF), com menu de ações por militar.
 // ===========================================================================
+function formatarDataBRCurta(dataISO) {
+  if (!dataISO) return null;
+  const [ano, mes, dia] = String(dataISO).slice(0, 10).split("-");
+  return `${dia}/${mes}`;
+}
+
+// ===========================================================================
+// QUADRO DE EFETIVO POR CATEGORIA DE AFASTAMENTO
+// Mesmo padrão visual do GrupamentoRosterCard (cabeçalho colorido + lista),
+// mas somático e sem ações — gerenciar (criar/editar/encerrar) continua na
+// tela dedicada de Afastamentos, alcançável pelo link "Gerenciar" acima.
+// ===========================================================================
+function AfastamentoCategoriaCard({ titulo, cor, itens, carregando }) {
+  const paleta = CORES_TIPO_AFASTAMENTO[cor] || CORES_TIPO_AFASTAMENTO.slate;
+
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+      <div className={`flex items-center justify-between px-4 py-3 ${paleta.bg} ring-1 ${paleta.ring}`}>
+        <span className={`text-sm font-bold ${paleta.text}`}>{titulo}</span>
+        <span className={`text-xs font-mono font-semibold ${paleta.text} opacity-70`}>
+          {itens.length}
+        </span>
+      </div>
+      <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+        {carregando && <p className="px-4 py-3 text-xs text-slate-400">Carregando...</p>}
+        {!carregando && itens.length === 0 && (
+          <p className="px-4 py-3 text-xs text-slate-400">Ninguém nessa categoria hoje.</p>
+        )}
+        {itens.map((a) => (
+          <div key={a.id_afastamento} className="px-4 py-2.5">
+            <p className="text-sm font-semibold text-slate-800">
+              {(a.nome_guerra || a.nome || "").toUpperCase()}
+            </p>
+            <p className="text-[11px] text-slate-500 font-mono">
+              {a.sigla_patente ? `${a.sigla_patente} · ` : ""}Mat. {formatarMatricula(a.matricula)}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              até {a.data_fim ? formatarDataBRCurta(a.data_fim) : "indeterminado"}
+              {a.turnos?.length > 0 &&
+                ` · ${a.modo_restricao === "SOMENTE" ? "somente" : "exceto"} ${a.turnos
+                  .map((t) => `${t.numero}º`)
+                  .join("/")} turno`}
+              {a.grupamentos?.length > 0 && ` · Eq. ${a.grupamentos.map((g) => g.sigla).join(",")}`}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function GrupamentoRosterCard({
   sigla,
   idGrupamento,
@@ -1400,6 +1733,17 @@ function GrupamentoRosterCard({
                 {m.sigla_patente || "—"} · Mat. {formatarMatricula(m.matricula)} · CPF{" "}
                 {formatarCpf(m.cpf)}
               </span>
+              {m.afastamentos_ativos?.length > 0 && (
+                <span
+                  title={m.afastamentos_ativos.map((a) => a.mensagem).join("\n")}
+                  className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold align-middle cursor-help"
+                >
+                  <AlertTriangle size={11} />
+                  {m.afastamentos_ativos.length > 1
+                    ? `${m.afastamentos_ativos.length} restrições`
+                    : m.afastamentos_ativos[0].rotulo}
+                </span>
+              )}
             </p>
             {/* Grade sempre abaixo do texto (nunca ao lado — era isso que
                 causava a distorção). Colunas se ajustam sozinhas: cabe
