@@ -122,3 +122,6 @@ uploads/*
 
 #ignore pasta arquivos
 src/database/arquivos/
+
+#ignore pasta docs
+docs/*
