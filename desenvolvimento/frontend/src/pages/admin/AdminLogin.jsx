@@ -6,6 +6,7 @@ export default function AdminLogin() {
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [mostrarEsqueciSenha, setMostrarEsqueciSenha] = useState(false);
 
   const { signIn, signOut } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -88,14 +89,53 @@ export default function AdminLogin() {
               required
             />
           </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="flex-1 py-2 px-4 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md shadow-sm font-medium"
+            >
+              Voltar
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-2 px-4 text-white bg-blue-800 hover:bg-blue-900 rounded-md shadow-sm font-medium"
+            >
+              Entrar no Painel
+            </button>
+          </div>
+
           <button
-            type="submit"
-            className="w-full py-2 px-4 text-white bg-blue-800 hover:bg-blue-900 rounded-md shadow-sm font-medium"
+            type="button"
+            onClick={() => setMostrarEsqueciSenha(true)}
+            className="block w-full text-center text-sm text-blue-700 hover:underline"
           >
-            Entrar no Painel
+            Esqueci minha senha
           </button>
         </form>
       </div>
+
+      {mostrarEsqueciSenha && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMostrarEsqueciSenha(false)}
+          />
+          <div className="relative w-full max-w-sm bg-white rounded-xl p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">Esqueci minha senha</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Entre em contato com o administrador para solucionar o problema.
+            </p>
+            <button
+              type="button"
+              onClick={() => setMostrarEsqueciSenha(false)}
+              className="w-full py-2 px-4 bg-blue-800 hover:bg-blue-900 text-white text-sm font-medium rounded-md transition"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
