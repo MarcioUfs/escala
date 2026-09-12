@@ -13,6 +13,7 @@ const setorRoutes = require("./src/routes/setorroutes");
 const v2EscalaRoutes = require("./src/routes/v2EscalaRoutes");
 const v2EscalaUserRoutes = require("./src/routes/v2EscalaUserRoutes");
 const v2PermutaRoutes = require("./src/routes/v2PermutaRoutes");
+const v2AfastamentoRoutes = require("./src/routes/v2AfastamentoRoutes");
 
 const app = express();
 
@@ -91,6 +92,7 @@ app.use("/setores", setorRoutes);
 app.use("/escalas", v2EscalaRoutes);
 app.use("/minha-escala", v2EscalaUserRoutes);
 app.use("/permutas", v2PermutaRoutes);
+app.use("/afastamentos", v2AfastamentoRoutes);
 
 // ---------------------------------------------------
 // 4. ROTA NÃO ENCONTRADA (404)

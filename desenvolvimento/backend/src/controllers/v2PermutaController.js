@@ -1,6 +1,7 @@
 const database = require("../database/db");
 const limparEspaco = require("../functions/limparEspacos");
 const gerarProtocoloPermuta = require("../functions/gerarProtocoloPermuta");
+const { avaliarRestricoesAtivas } = require("../functions/validarAlocacaoAfastamento");
 
 const STATUS = {
   AGUARDANDO_ALVO: "AGUARDANDO_ALVO",
@@ -583,7 +584,28 @@ async function aprovarPermutaV2(req, res) {
         });
     });
 
-    return res.status(200).json({ msg: "Permuta aprovada e incluída na escala!" });
+    // Não bloqueia nada (módulo de afastamentos é informativo) — só avisa
+    // se algum dos dois estiver indo pra um dia/turno/grupamento onde tem
+    // restrição ativa registrada.
+    const [avisosSolicitante, avisosAlvo] = await Promise.all([
+      avaliarRestricoesAtivas(
+        solicitacao.fk_id_usuario_solicitante,
+        solicitacao.data_alvo,
+        solicitacao.fk_id_turno_alvo,
+        solicitacao.fk_id_grupamento_alvo,
+      ),
+      avaliarRestricoesAtivas(
+        solicitacao.fk_id_usuario_alvo,
+        solicitacao.data_solicitante,
+        solicitacao.fk_id_turno_solicitante,
+        solicitacao.fk_id_grupamento_solicitante,
+      ),
+    ]);
+
+    return res.status(200).json({
+      msg: "Permuta aprovada e incluída na escala!",
+      avisos: [...avisosSolicitante, ...avisosAlvo],
+    });
   } catch (error) {
     return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
   }

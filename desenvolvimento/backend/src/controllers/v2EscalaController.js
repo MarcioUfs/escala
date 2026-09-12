@@ -6,6 +6,10 @@ const validarDataUsuario = require("../functions/validarDataUsuario");
 const validarPeriodoEscala = require("../functions/validarPeriodoEscala");
 const processarDiaMes = require("../functions/filtroDiaMes");
 const calcularPeriodoEstendido = require("../functions/calcularPeriodoEstendido");
+const {
+  avaliarRestricoesAtivas,
+  buscarAfastamentosAtivosPorUsuarios,
+} = require("../functions/validarAlocacaoAfastamento");
 
 // -----------------------------------------------------------------------
 // 1) GERAR ESCALA A PARTIR DO CICLO (equivalente ao "createEscala", mas em
@@ -562,7 +566,20 @@ async function listarMembrosGrupamentoV2(req, res) {
       .whereNull("v2_grupamento_usuario.data_fim")
       .orderBy("users.nome");
 
-    return res.status(200).json(membros);
+    // Anota, sem bloquear nada, quais membros têm afastamento/restrição
+    // ativo hoje — vira o aviso visual no card do grupamento na tela de
+    // escala (módulo de Afastamentos é 100% informativo).
+    const hoje = new Date().toISOString().slice(0, 10);
+    const afastamentosPorUsuario = await buscarAfastamentosAtivosPorUsuarios(
+      membros.map((m) => m.id_user),
+      hoje,
+    );
+    const membrosComAviso = membros.map((m) => ({
+      ...m,
+      afastamentos_ativos: afastamentosPorUsuario.get(m.id_user) || [],
+    }));
+
+    return res.status(200).json(membrosComAviso);
   } catch (error) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
@@ -676,9 +693,17 @@ async function criarSubstituicaoAdicaoV2(req, res) {
         updated_at: new Date(),
       });
 
-      return res
-        .status(201)
-        .json({ msg: "Militar adicionado à escala apenas nesse dia com sucesso!" });
+      const avisos = await avaliarRestricoesAtivas(
+        fk_id_usuario_entra,
+        dataSubstituicao.dataFormatada,
+        fk_id_turno,
+        fk_id_grupamento,
+      );
+
+      return res.status(201).json({
+        msg: "Militar adicionado à escala apenas nesse dia com sucesso!",
+        avisos,
+      });
     } catch (error) {
       return res.status(500).json({
         msg: "Erro interno do servidor",
@@ -843,9 +868,17 @@ async function criarSubstituicaoPermutaV2(req, res) {
         updated_at: new Date(),
       });
 
-      return res
-        .status(201)
-        .json({ msg: "Permuta registrada com sucesso apenas para esse dia!" });
+      const avisos = await avaliarRestricoesAtivas(
+        fk_id_usuario_entra,
+        dataSubstituicao.dataFormatada,
+        fk_id_turno,
+        fk_id_grupamento,
+      );
+
+      return res.status(201).json({
+        msg: "Permuta registrada com sucesso apenas para esse dia!",
+        avisos,
+      });
     } catch (error) {
       return res.status(500).json({
         msg: "Erro interno do servidor",
@@ -896,7 +929,22 @@ async function listarSubstituicoesDoDiaV2(req, res) {
       .where("v2_escala_substituicao.data", dataConsulta.objetoDate)
       .orderBy("v2_turno.numero");
 
-    return res.status(200).json(substituicoes);
+    // Mesma anotação informativa do roster mensal — quem "entra" nesse dia
+    // por substituição pontual também pode ter afastamento/restrição ativo,
+    // e o painel do dia precisa saber disso pra avisar o administrador.
+    const idsEntrando = substituicoes.map((s) => s.id_usuario_entra).filter(Boolean);
+    const afastamentosPorUsuario = await buscarAfastamentosAtivosPorUsuarios(
+      idsEntrando,
+      dataConsulta.dataFormatada,
+    );
+    const substituicoesComAviso = substituicoes.map((s) => ({
+      ...s,
+      afastamentos_ativos: s.id_usuario_entra
+        ? afastamentosPorUsuario.get(s.id_usuario_entra) || []
+        : [],
+    }));
+
+    return res.status(200).json(substituicoesComAviso);
   } catch (error) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
