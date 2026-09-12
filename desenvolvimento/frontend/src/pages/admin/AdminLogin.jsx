@@ -72,6 +72,7 @@ export default function AdminLogin() {
               type="text"
               value={cpf}
               onChange={handleCpfChange}
+              placeholder="000.000.000-00"
               maxLength={14}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               required
