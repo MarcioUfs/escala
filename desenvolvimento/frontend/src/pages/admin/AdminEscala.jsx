@@ -223,9 +223,6 @@ export default function DashboardEscala() {
     }
   };
 
-  const [confirmandoEdicaoMes, setConfirmandoEdicaoMes] = useState(false);
-  const [salvandoMes, setSalvandoMes] = useState(false);
-
   // Período vazio detectado no 404 (o backend calcula e devolve
   // data_inicio/data_fim mesmo sem nenhuma linha) — usado só pra oferecer
   // a geração automática abaixo, sem duplicar a conta de dias no front.
@@ -283,6 +280,42 @@ export default function DashboardEscala() {
   useEffect(() => {
     carregarEscalas();
   }, [carregarEscalas]);
+
+  // -------------------------------------------------------------------
+  // Marcadores "*" (houve ajuste pontual — adição/permuta/folga) e "!"
+  // (alguém do efetivo tinha restrição/afastamento ativo) — mesmo sistema
+  // das Escalas Consolidadas, evidenciando na própria grade ao vivo onde
+  // existe alguma diferença em relação ao ciclo puro. Busca à parte, sem
+  // bloquear o carregamento normal da escala: se falhar (ex: mês ainda
+  // sem nenhum dia gerado), a grade simplesmente fica sem marcadores.
+  const [enriquecimentoPorDiaTurno, setEnriquecimentoPorDiaTurno] = useState(new Map());
+
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      try {
+        const { data } = await api.post("/escalas/consolidadas/mes", {
+          mes_referencia: formatarMesReferencia(mesReferencia),
+        });
+        if (cancelado) return;
+        const mapa = new Map();
+        for (const dia of data.dias || []) {
+          for (const turno of dia.turnos) {
+            mapa.set(`${dia.data}_${turno.turno}`, {
+              temAjuste: turno.ajustes.length > 0,
+              temRestricao: turno.membros.some((m) => m.restricoes.length > 0),
+            });
+          }
+        }
+        setEnriquecimentoPorDiaTurno(mapa);
+      } catch {
+        if (!cancelado) setEnriquecimentoPorDiaTurno(new Map());
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [mesReferencia]);
 
   // -------------------------------------------------------------------
   // Geração automática — só dispara quando o mês está completamente
@@ -455,6 +488,7 @@ export default function DashboardEscala() {
   const [modalAdicionar, setModalAdicionar] = useState(null); // { sigla, idGrupamento }
   const [modalTrocar, setModalTrocar] = useState(null); // { membro, siglaAtual, idAtual }
   const [modalPermutar, setModalPermutar] = useState(null); // { membro, siglaAtual, idAtual }
+  const [modalExcluirMembro, setModalExcluirMembro] = useState(null); // { membro, sigla, idGrupamento }
   const [acaoEmAndamento, setAcaoEmAndamento] = useState(false);
   const [erroGestaoEfetivo, setErroGestaoEfetivo] = useState(null);
 
@@ -488,6 +522,7 @@ export default function DashboardEscala() {
     try {
       await api.put(`/escalas/grupamento-usuario/${membro.id_grupamento_usuario}/encerrar`);
       await recarregarEfetivoDoGrupamento(sigla, idGrupamento);
+      setModalExcluirMembro(null);
     } catch (err) {
       setErroGestaoEfetivo(
         err.response?.data?.msg || "Não foi possível remover o militar do grupamento.",
@@ -559,6 +594,7 @@ export default function DashboardEscala() {
   // vínculo mensal)
   const [modalAdicionarDia, setModalAdicionarDia] = useState(null); // { diaISO, linha }
   const [modalPermutarDia, setModalPermutarDia] = useState(null); // { diaISO, linha, membro }
+  const [modalExcluirDia, setModalExcluirDia] = useState(null); // { membro, diaISO, linha }
   const [substituicaoEmAndamento, setSubstituicaoEmAndamento] = useState(false);
   const [erroSubstituicaoDia, setErroSubstituicaoDia] = useState(null);
   // Avisos de restrição/afastamento (módulo é informativo — nunca bloqueia
@@ -595,14 +631,6 @@ export default function DashboardEscala() {
 
   // Exclui um militar da escala só naquele dia+turno
   const substituirExclusaoDia = async (membro, diaISO, linha) => {
-    const nome = membro.nome_guerra || membro.nome;
-    if (
-      !window.confirm(
-        `Excluir ${nome} da escala só no dia ${diaISO}? O vínculo mensal dele não é afetado.`,
-      )
-    ) {
-      return;
-    }
     setSubstituicaoEmAndamento(true);
     setErroSubstituicaoDia(null);
     try {
@@ -613,6 +641,7 @@ export default function DashboardEscala() {
         fk_id_usuario_sai: membro.id_user,
       });
       await carregarSubstituicoesDoDia(diaISO);
+      setModalExcluirDia(null);
     } catch (err) {
       setErroSubstituicaoDia(
         err.response?.data?.msg || "Não foi possível excluir o militar só nesse dia.",
@@ -719,31 +748,6 @@ export default function DashboardEscala() {
     });
   };
 
-  // -------------------------------------------------------------------
-  // Edição mensal — impacto direto no ciclo inteiro do período visível.
-  // Diferente do ajuste manual: regenera a escala a partir da regra do
-  // ciclo pra todo o intervalo, não só um dia.
-  // -------------------------------------------------------------------
-  const confirmarEdicaoMensal = async () => {
-    if (!periodo) return;
-    try {
-      setSalvandoMes(true);
-      await api.post("/escalas/gerar", {
-        data_inicio: periodo.data_inicio,
-        data_fim: periodo.data_fim,
-      });
-      await carregarEscalas();
-      setConfirmandoEdicaoMes(false);
-    } catch (err) {
-      setError(
-        err.response?.data?.msg ||
-          "Não foi possível regenerar a escala do mês.",
-      );
-    } finally {
-      setSalvandoMes(false);
-    }
-  };
-
   const diaSelecionadoDate = diaSelecionado ? parseDataLocal(diaSelecionado) : null;
 
   return (
@@ -824,13 +828,26 @@ export default function DashboardEscala() {
           </div>
 
           <button
-            onClick={() => setConfirmandoEdicaoMes(true)}
+            onClick={() =>
+              navigate("/admin/escala-despachantes", {
+                state: periodo ? { data_inicio: periodo.data_inicio, data_fim: periodo.data_fim } : undefined,
+              })
+            }
             disabled={!periodo || loading}
             className="flex items-center gap-2 px-3 md:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition shadow-sm"
           >
-            <RefreshCw size={16} />
-            <span className="hidden sm:inline">Editar escala do mês</span>
-            <span className="sm:hidden">Editar mês</span>
+            <FileText size={16} />
+            <span className="hidden sm:inline">Gerar escala por dia de efetivo</span>
+            <span className="sm:hidden">Gerar por dia</span>
+          </button>
+
+          <button
+            onClick={() => navigate("/admin/escalas-consolidadas")}
+            className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-bold rounded-lg transition shadow-sm"
+          >
+            <ClipboardList size={16} />
+            <span className="hidden sm:inline">Escalas Consolidadas</span>
+            <span className="sm:hidden">Consolidadas</span>
           </button>
         </div>
 
@@ -917,6 +934,7 @@ export default function DashboardEscala() {
                 turnosDoDia={turnosDoDia}
                 mapaCoresGrupamento={mapaCoresGrupamento}
                 membrosPorGrupamento={membrosPorGrupamento}
+                enriquecimentoPorDiaTurno={enriquecimentoPorDiaTurno}
                 onSelecionarDia={(date) => setDiaSelecionado(chaveISO(date))}
               />
             </div>
@@ -932,6 +950,7 @@ export default function DashboardEscala() {
                   mesReferencia={mesReferencia}
                   turnosDoDia={turnosDoDia}
                   mapaCoresGrupamento={mapaCoresGrupamento}
+                  enriquecimentoPorDiaTurno={enriquecimentoPorDiaTurno}
                   onSelecionarDia={(date) => setDiaSelecionado(chaveISO(date))}
                 />
               ))}
@@ -957,8 +976,8 @@ export default function DashboardEscala() {
                     onAdicionar={() =>
                       setModalAdicionar({ sigla, idGrupamento: idGrupamentoPorSigla.get(sigla) })
                     }
-                    onExcluirMensal={(membro) =>
-                      excluirDaEscalaMensal(membro, sigla, idGrupamentoPorSigla.get(sigla))
+                    onSolicitarExclusao={(membro) =>
+                      setModalExcluirMembro({ membro, sigla, idGrupamento: idGrupamentoPorSigla.get(sigla) })
                     }
                     onTrocar={(membro) =>
                       setModalTrocar({ membro, siglaAtual: sigla, idAtual: idGrupamentoPorSigla.get(sigla) })
@@ -1097,6 +1116,33 @@ export default function DashboardEscala() {
       )}
 
       {/* ------------------------------------------------------------- */}
+      {/* CONFIRMAÇÃO — remover militar do grupamento (vínculo mensal) */}
+      {/* ------------------------------------------------------------- */}
+      {modalExcluirMembro && (
+        <ModalConfirmacao
+          titulo="Remover do grupamento"
+          descricao={`Remover ${
+            modalExcluirMembro.membro.nome_guerra || modalExcluirMembro.membro.nome
+          } do Grupamento ${modalExcluirMembro.sigla}? Isso encerra o vínculo dele com este grupamento.`}
+          confirmando={acaoEmAndamento}
+          erro={erroGestaoEfetivo}
+          rotuloConfirmar="Remover"
+          rotuloProcessando="Removendo..."
+          onCancelar={() => {
+            setModalExcluirMembro(null);
+            setErroGestaoEfetivo(null);
+          }}
+          onConfirmar={() =>
+            excluirDaEscalaMensal(
+              modalExcluirMembro.membro,
+              modalExcluirMembro.sigla,
+              modalExcluirMembro.idGrupamento,
+            )
+          }
+        />
+      )}
+
+      {/* ------------------------------------------------------------- */}
       {/* MODAL — adicionar militar só naquele dia (substituição pontual) */}
       {/* ------------------------------------------------------------- */}
       {modalAdicionarDia && (
@@ -1148,6 +1194,29 @@ export default function DashboardEscala() {
       )}
 
       {/* ------------------------------------------------------------- */}
+      {/* CONFIRMAÇÃO — excluir militar da escala só naquele dia */}
+      {/* ------------------------------------------------------------- */}
+      {modalExcluirDia && (
+        <ModalConfirmacao
+          titulo="Excluir da escala do dia"
+          descricao={`Excluir ${
+            modalExcluirDia.membro.nome_guerra || modalExcluirDia.membro.nome
+          } da escala só no dia ${modalExcluirDia.diaISO}? O vínculo mensal dele não é afetado.`}
+          confirmando={substituicaoEmAndamento}
+          erro={erroSubstituicaoDia}
+          rotuloConfirmar="Excluir"
+          rotuloProcessando="Excluindo..."
+          onCancelar={() => {
+            setModalExcluirDia(null);
+            setErroSubstituicaoDia(null);
+          }}
+          onConfirmar={() =>
+            substituirExclusaoDia(modalExcluirDia.membro, modalExcluirDia.diaISO, modalExcluirDia.linha)
+          }
+        />
+      )}
+
+      {/* ------------------------------------------------------------- */}
       {/* PAINEL DO DIA — só ações diárias (efetivo real do dia, com */}
       {/* ajustes pontuais já refletidos). Ações mensais moraram pro */}
       {/* card "Efetivo por Grupamento", mais abaixo na tela. */}
@@ -1166,24 +1235,12 @@ export default function DashboardEscala() {
           onAdicionarRapido={(afastamento, diaISO, linha) =>
             substituirAdicaoDia({ id_user: afastamento.fk_id_usuario }, diaISO, linha)
           }
-          onExcluirDia={(membro, diaISO, linha) => substituirExclusaoDia(membro, diaISO, linha)}
+          onExcluirDia={(membro, diaISO, linha) => setModalExcluirDia({ membro, diaISO, linha })}
           onPermutarDia={(membro, diaISO, linha) => setModalPermutarDia({ diaISO, linha, membro })}
           onReverterSubstituicao={(idSubstituicao) => reverterSubstituicao(idSubstituicao)}
         />
       )}
 
-      {/* ------------------------------------------------------------- */}
-      {/* CONFIRMAÇÃO — edição mensal (impacto no ciclo inteiro) */}
-      {/* ------------------------------------------------------------- */}
-      {confirmandoEdicaoMes && (
-        <ModalConfirmacao
-          titulo="Editar escala do mês"
-          descricao="Isso regenera todos os dias do período visível a partir da regra do ciclo. Ajustes manuais feitos em dias específicos dentro desse intervalo serão sobrescritos. Essa ação afeta o mês inteiro, não apenas um dia."
-          confirmando={salvandoMes}
-          onCancelar={() => setConfirmandoEdicaoMes(false)}
-          onConfirmar={confirmarEdicaoMensal}
-        />
-      )}
     </div>
   );
 }
@@ -1191,7 +1248,14 @@ export default function DashboardEscala() {
 // ===========================================================================
 // TABELA DESKTOP
 // ===========================================================================
-function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, membrosPorGrupamento, onSelecionarDia }) {
+function TabelaDesktop({
+  dias,
+  turnosDoDia,
+  mapaCoresGrupamento,
+  membrosPorGrupamento,
+  enriquecimentoPorDiaTurno,
+  onSelecionarDia,
+}) {
   const turnosLabel = [
     { numero: 1, label: "1º Turno" },
     { numero: 2, label: "2º Turno" },
@@ -1242,18 +1306,24 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, membrosPorGrupa
                 const nomesTooltip = membros?.length
                   ? membros.map((m) => m.nome).join(", ")
                   : "Nenhum militar vinculado a este grupamento";
+                const enriquecimento = linha
+                  ? enriquecimentoPorDiaTurno.get(`${chaveISO(dia)}_${t.numero}`)
+                  : null;
+                const temAjuste = linha?.origem === "AJUSTE_MANUAL" || enriquecimento?.temAjuste;
+                const temRestricao = enriquecimento?.temRestricao;
                 return (
                   <td key={idx} className="border-t border-slate-100 text-center p-0.5">
                     {linha ? (
                       <button
                         onClick={() => onSelecionarDia(dia)}
                         className={`w-full py-1 rounded-md font-bold ${cor.bg} ${cor.text} ring-1 ${cor.ring} hover:brightness-95 transition flex flex-col items-center leading-tight`}
-                        title={`Grupamento ${linha.grupamento} · ${linha.hora_inicio} às ${linha.hora_fim}${linha.origem === "AJUSTE_MANUAL" ? " · ajuste manual" : ""} · ${nomesTooltip}`}
+                        title={`Grupamento ${linha.grupamento} · ${linha.hora_inicio} às ${linha.hora_fim}${linha.origem === "AJUSTE_MANUAL" ? " · ajuste manual" : ""}${temAjuste ? " · houve ajuste pontual" : ""}${temRestricao ? " · restrição/afastamento ativo" : ""} · ${nomesTooltip}`}
                       >
                         <span>
                           {linha.grupamento}
-                          {linha.origem === "AJUSTE_MANUAL" && (
-                            <span className="ml-0.5 text-[8px] align-top">*</span>
+                          {temAjuste && <span className="ml-0.5 text-[11px] font-bold align-top">*</span>}
+                          {temRestricao && (
+                            <span className="ml-0.5 text-[11px] font-bold align-top text-amber-700">!</span>
                           )}
                         </span>
                         <span className="text-[9px] font-normal opacity-70">
@@ -1271,7 +1341,9 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, membrosPorGrupa
         </tbody>
       </table>
       <p className="px-3 py-2 text-[11px] text-slate-400 border-t border-slate-200">
-        * ajuste manual pontual — clique em um dia para ver detalhes
+        <span className="font-bold">*</span> houve ajuste manual do ciclo ou ajuste pontual
+        (adição/permuta/folga) nesse turno · <span className="font-bold text-amber-700">!</span>{" "}
+        alguém do efetivo tinha restrição/afastamento ativo · clique em um dia para ver detalhes
       </p>
     </div>
   );
@@ -1280,7 +1352,14 @@ function TabelaDesktop({ dias, turnosDoDia, mapaCoresGrupamento, membrosPorGrupa
 // ===========================================================================
 // CALENDÁRIO MOBILE — blocos de 7 dias
 // ===========================================================================
-function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupamento, onSelecionarDia }) {
+function CalendarioSemana({
+  semana,
+  mesReferencia,
+  turnosDoDia,
+  mapaCoresGrupamento,
+  enriquecimentoPorDiaTurno,
+  onSelecionarDia,
+}) {
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
       <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
@@ -1294,6 +1373,15 @@ function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupame
         {semana.map((dia, idx) => {
           const linhas = turnosDoDia(dia);
           const foraDoMes = dia.getMonth() !== mesReferencia.getMonth();
+          // Mesmos marcadores "*"/"!" da tabela desktop — aqui resumidos
+          // pro dia inteiro (basta UM turno do dia ter ajuste/restrição).
+          const chaveDia = chaveISO(dia);
+          const temAjuste = linhas.some(
+            (l) => l.origem === "AJUSTE_MANUAL" || enriquecimentoPorDiaTurno.get(`${chaveDia}_${l.turno}`)?.temAjuste,
+          );
+          const temRestricao = linhas.some(
+            (l) => enriquecimentoPorDiaTurno.get(`${chaveDia}_${l.turno}`)?.temRestricao,
+          );
           return (
             <button
               key={idx}
@@ -1302,8 +1390,12 @@ function CalendarioSemana({ semana, mesReferencia, turnosDoDia, mapaCoresGrupame
                 foraDoMes ? "opacity-30" : "hover:bg-slate-50"
               }`}
             >
-              <span className="text-xs font-mono font-bold text-slate-700">
+              <span className="text-xs font-mono font-bold text-slate-700 flex items-center">
                 {dia.getDate()}
+                {temAjuste && <span className="ml-0.5 text-[11px] font-bold align-top">*</span>}
+                {temRestricao && (
+                  <span className="ml-0.5 text-[11px] font-bold align-top text-amber-700">!</span>
+                )}
               </span>
               <div className="flex gap-0.5">
                 {linhas.slice(0, 3).map((l, i) => {
@@ -1688,17 +1780,10 @@ function GrupamentoRosterCard({
   membros,
   carregando,
   onAdicionar,
-  onExcluirMensal,
+  onSolicitarExclusao,
   onTrocar,
   onPermutar,
 }) {
-  const confirmarExclusao = (membro) => {
-    const nome = membro.nome_guerra || membro.nome;
-    if (window.confirm(`Remover ${nome} do Grupamento ${sigla}? Isso encerra o vínculo dele com este grupamento.`)) {
-      onExcluirMensal(membro);
-    }
-  };
-
   return (
     <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-visible">
       <div className={`flex items-center justify-between px-4 py-3 ${cor.bg} ring-1 ${cor.ring}`}>
@@ -1769,7 +1854,7 @@ function GrupamentoRosterCard({
                 Permutar
               </button>
               <button
-                onClick={() => confirmarExclusao(m)}
+                onClick={() => onSolicitarExclusao(m)}
                 title="Excluir da escala mensal"
                 className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-xs font-semibold rounded transition"
               >
@@ -2022,13 +2107,25 @@ function ModalTrocarGrupamento({ membro, siglaAtual, grupamentosDisponiveis, con
 // ===========================================================================
 // MODAL DE CONFIRMAÇÃO GENÉRICO
 // ===========================================================================
-function ModalConfirmacao({ titulo, descricao, confirmando, onCancelar, onConfirmar }) {
+function ModalConfirmacao({
+  titulo,
+  descricao,
+  confirmando,
+  erro,
+  rotuloConfirmar = "Confirmar edição",
+  rotuloProcessando = "Aplicando...",
+  onCancelar,
+  onConfirmar,
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50" onClick={onCancelar} />
       <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl">
         <h3 className="text-base font-bold text-slate-800 mb-2">{titulo}</h3>
         <p className="text-sm text-slate-500 mb-5">{descricao}</p>
+        {erro && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{erro}</div>
+        )}
         <div className="flex gap-2 justify-end">
           <button
             onClick={onCancelar}
@@ -2042,7 +2139,7 @@ function ModalConfirmacao({ titulo, descricao, confirmando, onCancelar, onConfir
             disabled={confirmando}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition"
           >
-            {confirmando ? "Aplicando..." : "Confirmar edição"}
+            {confirmando ? rotuloProcessando : rotuloConfirmar}
           </button>
         </div>
       </div>

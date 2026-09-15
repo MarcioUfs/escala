@@ -23,6 +23,8 @@ import AdminEscala from "./pages/admin/AdminEscala";
 import AdminPermutas from "./pages/admin/AdminPermutas";
 import AdminAfastamentos from "./pages/admin/AdminAfastamentos";
 import AdminBoletimEfetivo from "./pages/admin/AdminBoletimEfetivo";
+import AdminEscalaDespachantes from "./pages/admin/AdminEscalaDespachantes";
+import AdminEscalasConsolidadas from "./pages/admin/AdminEscalasConsolidadas";
 import UserEscala from "./pages/user/UserEscala";
 import UserPermutas from "./pages/user/UserPermutas";
 
@@ -66,6 +68,8 @@ function App() {
             <Route path="permutas" element={<AdminPermutas />} />
             <Route path="afastamentos" element={<AdminAfastamentos />} />
             <Route path="boletim-efetivo" element={<AdminBoletimEfetivo />} />
+            <Route path="escala-despachantes" element={<AdminEscalaDespachantes />} />
+            <Route path="escalas-consolidadas" element={<AdminEscalasConsolidadas />} />
           </Route>
 
           {/* ==============================================

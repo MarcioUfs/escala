@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { AuthContext } from "../../contexts/AuthContext";
 
 export default function AdminLogin() {
@@ -7,6 +8,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [mostrarEsqueciSenha, setMostrarEsqueciSenha] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const { signIn, signOut } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -82,13 +84,24 @@ export default function AdminLogin() {
             <label className="block text-sm font-medium text-gray-700">
               Senha
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
+            <div className="relative mt-1">
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                tabIndex={-1}
+              >
+                {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <div className="flex gap-3">
             <button
