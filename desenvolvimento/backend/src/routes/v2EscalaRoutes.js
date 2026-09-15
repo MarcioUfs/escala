@@ -5,6 +5,9 @@ const { authenticatedLimiter } = require("../middleware/rateLimiter");
 
 const {
   gerarEscalaV2,
+  gerarDocumentoDespachantesV2,
+  listarMesesConsolidadosV2,
+  gerarEscalaConsolidadaV2,
   criarAjusteManualV2,
   listarEscalasV2,
   listarEscalaPeriodoEstendidoV2,
@@ -32,6 +35,42 @@ const {
 // POST /escalas/gerar
 // Gera em massa, a partir do ciclo, todos os dias de um período
 router.post("/gerar", verifyJwt, isAdmin, authenticatedLimiter, gerarEscalaV2);
+
+// POST /escalas/despachantes/documento
+// Preenche lacunas do intervalo (igual à rota acima) e devolve a grade
+// nominal (patente+matrícula+nome por turno/dia) pro documento "Escala
+// dos Despachantes", no formato do boletim oficial do COPOM/PMSE
+router.post(
+  "/despachantes/documento",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  gerarDocumentoDespachantesV2,
+);
+
+// GET /escalas/consolidadas/meses
+// Lista os meses que já têm escala gerada (não é um "arquivo" separado —
+// v2_escala já guarda o histórico completo por data, isso só lista o que
+// já existe)
+router.get(
+  "/consolidadas/meses",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  listarMesesConsolidadosV2,
+);
+
+// POST /escalas/consolidadas/mes
+// Grade completa do mês (dia 01 ao último dia): efetivo nominal final por
+// turno + ajustes pontuais (quem saiu/entrou) + restrição/motivo de
+// afastamento de cada militar naquele dia específico
+router.post(
+  "/consolidadas/mes",
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  gerarEscalaConsolidadaV2,
+);
 
 // POST /escalas/ajuste
 // Cria/sobrescreve um ajuste manual em um dia+turno específico

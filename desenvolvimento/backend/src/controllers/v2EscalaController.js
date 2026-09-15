@@ -9,7 +9,199 @@ const calcularPeriodoEstendido = require("../functions/calcularPeriodoEstendido"
 const {
   avaliarRestricoesAtivas,
   buscarAfastamentosAtivosPorUsuarios,
+  buscarAfastamentosDetalhadosNoPeriodo,
+  avaliarRestricoesEmLote,
 } = require("../functions/validarAlocacaoAfastamento");
+const { montarGradeNominal, paraDataISO } = require("../functions/montarGradeNominalEscala");
+
+// -----------------------------------------------------------------------
+// 1B) GERAR + DEVOLVER O DOCUMENTO "ESCALA DOS DESPACHANTES" — mesmo
+//     preenchimento de lacunas do item 1 (seguro, nunca sobrescreve o que
+//     já existe), mas em vez de só confirmar "gerado com sucesso", devolve
+//     a grade já pronta com o efetivo NOMINAL (patente + matrícula + nome
+//     de guerra) de cada turno de cada dia do intervalo — é a fonte de
+//     dados do boletim impresso no formato do documento oficial do
+//     COPOM/PMSE (ex: "ESCALA MENSAL MÊS DE JULHO/2026 — DESPACHANTES").
+//
+//     Efetivo de cada turno = vínculo mensal vigente naquele dia
+//     (v2_grupamento_usuario) já ajustado pelas substituições pontuais
+//     registradas pra aquele data+turno+grupamento (v2_escala_substituicao)
+//     — mesma regra usada no "Painel do Dia" do frontend, só que
+//     calculada aqui pro intervalo inteiro de uma vez, não dia a dia.
+// -----------------------------------------------------------------------
+async function gerarDocumentoDespachantesV2(req, res) {
+  try {
+    const dataInicio = validarDataUsuario(formatarDataEscala(req.body.data_inicio));
+    const dataFim = validarDataUsuario(formatarDataEscala(req.body.data_fim));
+
+    if (!dataInicio.valido) {
+      return res.status(400).json({ msg: `Data de início: ${dataInicio.motivo}` });
+    }
+    if (!dataFim.valido) {
+      return res.status(400).json({ msg: `Data de fim: ${dataFim.motivo}` });
+    }
+
+    const periodoValido = validarPeriodoEscala(dataInicio.objetoDate, dataFim.objetoDate);
+    if (!periodoValido.valido) {
+      return res.status(400).json({ msg: periodoValido.motivo });
+    }
+
+    // Preenche eventuais lacunas do intervalo a partir do ciclo antes de
+    // montar o documento — "ON CONFLICT DO NOTHING", nunca sobrescreve um
+    // dia que já existe (nem ciclo, nem ajuste manual/substituição).
+    await database.raw("SELECT fn_v2_gerar_escala(?, ?)", [
+      dataInicio.dataFormatada,
+      dataFim.dataFormatada,
+    ]);
+
+    const { dias } = await montarGradeNominal(dataInicio.dataFormatada, dataFim.dataFormatada);
+
+    if (dias.length === 0) {
+      return res.status(404).json({
+        msg: "Nenhuma escala encontrada nesse período (confira se existe ciclo cadastrado).",
+        periodo: { data_inicio: dataInicio.dataFormatada, data_fim: dataFim.dataFormatada },
+      });
+    }
+
+    // O boletim de despachantes só usa dia/turno/grupamento/membros —
+    // "ajustes" (o log de quem saiu/entrou) é específico das Escalas
+    // Consolidadas, não faz parte deste documento.
+    const diasSemAjustes = dias.map((dia) => ({
+      data: dia.data,
+      turnos: dia.turnos.map(({ turno, hora_inicio, hora_fim, grupamento, membros }) => ({
+        turno,
+        hora_inicio,
+        hora_fim,
+        grupamento,
+        membros: membros.map(({ id_user, sigla_patente, matricula, nome_guerra, nome }) => ({
+          id_user,
+          sigla_patente,
+          matricula,
+          nome_guerra,
+          nome,
+        })),
+      })),
+    }));
+
+    return res.status(200).json({
+      periodo: { data_inicio: dataInicio.dataFormatada, data_fim: dataFim.dataFormatada },
+      dias: diasSemAjustes,
+    });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+  }
+}
+
+// -----------------------------------------------------------------------
+// 1C) ESCALAS CONSOLIDADAS — LISTAR MESES DISPONÍVEIS
+//     Não existe uma tabela de "snapshot mensal": a escala do ciclo
+//     (v2_escala), as substituições pontuais e os afastamentos já ficam
+//     permanentemente salvos por data, então o mês "já está salvo" assim
+//     que qualquer dia dele é gerado — não tem o que arquivar de novo.
+//     Esta rota só lista, a partir do que já existe em v2_escala, quais
+//     meses têm dado pra oferecer na tela.
+// -----------------------------------------------------------------------
+async function listarMesesConsolidadosV2(req, res) {
+  try {
+    const linhas = await database("v2_escala")
+      .distinct(database.raw("date_trunc('month', data)::date as mes"))
+      .orderBy("mes", "desc");
+
+    const meses = linhas.map((l) => {
+      const mes = paraDataISO(l.mes);
+      const [ano, mesNum] = mes.split("-");
+      const ultimoDia = new Date(Number(ano), Number(mesNum), 0).getDate();
+      return {
+        mes_referencia: `${mesNum}/${ano}`,
+        data_inicio: `${ano}-${mesNum}-01`,
+        data_fim: `${ano}-${mesNum}-${String(ultimoDia).padStart(2, "0")}`,
+      };
+    });
+
+    return res.status(200).json(meses);
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+  }
+}
+
+// -----------------------------------------------------------------------
+// 1D) ESCALAS CONSOLIDADAS — GRADE COMPLETA DE UM MÊS
+//     Igual à grade nominal do documento de despachantes, mas: (1) sempre
+//     o mês-calendário exato (dia 01 ao último dia), nunca um intervalo
+//     livre; (2) cada turno também traz "ajustes" (quem saiu de folga,
+//     quem entrou numa permuta/adição — não só o resultado líquido); (3)
+//     cada membro do efetivo final vem anotado com a restrição/motivo de
+//     afastamento que ele tinha ativo NAQUELE dia específico, se houver
+//     (mesma regra de avaliarRestricoesAtivas, mas em lote pro mês
+//     inteiro — ver validarAlocacaoAfastamento.js).
+//     Não preenche lacunas a partir do ciclo — é uma tela de CONSULTA de
+//     histórico, não de edição; um mês sem nenhum dia gerado ainda
+//     simplesmente não aparece na lista de meses disponíveis.
+// -----------------------------------------------------------------------
+async function gerarEscalaConsolidadaV2(req, res) {
+  try {
+    const mesReferencia = req.body.mes_referencia;
+    if (!mesReferencia || !/^\d{2}\/\d{4}$/.test(mesReferencia)) {
+      return res.status(400).json({
+        msg: 'mes_referencia é obrigatório, no formato "MM/YYYY" (ex: "09/2026")',
+      });
+    }
+    const [mesStr, anoStr] = mesReferencia.split("/");
+    const mes = Number(mesStr);
+    const ano = Number(anoStr);
+    if (mes < 1 || mes > 12) {
+      return res.status(400).json({ msg: "Mês inválido em mes_referencia" });
+    }
+
+    const dataInicio = `${anoStr}-${mesStr}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const dataFim = `${anoStr}-${mesStr}-${String(ultimoDia).padStart(2, "0")}`;
+
+    const { dias } = await montarGradeNominal(dataInicio, dataFim);
+
+    if (dias.length === 0) {
+      return res.status(404).json({
+        msg: "Nenhuma escala encontrada nesse mês.",
+        periodo: { data_inicio: dataInicio, data_fim: dataFim },
+      });
+    }
+
+    // Uma leva só de afastamentos ativos no mês (todo mundo, não só quem
+    // aparece na grade) — avaliarRestricoesEmLote() resolve em memória
+    // pra cada membro, sem 1 query por célula da grade.
+    const afastamentosPorUsuario = await buscarAfastamentosDetalhadosNoPeriodo(dataInicio, dataFim);
+
+    const diasComRestricao = dias.map((dia) => ({
+      data: dia.data,
+      turnos: dia.turnos.map((turno) => ({
+        turno: turno.turno,
+        hora_inicio: turno.hora_inicio,
+        hora_fim: turno.hora_fim,
+        fk_id_grupamento: turno.fk_id_grupamento,
+        grupamento: turno.grupamento,
+        membros: turno.membros.map((m) => ({
+          ...m,
+          restricoes: avaliarRestricoesEmLote(
+            afastamentosPorUsuario,
+            m.id_user,
+            dia.data,
+            turno.fk_id_turno,
+            turno.fk_id_grupamento,
+          ),
+        })),
+        ajustes: turno.ajustes,
+      })),
+    }));
+
+    return res.status(200).json({
+      mes_referencia: mesReferencia,
+      periodo: { data_inicio: dataInicio, data_fim: dataFim },
+      dias: diasComRestricao,
+    });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+  }
+}
 
 // -----------------------------------------------------------------------
 // 1) GERAR ESCALA A PARTIR DO CICLO (equivalente ao "createEscala", mas em
@@ -978,6 +1170,9 @@ async function reverterSubstituicaoV2(req, res) {
 
 module.exports = {
   gerarEscalaV2: gerarEscalaV2, // substitui o createEscala em massa
+  gerarDocumentoDespachantesV2: gerarDocumentoDespachantesV2, // grade nominal por dia/turno, formato do boletim oficial
+  listarMesesConsolidadosV2: listarMesesConsolidadosV2, // meses com escala já gerada
+  gerarEscalaConsolidadaV2: gerarEscalaConsolidadaV2, // grade completa de um mês + ajustes + restrições
   criarAjusteManualV2: criarAjusteManualV2, // troca pontual em um dia/turno
   listarEscalasV2: listarEscalasV2, // mesmo papel do listarEscalaGuarnicoes
   listarEscalaPeriodoEstendidoV2: listarEscalaPeriodoEstendidoV2, // mês anterior (N dias) + mês seguinte inteiro

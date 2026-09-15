@@ -66,6 +66,38 @@ async function buscarAfastamentosAtivosPorUsuarios(idsUsuario, dataReferencia) {
   return porUsuario;
 }
 
+// Regra pura, sem banco — decide se UM afastamento específico "pega" numa
+// alocação turno+grupamento específica, e com que nível de aviso. Extraída
+// de avaliarRestricoesAtivas() pra ser reaproveitada tanto ali (1 consulta
+// por vez, usado nas telas de adicionar/permutar) quanto em
+// avaliarRestricoesEmLote() (dados já carregados em memória, usado pra
+// montar um mês inteiro de uma vez sem 1 query por célula da grade).
+function avaliarAplicabilidade(afastamento, turnosDoAfastamento, gruposDoAfastamento, fk_id_turno, fk_id_grupamento) {
+  // Sem turno nem grupamento associado (ex: RESTRIÇÃO GERAL, férias,
+  // curso...) — é só informativo, sempre avisa, não há "violação".
+  if (turnosDoAfastamento.length === 0 && gruposDoAfastamento.length === 0) {
+    return { aplica: true, nivel: "informativo" };
+  }
+
+  // Restrição tem grupamento(s) associado(s) e o grupamento da alocação
+  // não está entre eles -> não se aplica aqui.
+  if (gruposDoAfastamento.length > 0 && !gruposDoAfastamento.includes(Number(fk_id_grupamento))) {
+    return { aplica: false };
+  }
+
+  if (turnosDoAfastamento.length === 0) {
+    // Só restrito por grupamento, sem turno específico.
+    return { aplica: true, nivel: "atencao" };
+  }
+
+  const turnoEstaNaLista = turnosDoAfastamento.includes(Number(fk_id_turno));
+  const violado =
+    (afastamento.modo_restricao === "SOMENTE" && !turnoEstaNaLista) ||
+    (afastamento.modo_restricao === "EXCETO" && turnoEstaNaLista);
+
+  return violado ? { aplica: true, nivel: "atencao" } : { aplica: false };
+}
+
 // Avalia, pra um usuário + dia/turno/grupamento específicos, se existe
 // alguma restrição relevante — usado na hora de adicionar/permutar um
 // militar num dia da escala. Sempre devolve avisos, nunca bloqueia.
@@ -97,36 +129,109 @@ async function avaliarRestricoesAtivas(fk_id_usuario, data, fk_id_turno, fk_id_g
       .filter((g) => g.fk_id_afastamento === afastamento.id_afastamento)
       .map((g) => g.fk_id_grupamento);
 
-    // Sem turno nem grupamento associado (ex: RESTRIÇÃO GERAL, férias,
-    // curso...) — é só informativo, sempre avisa, não há "violação".
-    if (turnosDoAfastamento.length === 0 && gruposDoAfastamento.length === 0) {
-      avisos.push({ tipo: afastamento.tipo, nivel: "informativo", mensagem: montarMensagem(afastamento) });
-      continue;
-    }
-
-    // Restrição tem grupamento(s) associado(s) e o grupamento da alocação
-    // não está entre eles -> não se aplica aqui.
-    if (gruposDoAfastamento.length > 0 && !gruposDoAfastamento.includes(Number(fk_id_grupamento))) {
-      continue;
-    }
-
-    if (turnosDoAfastamento.length === 0) {
-      // Só restrito por grupamento, sem turno específico.
-      avisos.push({ tipo: afastamento.tipo, nivel: "atencao", mensagem: montarMensagem(afastamento) });
-      continue;
-    }
-
-    const turnoEstaNaLista = turnosDoAfastamento.includes(Number(fk_id_turno));
-    const violado =
-      (afastamento.modo_restricao === "SOMENTE" && !turnoEstaNaLista) ||
-      (afastamento.modo_restricao === "EXCETO" && turnoEstaNaLista);
-
-    if (violado) {
-      avisos.push({ tipo: afastamento.tipo, nivel: "atencao", mensagem: montarMensagem(afastamento) });
+    const resultado = avaliarAplicabilidade(
+      afastamento,
+      turnosDoAfastamento,
+      gruposDoAfastamento,
+      fk_id_turno,
+      fk_id_grupamento,
+    );
+    if (resultado.aplica) {
+      avisos.push({ tipo: afastamento.tipo, nivel: resultado.nivel, mensagem: montarMensagem(afastamento) });
     }
   }
 
   return avisos;
 }
 
-module.exports = { avaliarRestricoesAtivas, buscarAfastamentosAtivosPorUsuarios, montarMensagem };
+// Busca em UMA leva só todos os afastamentos ativos que tocam o período
+// (qualquer usuário), já com turnos/grupamentos associados, indexados por
+// usuário — base pra avaliar restrição dia a dia sem 1 query por célula.
+async function buscarAfastamentosDetalhadosNoPeriodo(dataInicio, dataFim) {
+  const afastamentos = await database("v2_afastamentos")
+    .where("ativo", true)
+    .andWhere("data_inicio", "<=", dataFim)
+    .andWhere(function () {
+      this.whereNull("data_fim").orWhere("data_fim", ">=", dataInicio);
+    })
+    .select(
+      "id_afastamento",
+      "fk_id_usuario",
+      "tipo",
+      "modo_restricao",
+      "data_inicio",
+      "data_fim",
+      "bgo_referencia",
+      "observacao",
+    );
+
+  const idsAfastamento = afastamentos.map((a) => a.id_afastamento);
+  const [turnosLinhas, gruposLinhas] = idsAfastamento.length
+    ? await Promise.all([
+        database("v2_afastamento_turno")
+          .whereIn("fk_id_afastamento", idsAfastamento)
+          .select("fk_id_afastamento", "fk_id_turno"),
+        database("v2_afastamento_grupamento")
+          .whereIn("fk_id_afastamento", idsAfastamento)
+          .select("fk_id_afastamento", "fk_id_grupamento"),
+      ])
+    : [[], []];
+
+  const porUsuario = new Map();
+  for (const afastamento of afastamentos) {
+    const lista = porUsuario.get(afastamento.fk_id_usuario) || [];
+    lista.push({
+      ...afastamento,
+      turnosDoAfastamento: turnosLinhas
+        .filter((t) => t.fk_id_afastamento === afastamento.id_afastamento)
+        .map((t) => t.fk_id_turno),
+      gruposDoAfastamento: gruposLinhas
+        .filter((g) => g.fk_id_afastamento === afastamento.id_afastamento)
+        .map((g) => g.fk_id_grupamento),
+    });
+    porUsuario.set(afastamento.fk_id_usuario, lista);
+  }
+  return porUsuario;
+}
+
+// Versão em memória de avaliarRestricoesAtivas() — recebe o Map já
+// carregado por buscarAfastamentosDetalhadosNoPeriodo() e resolve pra um
+// usuário+dia+turno+grupamento específicos sem tocar o banco de novo.
+function avaliarRestricoesEmLote(afastamentosPorUsuario, fk_id_usuario, data, fk_id_turno, fk_id_grupamento) {
+  const afastamentos = afastamentosPorUsuario.get(fk_id_usuario) || [];
+  const avisos = [];
+
+  for (const afastamento of afastamentos) {
+    const dataInicioISO =
+      afastamento.data_inicio instanceof Date
+        ? afastamento.data_inicio.toISOString().slice(0, 10)
+        : String(afastamento.data_inicio).slice(0, 10);
+    const dataFimISO = afastamento.data_fim
+      ? afastamento.data_fim instanceof Date
+        ? afastamento.data_fim.toISOString().slice(0, 10)
+        : String(afastamento.data_fim).slice(0, 10)
+      : null;
+    if (data < dataInicioISO || (dataFimISO && data > dataFimISO)) continue;
+
+    const resultado = avaliarAplicabilidade(
+      afastamento,
+      afastamento.turnosDoAfastamento,
+      afastamento.gruposDoAfastamento,
+      fk_id_turno,
+      fk_id_grupamento,
+    );
+    if (resultado.aplica) {
+      avisos.push({ tipo: afastamento.tipo, nivel: resultado.nivel, mensagem: montarMensagem(afastamento) });
+    }
+  }
+
+  return avisos;
+}
+
+module.exports = {
+  avaliarRestricoesAtivas,
+  buscarAfastamentosAtivosPorUsuarios,
+  buscarAfastamentosDetalhadosNoPeriodo,
+  avaliarRestricoesEmLote,
+  montarMensagem,
+};
