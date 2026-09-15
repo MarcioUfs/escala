@@ -120,8 +120,8 @@ exports.seed = async function (knex) {
     {
       id_admin: 100001,
       password: hashedPassword,
-      nome: "John Doe",
-      cpf: "03251007482",
+      nome: "Claudenice",
+      cpf: "78202426553",
       role: "admin", // corrigido — estava "" no seed original
       fk_id_setor: 2000,
       is_active: true,
