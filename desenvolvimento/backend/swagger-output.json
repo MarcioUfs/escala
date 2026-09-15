@@ -587,6 +587,49 @@
         }
       }
     },
+    "\r/despachantes/documento": {
+      "post": {
+        "tags": [],
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data_inicio": {
+                  "example": "any"
+                },
+                "data_fim": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/ajuste": {
       "post": {
         "tags": [],
@@ -682,7 +725,7 @@
         }
       }
     },
-    "/listar/periodo-estendido": {
+    "\r/listar/periodo-estendido": {
       "post": {
         "tags": [],
         "description": "",
@@ -752,9 +795,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error"
           }
         }
       }
@@ -772,9 +812,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "description": "Unauthorized"
           },
@@ -790,7 +827,7 @@
         }
       }
     },
-    "/grupamento-usuario": {
+    "\r/grupamento-usuario": {
       "post": {
         "tags": [],
         "description": "",
@@ -815,9 +852,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created"
-          },
           "400": {
             "description": "Bad Request"
           },
@@ -836,7 +870,7 @@
         }
       }
     },
-    "/grupamento-usuario/{id}/encerrar": {
+    "\r/grupamento-usuario/{id}/encerrar": {
       "put": {
         "tags": [],
         "description": "",
@@ -860,17 +894,11 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
           }
         }
       }
     },
-    "/grupamento/{id}/membros": {
+    "\r/grupamento/{id}/membros": {
       "get": {
         "tags": [],
         "description": "",
@@ -898,7 +926,7 @@
         }
       }
     },
-    "/substituicao/adicionar": {
+    "\r/substituicao/adicionar": {
       "post": {
         "tags": [],
         "description": "",
@@ -953,7 +981,7 @@
         }
       }
     },
-    "/substituicao/excluir": {
+    "\r/substituicao/excluir": {
       "post": {
         "tags": [],
         "description": "",
@@ -984,9 +1012,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Created"
-          },
           "400": {
             "description": "Bad Request"
           },
@@ -1008,7 +1033,7 @@
         }
       }
     },
-    "/substituicao/permutar": {
+    "\r/substituicao/permutar": {
       "post": {
         "tags": [],
         "description": "",
@@ -1066,7 +1091,7 @@
         }
       }
     },
-    "/substituicao/dia/{data}": {
+    "\r/substituicao/dia/{data}": {
       "get": {
         "tags": [],
         "description": "",
@@ -1097,7 +1122,7 @@
         }
       }
     },
-    "/substituicao/{id}": {
+    "\r/substituicao/{id}": {
       "delete": {
         "tags": [],
         "description": "",
@@ -1110,9 +1135,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
           "401": {
             "description": "Unauthorized"
           },
@@ -1126,6 +1148,14 @@
             "description": "Internal Server Error"
           }
         }
+      }
+    },
+    "/gerarfalse": {
+      "get": {
+        "tags": [],
+        "description": "",
+        "parameters": [],
+        "responses": {}
       }
     },
     "/create": {
