@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   RefreshCw,
   ArrowLeftRight,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -532,6 +534,29 @@ export default function AdminEscalasConsolidadas() {
           </div>
         </div>
       )}
+
+      {/* Botões flutuantes de navegação vertical — mesmo padrão de
+          /admin/escala. Somem na impressão (print:hidden). */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3 print:hidden">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          title="Voltar ao topo"
+          aria-label="Voltar ao topo"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowUp size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={() => window.scrollBy({ top: window.innerHeight, behavior: "smooth" })}
+          title="Descer uma página"
+          aria-label="Descer uma página"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowDown size={20} />
+        </button>
+      </div>
     </div>
   );
 }

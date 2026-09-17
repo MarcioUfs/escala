@@ -14,6 +14,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor de resposta: um 429 (limite de requisições) pode acontecer em
+// qualquer tela, então em vez de cada componente tratar isso na mão, dispara
+// um evento global que o <RateLimitModal /> (montado uma vez em App.jsx)
+// escuta e mostra o aviso — funciona não importa em qual página o admin
+// estiver no momento do bloqueio.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      const retryAfterSeconds = Number(error.response.data?.retryAfterSeconds) || 300;
+      window.dispatchEvent(new CustomEvent('api:rate-limited', { detail: { retryAfterSeconds } }));
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default api;
 
 /*

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Printer, AlertTriangle, Radio } from "lucide-react";
+import { ArrowLeft, Printer, AlertTriangle, Radio, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../services/api";
 import brasaoSergipe from "../../assets/brasao_sergipe_pb.svg";
@@ -483,6 +483,29 @@ export default function AdminEscalaDespachantes() {
         ref={pagedContainerRef}
         className="fixed top-0 -left-[10000px] print:static print:left-auto"
       />
+
+      {/* Botões flutuantes de navegação vertical — mesmo padrão de
+          /admin/escala. Somem na impressão (print:hidden). */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3 print:hidden">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          title="Voltar ao topo"
+          aria-label="Voltar ao topo"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowUp size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={() => window.scrollBy({ top: window.innerHeight, behavior: "smooth" })}
+          title="Descer uma página"
+          aria-label="Descer uma página"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowDown size={20} />
+        </button>
+      </div>
     </div>
   );
 }

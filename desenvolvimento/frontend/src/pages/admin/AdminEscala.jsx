@@ -16,6 +16,8 @@ import {
   Search,
   ClipboardList,
   FileText,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -1241,6 +1243,29 @@ export default function DashboardEscala() {
         />
       )}
 
+      {/* Botões flutuantes de navegação vertical — fixos no canto inferior
+          direito, sempre visíveis por cima do restante do conteúdo.
+          "Voltar ao topo" em cima, "descer uma página" logo abaixo. */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          title="Voltar ao topo"
+          aria-label="Voltar ao topo"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowUp size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={() => window.scrollBy({ top: window.innerHeight, behavior: "smooth" })}
+          title="Descer uma página"
+          aria-label="Descer uma página"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowDown size={20} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1736,6 +1761,13 @@ function formatarDataBRCurta(dataISO) {
 // ===========================================================================
 function AfastamentoCategoriaCard({ titulo, cor, itens, carregando }) {
   const paleta = CORES_TIPO_AFASTAMENTO[cor] || CORES_TIPO_AFASTAMENTO.slate;
+  // O card sempre mostra TODOS os itens (nunca corta a lista) — a área é
+  // só limitada em altura e rola por dentro. Cada linha ocupa uns 62px;
+  // max-h-72 (288px) cabe ~4 antes de precisar rolar — acima disso, some
+  // uma pista visual (esmaecido embaixo) de que tem mais gente na lista,
+  // porque a barra de rolagem padrão do Windows/Chrome é fina/discreta
+  // demais pra avisar sozinha.
+  const podeTransbordar = itens.length > 4;
 
   return (
     <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
@@ -1745,29 +1777,36 @@ function AfastamentoCategoriaCard({ titulo, cor, itens, carregando }) {
           {itens.length}
         </span>
       </div>
-      <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
-        {carregando && <p className="px-4 py-3 text-xs text-slate-400">Carregando...</p>}
-        {!carregando && itens.length === 0 && (
-          <p className="px-4 py-3 text-xs text-slate-400">Ninguém nessa categoria hoje.</p>
+      <div className="relative">
+        <div
+          className="divide-y divide-slate-100 max-h-72 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.400)_theme(colors.slate.100)] [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-400 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-slate-500"
+        >
+          {carregando && <p className="px-4 py-3 text-xs text-slate-400">Carregando...</p>}
+          {!carregando && itens.length === 0 && (
+            <p className="px-4 py-3 text-xs text-slate-400">Ninguém nessa categoria hoje.</p>
+          )}
+          {itens.map((a) => (
+            <div key={a.id_afastamento} className="px-4 py-2.5">
+              <p className="text-sm font-semibold text-slate-800">
+                {(a.nome_guerra || a.nome || "").toUpperCase()}
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono">
+                {a.sigla_patente ? `${a.sigla_patente} · ` : ""}Mat. {formatarMatricula(a.matricula)}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                até {a.data_fim ? formatarDataBRCurta(a.data_fim) : "indeterminado"}
+                {a.turnos?.length > 0 &&
+                  ` · ${a.modo_restricao === "SOMENTE" ? "somente" : "exceto"} ${a.turnos
+                    .map((t) => `${t.numero}º`)
+                    .join("/")} turno`}
+                {a.grupamentos?.length > 0 && ` · Eq. ${a.grupamentos.map((g) => g.sigla).join(",")}`}
+              </p>
+            </div>
+          ))}
+        </div>
+        {podeTransbordar && (
+          <div className="pointer-events-none absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-white to-transparent rounded-b-xl" />
         )}
-        {itens.map((a) => (
-          <div key={a.id_afastamento} className="px-4 py-2.5">
-            <p className="text-sm font-semibold text-slate-800">
-              {(a.nome_guerra || a.nome || "").toUpperCase()}
-            </p>
-            <p className="text-[11px] text-slate-500 font-mono">
-              {a.sigla_patente ? `${a.sigla_patente} · ` : ""}Mat. {formatarMatricula(a.matricula)}
-            </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              até {a.data_fim ? formatarDataBRCurta(a.data_fim) : "indeterminado"}
-              {a.turnos?.length > 0 &&
-                ` · ${a.modo_restricao === "SOMENTE" ? "somente" : "exceto"} ${a.turnos
-                  .map((t) => `${t.numero}º`)
-                  .join("/")} turno`}
-              {a.grupamentos?.length > 0 && ` · Eq. ${a.grupamentos.map((g) => g.sigla).join(",")}`}
-            </p>
-          </div>
-        ))}
       </div>
     </div>
   );

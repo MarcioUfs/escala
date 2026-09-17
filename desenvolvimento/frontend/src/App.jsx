@@ -27,11 +27,13 @@ import AdminEscalaDespachantes from "./pages/admin/AdminEscalaDespachantes";
 import AdminEscalasConsolidadas from "./pages/admin/AdminEscalasConsolidadas";
 import UserEscala from "./pages/user/UserEscala";
 import UserPermutas from "./pages/user/UserPermutas";
+import RateLimitModal from "./components/RateLimitModal";
 
 function App() {
   return (
     <BrowserRouter useTransitions={false}>
       <AuthProvider>
+        <RateLimitModal />
         <Routes>
           {/* ==============================================
               PÁGINA INICIAL PÚBLICA
