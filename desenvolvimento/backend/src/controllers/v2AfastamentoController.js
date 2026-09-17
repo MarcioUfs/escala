@@ -22,6 +22,36 @@ function validarDataObrigatoria(valor, rotulo) {
   return { valido: true, data: resultado.dataFormatada };
 }
 
+// Valida o BGO de encerramento: número 001-999 (3 dígitos) + ano com 4
+// dígitos, nunca maior que o ano corrente. Retorna já combinado no formato
+// "NNN/AAAA" usado em toda a tela (ex: "002/2026").
+function validarBgoEncerramento(numero, ano) {
+  const numeroStr = String(numero ?? "").trim();
+  if (!/^\d{3}$/.test(numeroStr) || Number(numeroStr) < 1) {
+    return { valido: false, msg: "Número do BGO deve ter 3 dígitos, de 001 a 999." };
+  }
+  const anoStr = String(ano ?? "").trim();
+  const anoAtual = new Date().getFullYear();
+  if (!/^\d{4}$/.test(anoStr) || Number(anoStr) > anoAtual) {
+    return { valido: false, msg: `Ano do BGO deve ter 4 dígitos e não pode ser maior que ${anoAtual}.` };
+  }
+  return { valido: true, bgo: `${numeroStr}/${anoStr}` };
+}
+
+// Motivo do encerramento: obrigatório, até 500 palavras (mesmo limite
+// mostrado no contador do formulário).
+function validarMotivoEncerramento(valor) {
+  const texto = (valor || "").trim();
+  if (texto.length < 3) {
+    return { valido: false, msg: "Informe o motivo do encerramento." };
+  }
+  const palavras = texto.split(/\s+/).filter(Boolean);
+  if (palavras.length > 500) {
+    return { valido: false, msg: "Motivo do encerramento não pode passar de 500 palavras." };
+  }
+  return { valido: true, texto };
+}
+
 async function validarUsuarioAtivo(fk_id_usuario) {
   const usuario = await database("users").where({ id_user: fk_id_usuario, is_active: true }).first();
   return Boolean(usuario);
@@ -147,6 +177,7 @@ async function listarAfastamentosV2(req, res) {
     const query = database("v2_afastamentos")
       .join("users", "users.id_user", "v2_afastamentos.fk_id_usuario")
       .leftJoin("tbl_patentes", "tbl_patentes.id_patente", "users.id_patente")
+      .leftJoin("admins as admin_encerramento", "admin_encerramento.id_admin", "v2_afastamentos.fk_id_admin_encerramento")
       .select(
         "v2_afastamentos.id_afastamento",
         "v2_afastamentos.fk_id_usuario",
@@ -158,9 +189,14 @@ async function listarAfastamentosV2(req, res) {
         "v2_afastamentos.observacao",
         "v2_afastamentos.ativo",
         "v2_afastamentos.created_at",
+        "v2_afastamentos.data_encerramento",
+        "v2_afastamentos.bgo_encerramento",
+        "v2_afastamentos.motivo_encerramento",
+        "admin_encerramento.nome as nome_admin_encerramento",
         "users.nome",
         "users.nome_guerra",
         "users.matricula",
+        "users.cpf",
         "tbl_patentes.sigla_patente",
       )
       .orderBy("v2_afastamentos.data_inicio", "desc");
@@ -490,18 +526,47 @@ async function atualizarAfastamentoV2(req, res) {
 // -----------------------------------------------------------------------
 // PATCH /afastamentos/:id/encerrar
 // Encerramento manual (ex: militar voltou antes do previsto) — soft,
-// mantém o histórico. Não é a mesma coisa que excluir.
+// mantém o histórico. Não é a mesma coisa que excluir. Exige registro
+// formal: data do encerramento (nunca antes do início), BGO (NNN/AAAA) e
+// motivo — quem executou a ação é o admin autenticado no token.
 // -----------------------------------------------------------------------
 async function encerrarAfastamentoV2(req, res) {
   try {
     const { id } = req.params;
-    const linhas = await database("v2_afastamentos")
-      .where({ id_afastamento: id })
-      .update({ ativo: false, updated_at: new Date() });
+    const idAdmin = req.user.id_admin;
+    const { data_encerramento, bgo_numero, bgo_ano, motivo_encerramento } = req.body;
 
-    if (linhas === 0) {
+    const afastamento = await database("v2_afastamentos").where({ id_afastamento: id }).first();
+    if (!afastamento) {
       return res.status(404).json({ msg: "Afastamento não encontrado" });
     }
+    if (!afastamento.ativo) {
+      return res.status(400).json({ msg: "Este afastamento já está encerrado." });
+    }
+
+    const dataValida = validarDataObrigatoria(data_encerramento, "Data do encerramento");
+    if (!dataValida.valido) return res.status(400).json({ msg: dataValida.msg });
+    if (dataValida.data < afastamento.data_inicio) {
+      return res.status(400).json({ msg: "Data do encerramento não pode ser anterior à data de início do afastamento." });
+    }
+
+    const bgoValido = validarBgoEncerramento(bgo_numero, bgo_ano);
+    if (!bgoValido.valido) return res.status(400).json({ msg: bgoValido.msg });
+
+    const motivoValido = validarMotivoEncerramento(motivo_encerramento);
+    if (!motivoValido.valido) return res.status(400).json({ msg: motivoValido.msg });
+
+    await database("v2_afastamentos")
+      .where({ id_afastamento: id })
+      .update({
+        ativo: false,
+        data_encerramento: dataValida.data,
+        bgo_encerramento: bgoValido.bgo,
+        motivo_encerramento: motivoValido.texto,
+        fk_id_admin_encerramento: idAdmin,
+        updated_at: new Date(),
+      });
+
     return res.status(200).json({ msg: "Afastamento encerrado" });
   } catch (error) {
     return res.status(500).json({ msg: "Erro interno do servidor" });
