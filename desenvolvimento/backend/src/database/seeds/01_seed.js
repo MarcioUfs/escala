@@ -139,6 +139,17 @@ exports.seed = async function (knex) {
       created_at: now,
       updated_at: now,
     },
+    {
+      id_admin: 100003,
+      password: hashedPassword,
+      nome: "Francisco Admin",
+      cpf: "63542617415",
+      role: "admin",
+      fk_id_setor: 3000,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    },
   ]);
   await knex.raw(
     "SELECT setval('admins_id_admin_seq', (SELECT MAX(id_admin) FROM admins))",

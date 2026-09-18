@@ -11,11 +11,14 @@ const {
   confirmarAlvoV2,
   recusarAlvoV2,
   marcarLidaV2,
+  arquivarPermutaV2,
+  desarquivarPermutaV2,
   contarPendenciasV2,
   listarPendentesAdminV2,
   contarPendenciasAdminV2,
   aprovarPermutaV2,
   rejeitarPermutaV2,
+  listarHistoricoAdminV2,
 } = require("../controllers/v2PermutaController");
 
 // -----------------------------------------------------------------------
@@ -74,6 +77,11 @@ router.put(
   marcarLidaV2,
 );
 
+// PUT /permutas/:id/arquivar  |  PUT /permutas/:id/desarquivar
+// Esconde/mostra a solicitação só na visão de quem pediu (individual)
+router.put("/:id/arquivar", verifyJwtUser, isUser, authenticatedLimiter, arquivarPermutaV2);
+router.put("/:id/desarquivar", verifyJwtUser, isUser, authenticatedLimiter, desarquivarPermutaV2);
+
 // -----------------------------------------------------------------------
 // ANÁLISE DO ADMIN
 // -----------------------------------------------------------------------
@@ -94,6 +102,16 @@ router.get(
   isAdmin,
   authenticatedLimiter,
   contarPendenciasAdminV2,
+);
+
+// GET /permutas/admin/historico?data_inicio=&data_fim=
+// Todas as solicitações do período (qualquer situação), para consulta e relatório
+router.get(
+  "/admin/historico",
+  verifyJwtAdmin,
+  isAdmin,
+  authenticatedLimiter,
+  listarHistoricoAdminV2,
 );
 
 // PUT /permutas/:id/aprovar

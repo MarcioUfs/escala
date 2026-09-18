@@ -9,6 +9,7 @@ const tratarTelefone = require("../functions/tratarTelefone");
 const validarEmail = require("../functions/validarEmail");
 const somenteTelefone = require("../functions/somenteTelefone");
 const limparEspacos = require("../functions/limparEspacos");
+const validarCsvAntiguidade = require("../functions/validarCsvAntiguidade");
 
 async function readUsers(req, res) {
   await database
@@ -94,13 +95,16 @@ async function createUser(req, res) {
   if (!req.body?.cpf || req.body?.cpf === "") {
     return res.status(400).json({ msg: "CPF é obrigatório!" });
   }
-  if (!req.body?.password || req.body?.password === "") {
-    return res.status(400).json({ msg: "Senha é obrigatória!" });
-  }
-  if (req.body?.password.length < 6) {
-    return res
-      .status(400)
-      .json({ msg: "Senha deve ter pelo menos 6 caracteres!" });
+  // A senha inicial não vem mais do formulário: é a senha padrão definida
+  // em SEED_PASS (o militar troca depois em "alterar senha").
+  const senhaInicial = process.env.SEED_PASS;
+  if (!senhaInicial || senhaInicial.length < 6) {
+    console.error(
+      "SEED_PASS não definida (ou com menos de 6 caracteres) no ambiente.",
+    );
+    return res.status(500).json({
+      msg: "Senha padrão não configurada no servidor. Contate o responsável pelo sistema.",
+    });
   }
   if (somenteCpf(req.body?.cpf) === 0) {
     return res.status(400).json({ msg: "CPF inválido!" });
@@ -140,7 +144,7 @@ async function createUser(req, res) {
           .json({ msg: "Email, Matricula ou CPF já cadastrado!" });
       } else {
         bcryptjs.genSalt(10, function (err, salt) {
-          bcryptjs.hash(req.body.password, salt, async function (err, hash) {
+          bcryptjs.hash(senhaInicial, salt, async function (err, hash) {
             const user = {
               email: req.body.email,
               password: hash,
@@ -606,7 +610,7 @@ async function createAdmin(req, res) {
 async function getAdmin(req, res) {
   const { id_admin } = req.user;
   await database
-    .select("id_admin", "nome", "cpf", "role")
+    .select("id_admin", "nome", "cpf", "role", "created_at", "updated_at")
     .table("admins")
     .where({ id_admin: id_admin })
     .then((data) => {
@@ -733,7 +737,126 @@ async function updateAdmin(req, res) {
   }
 }
 
+// POST /admin/antiguidade/importar-csv — alternativa manual ao job
+// automático (scraperAntiguidade.js), usada quando o servidor não
+// consegue alcançar a intranet da PM (ver diagnóstico: hospedagem externa
+// sem rota até a rede interna). O admin exporta o CSV direto do site pelo
+// navegador e sobe aqui. Mesma lógica de upsert do job (onConflict
+// matricula), pra manter os dois caminhos consistentes entre si.
+async function importarAntiguidadeCsv(req, res) {
+  try {
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ msg: "Nenhum arquivo enviado." });
+    }
+
+    const { ok, erros, registros } = validarCsvAntiguidade(req.file.buffer);
+
+    if (!ok) {
+      return res.status(400).json({
+        msg: "Arquivo inválido. Corrija os itens abaixo e tente novamente.",
+        erros,
+      });
+    }
+
+    const agora = new Date();
+    const registrosComTimestamp = registros.map((registro) => ({
+      ...registro,
+      atualizado_em: agora,
+    }));
+
+    // Insere em lotes pra não estourar o limite de parâmetros de uma
+    // query do Postgres num arquivo grande.
+    const TAMANHO_LOTE = 500;
+    await database.transaction(async (trx) => {
+      for (let i = 0; i < registrosComTimestamp.length; i += TAMANHO_LOTE) {
+        const lote = registrosComTimestamp.slice(i, i + TAMANHO_LOTE);
+        // CPF e data de admissão só existem na API interna usada pelo job;
+        // o CSV manual normalmente não traz. COALESCE evita que um valor
+        // vazio do CSV apague o que o job já gravou.
+        await trx("efetivo_antiguidade")
+          .insert(lote)
+          .onConflict("matricula")
+          .merge({
+            nome: trx.raw("excluded.nome"),
+            patente: trx.raw("excluded.patente"),
+            quadro: trx.raw("excluded.quadro"),
+            ordem: trx.raw("excluded.ordem"),
+            antiguidade: trx.raw("excluded.antiguidade"),
+            data_promocao: trx.raw("excluded.data_promocao"),
+            tempo_promocao: trx.raw("excluded.tempo_promocao"),
+            atualizado_em: trx.raw("excluded.atualizado_em"),
+            cpf: trx.raw("COALESCE(excluded.cpf, efetivo_antiguidade.cpf)"),
+            data_admissao: trx.raw(
+              "COALESCE(excluded.data_admissao, efetivo_antiguidade.data_admissao)",
+            ),
+          });
+      }
+    });
+
+    return res.status(200).json({
+      msg: "Importação concluída com sucesso.",
+      totalRegistros: registrosComTimestamp.length,
+    });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
+// PUT /admin/updatePassword — o próprio administrador troca a sua senha.
+// Sempre opera sobre o id do token (req.user), nunca sobre um id vindo do
+// corpo, então um admin não consegue trocar a senha de outro por aqui.
+async function updateAdminPassword(req, res) {
+  const { oldPassword, newPassword, confirmNewPassword } = req.body || {};
+
+  if (typeof oldPassword !== "string" || oldPassword === "") {
+    return res.status(400).json({ msg: "A senha atual é obrigatória!" });
+  }
+  if (typeof newPassword !== "string" || newPassword.length < 6) {
+    return res.status(400).json({ msg: "A nova senha deve ter pelo menos 6 caracteres!" });
+  }
+  if (newPassword.length > 72) {
+    // bcrypt ignora tudo após 72 bytes — melhor recusar do que aceitar
+    // uma senha que seria silenciosamente truncada.
+    return res.status(400).json({ msg: "A nova senha deve ter no máximo 72 caracteres!" });
+  }
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({ msg: "A nova senha e a confirmação não coincidem." });
+  }
+  if (newPassword === oldPassword) {
+    return res.status(400).json({ msg: "A nova senha deve ser diferente da senha atual." });
+  }
+
+  const idAdmin = req.user?.id_admin;
+  if (!idAdmin) {
+    return res.status(401).json({ msg: "Acesso negado. Administrador não autenticado." });
+  }
+
+  try {
+    const admin = await database("admins").where({ id_admin: idAdmin }).first();
+    if (!admin) {
+      return res.status(404).json({ msg: "Administrador não encontrado." });
+    }
+
+    const senhaCorreta = await bcryptjs.compare(oldPassword, admin.password);
+    if (!senhaCorreta) {
+      return res.status(401).json({ msg: "A senha atual está incorreta." });
+    }
+
+    const salt = await bcryptjs.genSalt(10);
+    const hash = await bcryptjs.hash(newPassword, salt);
+
+    await database("admins")
+      .where({ id_admin: idAdmin })
+      .update({ password: hash, updated_at: new Date() });
+
+    return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
+  }
+}
+
 module.exports = {
+  updateAdminPassword: updateAdminPassword,
   readUsers: readUsers,
   createUser: createUser,
   deleteUser: deleteUser,
@@ -742,6 +865,7 @@ module.exports = {
 
   readAllPm: readAllPm,
   readAllPatente: readAllPatente,
+  importarAntiguidadeCsv: importarAntiguidadeCsv,
 
   loginAdmin: loginAdmin,
   createAdmin: createAdmin,

@@ -1,6 +1,7 @@
 const express = require("express");
 const { verifyJwt, isUser } = require("../middleware/verifyJWT");
 const userController = require("../controllers/UserController");
+const avisosController = require("../controllers/avisosController");
 const { strictLimiter, authenticatedLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
@@ -13,6 +14,10 @@ router.post("/login", strictLimiter, userController.login);
 // authenticatedLimiter (não está abusando da API?) — mesmo padrão
 // aplicado em admin/escalas.
 router.get("/getUser", verifyJwt, isUser, authenticatedLimiter, userController.getUser);
+
+// Mural de avisos: usuário só lê; publicar é exclusivo de admin
+// (POST /admin/avisos).
+router.get("/avisos", verifyJwt, isUser, authenticatedLimiter, avisosController.avisoAtual);
 
 // Troca de senha é sensível o bastante pra manter o strictLimiter (10
 // tentativas/hora) em vez do authenticatedLimiter genérico — protege

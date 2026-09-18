@@ -8,6 +8,7 @@ const {
   listarMembrosGrupamentoV2,
   listarSubstituicoesDoDiaV2,
 } = require("../controllers/v2EscalaController");
+const { listarMeusDiasV2 } = require("../controllers/v2MinhaEscalaController");
 
 // -----------------------------------------------------------------------
 // ESCALA — VERSÃO SOMENTE LEITURA DO MILITAR COMUM
@@ -24,6 +25,11 @@ const {
 // quem ele quer permutar); toda ação de escrita continua exclusiva do
 // admin em v2EscalaRoutes.js.
 // -----------------------------------------------------------------------
+
+// GET /minha-escala/meus-dias?data_inicio=&data_fim=
+// Lista cronológica dos dias de serviço do próprio militar, com permutas
+// e conflitos. Só usa o id do token — não recebe id de usuário.
+router.get("/meus-dias", verifyJwt, isUser, authenticatedLimiter, listarMeusDiasV2);
 
 // POST /minha-escala/listar/periodo-estendido
 router.post(

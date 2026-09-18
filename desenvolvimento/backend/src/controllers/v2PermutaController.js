@@ -1,6 +1,7 @@
 const database = require("../database/db");
 const limparEspaco = require("../functions/limparEspacos");
 const gerarProtocoloPermuta = require("../functions/gerarProtocoloPermuta");
+const tratarMatricula = require("../functions/tratarMatricula");
 const { avaliarRestricoesAtivas } = require("../functions/validarAlocacaoAfastamento");
 
 const STATUS = {
@@ -20,6 +21,23 @@ function hojeISO() {
     hoje.getDate(),
   ).padStart(2, "0")}`;
 }
+
+// Colunas `date` do Postgres chegam como Date (meia-noite local) ou string,
+// conforme o driver/configuração — normaliza pra "AAAA-MM-DD".
+function dataParaISO(valor) {
+  if (typeof valor === "string") return valor.slice(0, 10);
+  const d = new Date(valor);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Período encerrado = as DUAS datas da permuta já passaram (o dia de hoje
+// ainda conta como em andamento).
+function periodoEncerrado(solicitacao) {
+  const ultimaData = [dataParaISO(solicitacao.data_solicitante), dataParaISO(solicitacao.data_alvo)].sort().pop();
+  return ultimaData < hojeISO();
+}
+
+const STATUS_CONCLUIDOS = ["APROVADA", "RECUSADA_ALVO", "RECUSADA_ADMIN"];
 
 function somarDias(dataISO, dias) {
   const [ano, mes, dia] = dataISO.split("-").map(Number);
@@ -146,6 +164,8 @@ const SELECT_SOLICITACAO_DETALHADA = [
   "v2_permuta_solicitacao.motivo_recusa_admin",
   "v2_permuta_solicitacao.lido_solicitante",
   "v2_permuta_solicitacao.lido_alvo",
+  "v2_permuta_solicitacao.arquivada_solicitante",
+  "v2_permuta_solicitacao.arquivada_alvo",
   "v2_permuta_solicitacao.created_at",
   "v2_permuta_solicitacao.updated_at",
   "v2_permuta_solicitacao.data_solicitante",
@@ -319,10 +339,15 @@ async function listarMinhasSolicitacoesV2(req, res) {
       .orWhere("v2_permuta_solicitacao.fk_id_usuario_alvo", idUsuario)
       .orderBy("v2_permuta_solicitacao.created_at", "desc");
 
-    const comPapel = solicitacoes.map((s) => ({
-      ...s,
-      meu_papel: Number(s.fk_id_usuario_solicitante) === Number(idUsuario) ? "SOLICITANTE" : "ALVO",
-    }));
+    const comPapel = solicitacoes.map((s) => {
+      const souSolicitante = Number(s.fk_id_usuario_solicitante) === Number(idUsuario);
+      return {
+        ...s,
+        meu_papel: souSolicitante ? "SOLICITANTE" : "ALVO",
+        arquivada: souSolicitante ? s.arquivada_solicitante : s.arquivada_alvo,
+        periodo_encerrado: periodoEncerrado(s),
+      };
+    });
 
     return res.status(200).json(comPapel);
   } catch (error) {
@@ -431,18 +456,73 @@ async function marcarLidaV2(req, res) {
 }
 
 // -----------------------------------------------------------------------
+// PUT /permutas/:id/arquivar  e  PUT /permutas/:id/desarquivar
+// Arquivamento é individual: cada participante esconde/mostra só a sua
+// visão. Só dá pra arquivar o que já não exige nada de ninguém (concluída
+// ou com o período encerrado) e nunca o que está esperando a minha ação.
+// -----------------------------------------------------------------------
+function alterarArquivamentoV2(arquivar) {
+  return async function (req, res) {
+    try {
+      const { id } = req.params;
+      const idUsuario = req.user.id_user;
+
+      const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
+      if (!solicitacao) {
+        return res.status(404).json({ msg: "Solicitação não encontrada" });
+      }
+
+      const souSolicitante = Number(solicitacao.fk_id_usuario_solicitante) === Number(idUsuario);
+      const souAlvo = Number(solicitacao.fk_id_usuario_alvo) === Number(idUsuario);
+      if (!souSolicitante && !souAlvo) {
+        return res.status(403).json({ msg: "Essa solicitação não envolve você" });
+      }
+
+      if (arquivar) {
+        if (souAlvo && solicitacao.status === STATUS.AGUARDANDO_ALVO && !periodoEncerrado(solicitacao)) {
+          return res.status(409).json({ msg: "Essa solicitação aguarda a sua resposta e não pode ser arquivada." });
+        }
+        if (!STATUS_CONCLUIDOS.includes(solicitacao.status) && !periodoEncerrado(solicitacao)) {
+          return res.status(409).json({
+            msg: "Só é possível arquivar permutas já concluídas ou com o período encerrado.",
+          });
+        }
+      }
+
+      const coluna = souSolicitante ? "arquivada_solicitante" : "arquivada_alvo";
+      const colunaLido = souSolicitante ? "lido_solicitante" : "lido_alvo";
+      // Arquivar implica "já vi": tira o aviso de não lida da tela inicial.
+      const alteracao = arquivar ? { [coluna]: true, [colunaLido]: true } : { [coluna]: false };
+      await database("v2_permuta_solicitacao").where({ id_permuta: id }).update(alteracao);
+
+      return res.status(200).json({ msg: arquivar ? "Permuta arquivada." : "Permuta desarquivada." });
+    } catch (error) {
+      return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    }
+  };
+}
+
+const arquivarPermutaV2 = alterarArquivamentoV2(true);
+const desarquivarPermutaV2 = alterarArquivamentoV2(false);
+
+// -----------------------------------------------------------------------
 // GET /permutas/pendencias  (badges do usuário logado)
+// Permutas com o período já encerrado ficam ocultas na tela e, por isso,
+// também não entram nos badges.
 // -----------------------------------------------------------------------
 async function contarPendenciasV2(req, res) {
   try {
     const idUsuario = req.user.id_user;
+    const hoje = hojeISO();
 
     const [{ count: pendenteAcao }] = await database("v2_permuta_solicitacao")
       .where({ fk_id_usuario_alvo: idUsuario, status: STATUS.AGUARDANDO_ALVO })
+      .andWhereRaw("GREATEST(data_solicitante, data_alvo) >= ?", [hoje])
       .count("* as count");
 
     const [{ count: naoLidas }] = await database("v2_permuta_solicitacao")
       .whereIn("status", [STATUS.APROVADA, STATUS.RECUSADA_ADMIN, STATUS.RECUSADA_ALVO])
+      .andWhereRaw("GREATEST(data_solicitante, data_alvo) >= ?", [hoje])
       .andWhere(function () {
         this.where(function () {
           this.where("fk_id_usuario_solicitante", idUsuario).andWhere("lido_solicitante", false);
@@ -493,6 +573,101 @@ async function contarPendenciasAdminV2(req, res) {
     return res.status(200).json({ pendentes: Number(count) });
   } catch (error) {
     return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+  }
+}
+
+// -----------------------------------------------------------------------
+// GET /permutas/admin/historico?data_inicio=AAAA-MM-DD&data_fim=AAAA-MM-DD
+// Histórico completo de solicitações (qualquer situação) cujo dia de
+// serviço — o do solicitante OU o do alvo — cai no intervalo. Sem
+// parâmetros, devolve os últimos 30 e os próximos 30 dias.
+// -----------------------------------------------------------------------
+const HISTORICO_JANELA_PADRAO_DIAS = 30;
+const HISTORICO_JANELA_MAXIMA_DIAS = 731;
+const HISTORICO_LIMITE_LINHAS = 2000;
+
+function historicoDataValida(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const [a, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(a, m - 1, d));
+  return dt.getUTCFullYear() === a && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+async function listarHistoricoAdminV2(req, res) {
+  try {
+    const hoje = hojeISO();
+    const dataInicio = String(req.query.data_inicio || somarDias(hoje, -HISTORICO_JANELA_PADRAO_DIAS));
+    const dataFim = String(req.query.data_fim || somarDias(hoje, HISTORICO_JANELA_PADRAO_DIAS));
+
+    if (!historicoDataValida(dataInicio) || !historicoDataValida(dataFim)) {
+      return res.status(400).json({ msg: "Datas inválidas. Use o formato AAAA-MM-DD." });
+    }
+    if (dataFim < dataInicio) {
+      return res.status(400).json({ msg: "A data final não pode ser anterior à data inicial." });
+    }
+    const [a1, m1, d1] = dataInicio.split("-").map(Number);
+    const [a2, m2, d2] = dataFim.split("-").map(Number);
+    const dias = Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86400000);
+    if (dias > HISTORICO_JANELA_MAXIMA_DIAS) {
+      return res.status(400).json({ msg: "O período máximo é de 2 anos." });
+    }
+
+    const linhas = await database("v2_permuta_solicitacao as p")
+      .join("users as us", "us.id_user", "p.fk_id_usuario_solicitante")
+      .join("users as ua", "ua.id_user", "p.fk_id_usuario_alvo")
+      .leftJoin("tbl_patentes as ps", "ps.id_patente", "us.id_patente")
+      .leftJoin("tbl_patentes as pa", "pa.id_patente", "ua.id_patente")
+      .join("v2_turno as ts", "ts.id_turno", "p.fk_id_turno_solicitante")
+      .join("v2_turno as ta", "ta.id_turno", "p.fk_id_turno_alvo")
+      .join("v2_grupamento as gs", "gs.id_grupamento", "p.fk_id_grupamento_solicitante")
+      .join("v2_grupamento as ga", "ga.id_grupamento", "p.fk_id_grupamento_alvo")
+      .leftJoin("admins as ad", "ad.id_admin", "p.fk_id_admin_analise")
+      .select(
+        "p.id_permuta",
+        "p.protocolo",
+        "p.status",
+        "p.motivo_solicitacao",
+        "p.motivo_recusa_alvo",
+        "p.motivo_recusa_admin",
+        "p.created_at",
+        "p.updated_at",
+        "ad.nome as nome_admin_analise",
+        "us.nome as nome_solicitante",
+        "us.nome_guerra as nome_guerra_solicitante",
+        "us.matricula as matricula_solicitante",
+        "ps.sigla_patente as patente_solicitante",
+        "p.data_solicitante",
+        "ts.numero as turno_solicitante",
+        "gs.sigla as grupamento_solicitante",
+        "ua.nome as nome_alvo",
+        "ua.nome_guerra as nome_guerra_alvo",
+        "ua.matricula as matricula_alvo",
+        "pa.sigla_patente as patente_alvo",
+        "p.data_alvo",
+        "ta.numero as turno_alvo",
+        "ga.sigla as grupamento_alvo",
+      )
+      .where(function () {
+        this.whereBetween("p.data_solicitante", [dataInicio, dataFim]).orWhereBetween("p.data_alvo", [
+          dataInicio,
+          dataFim,
+        ]);
+      })
+      .orderByRaw("LEAST(p.data_solicitante, p.data_alvo) ASC, p.created_at ASC")
+      .limit(HISTORICO_LIMITE_LINHAS + 1);
+
+    const truncado = linhas.length > HISTORICO_LIMITE_LINHAS;
+    const permutas = (truncado ? linhas.slice(0, HISTORICO_LIMITE_LINHAS) : linhas).map((l) => ({
+      ...l,
+      data_solicitante: dataParaISO(l.data_solicitante),
+      data_alvo: dataParaISO(l.data_alvo),
+      matricula_solicitante: tratarMatricula(l.matricula_solicitante) || l.matricula_solicitante,
+      matricula_alvo: tratarMatricula(l.matricula_alvo) || l.matricula_alvo,
+    }));
+
+    return res.status(200).json({ data_inicio: dataInicio, data_fim: dataFim, truncado, permutas });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -652,9 +827,12 @@ module.exports = {
   confirmarAlvoV2,
   recusarAlvoV2,
   marcarLidaV2,
+  arquivarPermutaV2,
+  desarquivarPermutaV2,
   contarPendenciasV2,
   listarPendentesAdminV2,
   contarPendenciasAdminV2,
   aprovarPermutaV2,
   rejeitarPermutaV2,
+  listarHistoricoAdminV2,
 };
