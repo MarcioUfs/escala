@@ -1,21 +1,107 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import api from "../../services/api";
 
+const CAMPOS = ["nome", "nome_guerra", "id_patente", "cpf", "matricula", "telefone", "email"];
+
+const FORM_VAZIO = {
+  nome: "",
+  nome_guerra: "",
+  cpf: "",
+  matricula: "",
+  email: "",
+  telefone: "",
+  id_patente: "",
+};
+
+const soDigitos = (v) => (v || "").replace(/\D/g, "");
+
+function cpfTemDigitosVerificadoresValidos(cpf) {
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  for (let pos = 9; pos <= 10; pos++) {
+    let soma = 0;
+    for (let i = 0; i < pos; i++) soma += Number(cpf[i]) * (pos + 1 - i);
+    const resto = (soma * 10) % 11;
+    if ((resto === 10 ? 0 : resto) !== Number(cpf[pos])) return false;
+  }
+  return true;
+}
+
+function textoFaltam(n, unidade = "dígito") {
+  return `faltam ${n} ${unidade}${n === 1 ? "" : "s"}`;
+}
+
+// Devolve a mensagem de erro do campo, ou null se estiver ok. As regras
+// espelham as do backend (createUser) pra o admin descobrir o problema
+// aqui, e não só depois de enviar.
+function validarCampo(campo, valor) {
+  const v = (valor || "").trim();
+  switch (campo) {
+    case "nome":
+      if (!v) return "Informe o nome completo.";
+      if (v.length < 3 || !v.includes(" ")) return "Informe o nome completo (nome e sobrenome).";
+      return null;
+    case "nome_guerra":
+      if (!v) return "Informe o nome de guerra.";
+      if (v.length < 2) return "Nome de guerra muito curto.";
+      return null;
+    case "id_patente":
+      return v ? null : "Selecione a patente.";
+    case "cpf": {
+      const d = soDigitos(v);
+      if (!d) return "Informe o CPF.";
+      if (d.length < 11) return `CPF incompleto: ${textoFaltam(11 - d.length)}.`;
+      if (!cpfTemDigitosVerificadoresValidos(d)) return "CPF inválido: confira os números digitados.";
+      return null;
+    }
+    case "matricula": {
+      const d = soDigitos(v);
+      if (!d) return "Informe a matrícula.";
+      if (d.length < 12) return `Matrícula incompleta: ${textoFaltam(12 - d.length)}.`;
+      return null;
+    }
+    case "telefone": {
+      const d = soDigitos(v);
+      if (!d) return "Informe o telefone.";
+      if (d.length < 10) return `Telefone incompleto: ${textoFaltam(10 - d.length)} (mínimo 10 dígitos com DDD).`;
+      return null;
+    }
+    case "email":
+      if (!v) return "Informe o e-mail.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "E-mail inválido (ex: nome@dominio.com).";
+      return null;
+    default:
+      return null;
+  }
+}
+
+function MensagemErro({ texto }) {
+  if (!texto) return null;
+  return (
+    <p role="alert" className="mt-1 text-xs text-red-600">
+      {texto}
+    </p>
+  );
+}
+
 export default function AdminCreateUser() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    nome: "",
-    nome_guerra: "",
-    cpf: "",
-    matricula: "",
-    email: "",
-    password: "",
-    telefone: "",
-    id_patente: "",
-  });
+  const [formData, setFormData] = useState(FORM_VAZIO);
+  const [tocados, setTocados] = useState({});
+  const [tentouEnviar, setTentouEnviar] = useState(false);
+
+  const erros = useMemo(
+    () => Object.fromEntries(CAMPOS.map((c) => [c, validarCampo(c, formData[c])])),
+    [formData],
+  );
+  const erroVisivel = (campo) => (tocados[campo] || tentouEnviar ? erros[campo] : null);
+  const marcarTocado = (campo) => setTocados((t) => ({ ...t, [campo]: true }));
+  const classeInput = (campo) =>
+    `mt-1 block w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+      erroVisivel(campo) ? "border-red-500 bg-red-50" : "border-gray-300"
+    }`;
 
   // Estado para armazenar a lista de patentes vindas do backend
   const [patentes, setPatentes] = useState([]);
@@ -140,36 +226,28 @@ export default function AdminCreateUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Aplicação do Trim em todos os campos para evitar espaços extras
+    setTentouEnviar(true);
+    const primeiroInvalido = CAMPOS.find((c) => erros[c]);
+    if (primeiroInvalido) {
+      setStatus({
+        type: "error",
+        message: "Corrija os campos destacados em vermelho antes de cadastrar.",
+      });
+      document.querySelector(`[name="${primeiroInvalido}"]`)?.focus();
+      return;
+    }
+
+    // Aplicação do Trim em todos os campos para evitar espaços extras.
+    // A senha inicial é definida pelo backend (não é mais informada aqui).
     const payload = {
       nome: formData.nome.trim(),
       nome_guerra: formData.nome_guerra.trim(),
       cpf: formData.cpf.trim(),
       matricula: formData.matricula.trim(),
       email: formData.email.trim(),
-      password: formData.password.trim(),
       telefone: formData.telefone.trim(),
       id_patente: formData.id_patente,
     };
-
-    // Validação de seleção obrigatória da patente
-    if (!payload.id_patente) {
-      setStatus({
-        type: "error",
-        message: "Por favor, selecione uma patente válida.",
-      });
-      return;
-    }
-
-    // Validação básica e efetiva de E-mail via Regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(payload.email)) {
-      setStatus({
-        type: "error",
-        message: "Por favor, insira um e-mail válido.",
-      });
-      return;
-    }
 
     setStatus({ type: "loading", message: "A cadastrar usuário..." });
 
@@ -181,16 +259,9 @@ export default function AdminCreateUser() {
         message: "Usuário cadastrado com sucesso!",
       });
 
-      setFormData({
-        nome: "",
-        nome_guerra: "",
-        cpf: "",
-        matricula: "",
-        email: "",
-        password: "",
-        telefone: "",
-        id_patente: "",
-      });
+      setFormData(FORM_VAZIO);
+      setTocados({});
+      setTentouEnviar(false);
 
       setTimeout(() => {
         navigate("/admin");
@@ -202,15 +273,10 @@ export default function AdminCreateUser() {
           type: "error",
           message: "Email, Matrícula ou CPF já cadastrado!",
         });
-      } else if (error.response?.status === 403) {
-        setStatus({
-          type: "error",
-          message: "Preencha todos os campos obrigatórios!",
-        });
       } else {
         setStatus({
           type: "error",
-          message: error.response?.data?.message || "Erro interno do servidor. Tente novamente.",
+          message: error.response?.data?.msg || "Erro interno do servidor. Tente novamente.",
         });
       }
     }
@@ -309,7 +375,7 @@ export default function AdminCreateUser() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 w-full">
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Nome Completo
@@ -319,9 +385,11 @@ export default function AdminCreateUser() {
               name="nome"
               value={formData.nome}
               onChange={handleNomeChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onBlur={() => marcarTocado("nome")}
+              aria-invalid={!!erroVisivel("nome")}
+              className={classeInput("nome")}
             />
+            <MensagemErro texto={erroVisivel("nome")} />
           </div>
 
           <div>
@@ -333,9 +401,11 @@ export default function AdminCreateUser() {
               name="nome_guerra"
               value={formData.nome_guerra}
               onChange={handleNomeGuerraChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              onBlur={() => marcarTocado("nome_guerra")}
+              aria-invalid={!!erroVisivel("nome_guerra")}
+              className={classeInput("nome_guerra")}
             />
+            <MensagemErro texto={erroVisivel("nome_guerra")} />
           </div>
 
           <div>
@@ -346,8 +416,9 @@ export default function AdminCreateUser() {
               name="id_patente"
               value={formData.id_patente}
               onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm"
+              onBlur={() => marcarTocado("id_patente")}
+              aria-invalid={!!erroVisivel("id_patente")}
+              className={`${classeInput("id_patente")} bg-white text-gray-900 shadow-sm`}
             >
               <option value="" disabled hidden>
                 Selecione a patente...
@@ -358,6 +429,7 @@ export default function AdminCreateUser() {
                 </option>
               ))}
             </select>
+            <MensagemErro texto={erroVisivel("id_patente")} />
           </div>
 
           <div>
@@ -366,14 +438,17 @@ export default function AdminCreateUser() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               name="cpf"
               value={formData.cpf}
               onChange={handleCpfChange}
+              onBlur={() => marcarTocado("cpf")}
+              aria-invalid={!!erroVisivel("cpf")}
               placeholder="000.000.000-00"
               maxLength={14}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={classeInput("cpf")}
             />
+            <MensagemErro texto={erroVisivel("cpf")} />
           </div>
 
           <div>
@@ -382,14 +457,17 @@ export default function AdminCreateUser() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               name="matricula"
               value={formData.matricula}
               onChange={handleMatriculaChange}
+              onBlur={() => marcarTocado("matricula")}
+              aria-invalid={!!erroVisivel("matricula")}
               placeholder="0000000000-00"
               maxLength={13}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={classeInput("matricula")}
             />
+            <MensagemErro texto={erroVisivel("matricula")} />
           </div>
 
           <div>
@@ -398,14 +476,17 @@ export default function AdminCreateUser() {
             </label>
             <input
               type="text"
+              inputMode="numeric"
               name="telefone"
               value={formData.telefone}
               onChange={handleTelefoneChange}
+              onBlur={() => marcarTocado("telefone")}
+              aria-invalid={!!erroVisivel("telefone")}
               placeholder="(00) 00000-0000"
               maxLength={15}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={classeInput("telefone")}
             />
+            <MensagemErro texto={erroVisivel("telefone")} />
           </div>
 
           <div>
@@ -417,25 +498,17 @@ export default function AdminCreateUser() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              onBlur={() => marcarTocado("email")}
+              aria-invalid={!!erroVisivel("email")}
               placeholder="exemplo@email.com"
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className={classeInput("email")}
             />
+            <MensagemErro texto={erroVisivel("email")} />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Senha Padrão
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <p className="text-xs text-gray-500">
+            A senha inicial é definida automaticamente pelo sistema. O militar poderá alterá-la depois do primeiro acesso.
+          </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <button

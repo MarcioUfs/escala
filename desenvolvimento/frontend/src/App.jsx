@@ -22,11 +22,14 @@ import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
 import AdminEscala from "./pages/admin/AdminEscala";
 import AdminPermutas from "./pages/admin/AdminPermutas";
 import AdminAfastamentos from "./pages/admin/AdminAfastamentos";
+import AdminImportarAntiguidade from "./pages/admin/AdminImportarAntiguidade";
+import AdminMeusDados from "./pages/admin/AdminMeusDados";
 import AdminBoletimEfetivo from "./pages/admin/AdminBoletimEfetivo";
 import AdminEscalaDespachantes from "./pages/admin/AdminEscalaDespachantes";
 import AdminEscalasConsolidadas from "./pages/admin/AdminEscalasConsolidadas";
 import UserEscala from "./pages/user/UserEscala";
 import UserPermutas from "./pages/user/UserPermutas";
+import UserBoletins from "./pages/user/UserBoletins";
 import RateLimitModal from "./components/RateLimitModal";
 
 function App() {
@@ -69,6 +72,8 @@ function App() {
             <Route path="escala" element={<AdminEscala />} />
             <Route path="permutas" element={<AdminPermutas />} />
             <Route path="afastamentos" element={<AdminAfastamentos />} />
+            <Route path="importar-antiguidade" element={<AdminImportarAntiguidade />} />
+            <Route path="meus-dados" element={<AdminMeusDados />} />
             <Route path="boletim-efetivo" element={<AdminBoletimEfetivo />} />
             <Route path="escala-despachantes" element={<AdminEscalaDespachantes />} />
             <Route path="escalas-consolidadas" element={<AdminEscalasConsolidadas />} />
@@ -89,6 +94,7 @@ function App() {
             <Route path="reset-password" element={<UserResetPassword />} />
             <Route path="escala" element={<UserEscala />} />
             <Route path="permutas" element={<UserPermutas />} />
+            <Route path="boletins" element={<UserBoletins />} />
           </Route>
 
           {/* REDIRECIONAMENTO PADRÃO -> agora vai pra Home, não mais pro login */}

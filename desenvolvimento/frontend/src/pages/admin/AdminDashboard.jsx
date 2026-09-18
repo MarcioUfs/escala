@@ -2,9 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
+import AvisosCard from "../../components/AvisosCard";
 
 export default function AdminDashboard() {
-  const { user, signOut } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const [pendentesPermuta, setPendentesPermuta] = useState(0);
   const [afastamentosAtivos, setAfastamentosAtivos] = useState(0);
@@ -42,12 +43,12 @@ export default function AdminDashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 break-words">
             Painel do Administrador
           </h1>
-          <button
-            onClick={signOut}
-            className="w-full sm:w-auto px-5 py-2.5 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors shadow-sm"
+          <Link
+            to="/admin/meus-dados"
+            className="w-full sm:w-auto text-center px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
-            Sair
-          </button>
+            Meus dados
+          </Link>
         </div>
 
         {/* Informações do Usuário */}
@@ -109,6 +110,12 @@ export default function AdminDashboard() {
               >
                 + Novo Administrador
               </Link>
+              <Link
+                to="/admin/importar-antiguidade"
+                className="w-full sm:w-auto text-center px-5 py-2.5 bg-cyan-700 text-white font-medium rounded-lg hover:bg-cyan-800 transition-colors shadow-sm"
+              >
+                Importar Antiguidade (CSV)
+              </Link>
             </div>
           </div>
 
@@ -168,14 +175,8 @@ export default function AdminDashboard() {
               </Link>
             </div>
           </div>
-          <div className="p-5 sm:p-6 bg-gray-50 border border-gray-200 rounded-xl">
-            <h2 className="text-base font-bold text-gray-800">Avisos</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Lembrar que texto é so um exemplo, e que o módulo de escalas ainda
-              não tem funcionalidades implementadas.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3"></div>
-          </div>
+          <AvisosCard isAdmin />
+
         </div>
       </div>
     </div>

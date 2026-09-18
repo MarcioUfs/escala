@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 
 export default function UserLayout() {
@@ -37,6 +38,30 @@ export default function UserLayout() {
       <main className="flex-grow">
         <Outlet />
       </main>
+
+      {/* Botões flutuantes de navegação vertical — ficam aqui (e não em cada
+          página) para valer em todas as telas privadas do usuário; login e
+          rotas públicas não usam este layout. */}
+      <div className="fixed bottom-6 right-6 z-30 flex flex-col items-center gap-3 print:hidden">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          title="Voltar ao topo"
+          aria-label="Voltar ao topo"
+          className="flex items-center justify-center size-12 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition"
+        >
+          <ArrowUp size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={() => window.scrollBy({ top: window.innerHeight, behavior: 'smooth' })}
+          title="Descer uma página"
+          aria-label="Descer uma página"
+          className="flex items-center justify-center size-12 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition"
+        >
+          <ArrowDown size={20} />
+        </button>
+      </div>
     </div>
   );
 }

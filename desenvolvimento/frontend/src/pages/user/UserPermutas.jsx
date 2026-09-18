@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -6,6 +6,8 @@ import {
   XCircle,
   Clock,
   AlertCircle,
+  Archive,
+  ArchiveRestore,
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -25,9 +27,12 @@ const STATUS_INFO = {
   RECUSADA_ADMIN: { label: "Rejeitada pelo admin", cor: "bg-red-100 text-red-700 ring-red-300", icone: XCircle },
 };
 
+const STATUS_CONCLUIDOS = ["APROVADA", "RECUSADA_ALVO", "RECUSADA_ADMIN"];
+
 export default function UserPermutas() {
   const navigate = useNavigate();
   const [solicitacoes, setSolicitacoes] = useState([]);
+  const [aba, setAba] = useState("ativas"); // "ativas" | "arquivadas"
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
 
@@ -61,6 +66,31 @@ export default function UserPermutas() {
       );
     } catch {
       // silencioso — não é crítico, o badge só fica desatualizado até o próximo carregar()
+    }
+  };
+
+  // Arquivadas = arquivadas por mim OU com o período encerrado (as duas
+  // datas já passaram) — ficam fora da lista principal, acessíveis pela aba.
+  const { ativas, arquivadas } = useMemo(() => {
+    const ativas = [];
+    const arquivadas = [];
+    for (const s of solicitacoes) {
+      (s.arquivada || s.periodo_encerrado ? arquivadas : ativas).push(s);
+    }
+    return { ativas, arquivadas };
+  }, [solicitacoes]);
+  const listaVisivel = aba === "arquivadas" ? arquivadas : ativas;
+
+  const alterarArquivamento = async (id_permuta, arquivar) => {
+    setProcessando(true);
+    setErroAcao(null);
+    try {
+      await api.put(`/permutas/${id_permuta}/${arquivar ? "arquivar" : "desarquivar"}`);
+      await carregar();
+    } catch (err) {
+      setErro(err.response?.data?.msg || "Não foi possível alterar o arquivamento da permuta.");
+    } finally {
+      setProcessando(false);
     }
   };
 
@@ -127,6 +157,35 @@ export default function UserPermutas() {
           </div>
         )}
 
+        {!loading && !erro && solicitacoes.length > 0 && (
+          <div className="flex items-center gap-1 p-1 bg-slate-100 border border-slate-200 rounded-lg w-fit">
+            {[
+              { id: "ativas", rotulo: "Ativas", total: ativas.length },
+              { id: "arquivadas", rotulo: "Arquivadas", total: arquivadas.length },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setAba(item.id)}
+                className={`px-3 py-1.5 rounded-md text-sm font-semibold transition ${
+                  aba === item.id ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                {item.rotulo}
+                <span className="ml-1.5 text-xs font-mono text-slate-400">{item.total}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!loading && !erro && solicitacoes.length > 0 && listaVisivel.length === 0 && (
+          <p className="py-10 text-center text-sm text-slate-400">
+            {aba === "arquivadas"
+              ? "Nenhuma permuta arquivada. Permutas com o período encerrado aparecem aqui automaticamente."
+              : "Nenhuma permuta ativa no momento. Veja a aba Arquivadas para as anteriores."}
+          </p>
+        )}
+
         {!loading && !erro && solicitacoes.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
             <ArrowLeftRight className="text-slate-300" size={40} />
@@ -139,7 +198,7 @@ export default function UserPermutas() {
 
         {!loading &&
           !erro &&
-          solicitacoes.map((s) => {
+          listaVisivel.map((s) => {
             const info = STATUS_INFO[s.status] || STATUS_INFO.AGUARDANDO_ALVO;
             const Icone = info.icone;
             const souAlvo = s.meu_papel === "ALVO";
@@ -208,6 +267,44 @@ export default function UserPermutas() {
                     <span className="font-semibold">Motivo da rejeição (admin): </span>
                     {s.motivo_recusa_admin}
                   </p>
+                )}
+
+                {aba === "arquivadas" && (
+                  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                      <Archive size={13} />
+                      {s.periodo_encerrado ? "Período encerrado" : "Arquivada por você"}
+                    </span>
+                    {s.arquivada && !s.periodo_encerrado && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alterarArquivamento(s.id_permuta, false);
+                        }}
+                        disabled={processando}
+                        className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 text-xs font-bold rounded-md transition"
+                      >
+                        <ArchiveRestore size={13} />
+                        Desarquivar
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {aba === "ativas" && STATUS_CONCLUIDOS.includes(s.status) && (
+                  <div className="flex justify-end mt-3 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alterarArquivamento(s.id_permuta, true);
+                      }}
+                      disabled={processando}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 text-xs font-bold rounded-md transition"
+                    >
+                      <Archive size={13} />
+                      Arquivar
+                    </button>
+                  </div>
                 )}
 
                 {precisaAcao && (

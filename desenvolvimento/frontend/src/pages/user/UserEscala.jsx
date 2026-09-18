@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import MeusDiasServico from "../../components/MeusDiasServico";
 import { AuthContext } from "../../contexts/AuthContext";
 
 // Mesma paleta usada no painel do admin (AdminEscala.jsx) — mantém a
@@ -283,7 +284,12 @@ export default function UserEscala() {
             Voltar
           </button>
         </div>
-        <div className="px-4 md:px-8 pb-4 flex items-center justify-between gap-3">
+      </header>
+
+      <main className="px-4 md:px-8 py-6">
+        {/* Navegação de mês — centralizada logo acima da escala, mesmo
+            layout de /admin/escala (sem as ações de administrador). */}
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-3">
           <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
             <button
               onClick={() => irParaMes(-1)}
@@ -304,9 +310,7 @@ export default function UserEscala() {
             </button>
           </div>
         </div>
-      </header>
 
-      <main className="px-4 md:px-8 py-6">
         {loading && (
           <div className="flex h-64 items-center justify-center">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-emerald-600" />
@@ -424,6 +428,14 @@ export default function UserEscala() {
             </div>
           </>
         )}
+
+        <div className="mt-10 pt-8 border-t border-slate-200">
+          <div className="max-w-3xl mx-auto mb-4">
+            <h2 className="text-lg font-bold text-slate-800">Meus dias de serviço</h2>
+            <p className="text-xs text-slate-500 font-mono">Seus dias, permutas e avisos de conflito</p>
+          </div>
+          <MeusDiasServico />
+        </div>
       </main>
 
       {diaSelecionadoDate && (

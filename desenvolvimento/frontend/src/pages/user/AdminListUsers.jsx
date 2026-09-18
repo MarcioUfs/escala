@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowUp, ArrowDown, ArrowLeft, Plus, Radio, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../../services/api";
+
+const TAMANHO_PAGINA = 100;
 
 export default function AdminListUsers() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [pagina, setPagina] = useState(1);
   const [loading, setLoading] = useState(true);
 
   // Estados para o Modal de Exclusão e Alertas
@@ -48,14 +52,34 @@ export default function AdminListUsers() {
     loadUsers();
   }, []);
   
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.nome.toLowerCase().includes(searchLower) ||
-      user.matricula.includes(searchLower) ||
-      user.cpf.includes(searchLower)
-    );
-  });
+  // CPF e matrícula vêm formatados (com ponto/traço) do backend. Comparar
+  // só os DÍGITOS dos dois lados faz a busca funcionar digitando com ou sem
+  // pontuação (111.111.111-11 ou 11111111111).
+  const filteredUsers = useMemo(() => {
+    const termo = searchTerm.trim().toLowerCase();
+    if (!termo) return users;
+    const termoDigitos = termo.replace(/\D/g, "");
+    return users.filter((user) => {
+      const nomeBate = (user.nome || "").toLowerCase().includes(termo);
+      const cpfBate =
+        (user.cpf || "").includes(termo) ||
+        (termoDigitos !== "" && (user.cpf || "").replace(/\D/g, "").includes(termoDigitos));
+      const matriculaBate =
+        (user.matricula || "").includes(termo) ||
+        (termoDigitos !== "" && (user.matricula || "").replace(/\D/g, "").includes(termoDigitos));
+      return nomeBate || cpfBate || matriculaBate;
+    });
+  }, [users, searchTerm]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filteredUsers.length / TAMANHO_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const inicioPagina = (paginaAtual - 1) * TAMANHO_PAGINA;
+  const usersDaPagina = filteredUsers.slice(inicioPagina, inicioPagina + TAMANHO_PAGINA);
+
+  const irParaPagina = (nova) => {
+    setPagina(Math.min(Math.max(1, nova), totalPaginas));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // ==========================================
   // LÓGICA DE DELETAR (UI/UX)
@@ -113,48 +137,72 @@ export default function AdminListUsers() {
   }
 
   return (
-    <div className="p-4 sm:p-8 relative">
-      <div className="max-w-7xl mx-auto">
-        {/* CABEÇALHO E BARRA DE PESQUISA */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="relative">
+      {/* CABEÇALHO — mesmo padrão de /admin/escala */}
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
+        <div className="px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
               Gestão de Utilizadores
             </h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-xs text-slate-500 font-mono">
               Total de utilizadores: {users.length}
             </p>
           </div>
 
-          <div className="w-full md:w-1/2 relative">
-            <input
-              type="text"
-              placeholder="Pesquisar por nome, matrícula ou CPF..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
-            />
-            <svg
-              className="w-5 h-5 text-gray-400 absolute right-3 top-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/admin/create-user")}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white text-sm font-medium rounded-lg hover:bg-blue-900 transition shadow-sm"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              ></path>
-            </svg>
+              <Plus size={16} />
+              <span className="hidden sm:inline">Novo Utilizador</span>
+            </button>
+            <button
+              onClick={() => navigate("/admin/escala")}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition shadow-sm"
+            >
+              <Radio size={16} />
+              <span className="hidden sm:inline">Escala</span>
+            </button>
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-2 px-4 py-2 bg-green-800 text-white text-sm font-medium rounded-lg hover:bg-green-900 transition shadow-sm"
+            >
+              <ArrowLeft size={16} />
+              Voltar a gestão
+            </button>
           </div>
+        </div>
+      </header>
 
-          <button
-            onClick={() => navigate("/admin/create-user")}
-            className="w-full md:w-auto px-6 py-3 bg-blue-800 text-white font-medium rounded-lg hover:bg-blue-900 transition shadow-sm whitespace-nowrap"
+      <div className="p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* BARRA DE PESQUISA */}
+        <div className="mb-6 relative">
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, matrícula ou CPF..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPagina(1);
+            }}
+            className="w-full pl-4 pr-10 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+          />
+          <svg
+            className="w-5 h-5 text-gray-400 absolute right-3 top-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            + Novo Utilizador
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
         </div>
 
         {/* MENSAGENS DE SUCESSO OU ERRO (TOAST) */}
@@ -173,7 +221,7 @@ export default function AdminListUsers() {
         {/* VISÃO MOBILE (CARDS) */}
         <div className="grid grid-cols-1 gap-4 lg:hidden">
           {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
+            usersDaPagina.map((user) => (
               <div
                 key={user.id}
                 className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 relative"
@@ -281,7 +329,7 @@ export default function AdminListUsers() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
+                  usersDaPagina.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition">
                       <td className="p-4 text-gray-900 font-medium">
                         {user.ativo.toUpperCase() +
@@ -358,6 +406,42 @@ export default function AdminListUsers() {
             </table>
           </div>
         </div>
+
+        {/* PAGINAÇÃO — 100 militares por página */}
+        {filteredUsers.length > TAMANHO_PAGINA && (
+          <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-sm text-gray-600">
+              Exibindo {inicioPagina + 1}–
+              {Math.min(inicioPagina + TAMANHO_PAGINA, filteredUsers.length)} de {filteredUsers.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => irParaPagina(paginaAtual - 1)}
+                disabled={paginaAtual === 1}
+                aria-label="Página anterior"
+                className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ChevronLeft size={16} />
+                Anterior
+              </button>
+              <span className="px-2 text-sm font-mono text-gray-700">
+                {paginaAtual} / {totalPaginas}
+              </span>
+              <button
+                type="button"
+                onClick={() => irParaPagina(paginaAtual + 1)}
+                disabled={paginaAtual === totalPaginas}
+                aria-label="Próxima página"
+                className="flex items-center gap-1 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Próxima
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {/* ==========================================
@@ -410,6 +494,29 @@ export default function AdminListUsers() {
           </div>
         </div>
       )}
+
+      {/* Botões flutuantes de navegação vertical — mesmo padrão de
+          /admin/escala. */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          title="Voltar ao topo"
+          aria-label="Voltar ao topo"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowUp size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={() => window.scrollBy({ top: window.innerHeight, behavior: "smooth" })}
+          title="Descer uma página"
+          aria-label="Descer uma página"
+          className="flex items-center justify-center size-12 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition"
+        >
+          <ArrowDown size={20} />
+        </button>
+      </div>
     </div>
   );
 }
