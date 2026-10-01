@@ -205,8 +205,14 @@ export default function AdminEscalaDespachantes() {
       await previewer.preview(conteudoRef.current.innerHTML, [...folhasCss, { "escala-despachantes-page-rules": REGRAS_PAGINA }], pagedContainerRef.current);
 
       window.print();
-    } catch {
-      setErro("Não foi possível preparar a paginação para impressão. Tente novamente.");
+    } catch (erroPagedjs) {
+      // O catch genérico de antes escondia a causa real — sem o erro
+      // verdadeiro aqui (nem no console, nem na tela), não dá pra saber se
+      // é CSS que não carregou, CSP bloqueando o fetch da folha de estilo
+      // etc. Agora ele aparece nos dois lugares.
+      console.error("Falha ao preparar paginação (pagedjs):", erroPagedjs);
+      const detalhe = erroPagedjs?.message ? ` (detalhe técnico: ${erroPagedjs.message})` : "";
+      setErro(`Não foi possível preparar a paginação para impressão. Tente novamente.${detalhe}`);
     } finally {
       document.title = tituloAntes;
       setGerandoPdf(false);
