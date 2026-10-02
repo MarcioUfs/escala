@@ -1,9 +1,10 @@
 import { useContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { ShieldAlert } from "lucide-react";
 import { AuthContext } from "../contexts/AuthContext";
 
 export default function AdminLayout() {
-  const { signOut } = useContext(AuthContext);
+  const { signOut, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   return (
@@ -36,25 +37,39 @@ export default function AdminLayout() {
             </h1>
           </div>
 
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded-md transition text-sm font-medium border border-blue-700"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-2">
+            {/* Só aparece pra quem entrou aqui vindo do /master — um admin
+                comum não tem pra onde "voltar" nesse sentido. */}
+            {user?.role === "master" && (
+              <button
+                onClick={() => navigate("/master")}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded-md transition text-sm font-medium border border-blue-700"
+                title="Voltar para o painel master"
+              >
+                <ShieldAlert size={16} />
+                <span className="hidden sm:inline">Painel master</span>
+              </button>
+            )}
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded-md transition text-sm font-medium border border-blue-700"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              ></path>
-            </svg>
-            <span className="hidden sm:inline">Sair</span>
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                ></path>
+              </svg>
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
         </div>
       </header>
 
