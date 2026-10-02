@@ -165,19 +165,16 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
     } finally {
       document.title = tituloAntes;
       setGerandoPdf(false);
-      // Garante que o documento paginado some mesmo se o retorno automático
-      // do modo de impressão (@media print) não acontecer — sem isso a tela
-      // pode ficar presa mostrando o documento paginado em vez do preview
-      // normal depois de salvar/cancelar o PDF.
-      if (pagedContainerRef.current) {
-        pagedContainerRef.current.innerHTML = "";
-      }
+      // NÃO limpar o container paginado aqui: window.print() devolve o
+      // controle antes de o navegador terminar de montar a pré-visualização,
+      // então apagar o conteúdo neste ponto imprime o documento em branco.
+      // A limpeza acontece só no "afterprint", abaixo.
     }
   }
 
-  // Rede de segurança: "afterprint" é o evento que o navegador dispara ao
-  // fechar o diálogo de impressão/salvar PDF — cobre o caso de window.print()
-  // retornar antes do esperado, quando o finally acima sozinho não bastaria.
+  // Limpa o documento paginado quando a impressão realmente termina —
+  // "afterprint" é disparado pelo navegador ao fechar o diálogo de
+  // impressão/salvar PDF.
   useEffect(() => {
     function aoFecharImpressao() {
       if (pagedContainerRef.current) {

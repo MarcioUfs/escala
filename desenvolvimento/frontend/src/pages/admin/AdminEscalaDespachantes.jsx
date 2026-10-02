@@ -216,22 +216,17 @@ export default function AdminEscalaDespachantes() {
     } finally {
       document.title = tituloAntes;
       setGerandoPdf(false);
-      // Some embora o conteúdo paginado já devesse sumir sozinho assim que
-      // o navegador sai do modo de impressão (@media print volta a não se
-      // aplicar) — limpar aqui garante isso mesmo se, por algum motivo,
-      // esse retorno automático não acontecer e a tela ficar "presa" no
-      // documento paginado em vez de voltar pro preview normal.
-      if (pagedContainerRef.current) {
-        pagedContainerRef.current.innerHTML = "";
-      }
+      // NÃO limpar o container paginado aqui: window.print() devolve o
+      // controle antes de o navegador terminar de montar a pré-visualização,
+      // então apagar o conteúdo neste ponto imprime o documento em branco.
+      // A limpeza acontece só no "afterprint", abaixo.
     }
   }
 
-  // Reforço do mesmo cuidado acima: "afterprint" é o evento que o próprio
-  // navegador dispara quando o diálogo de impressão/salvar PDF fecha — serve
-  // de rede de segurança caso window.print() retorne antes do esperado (não
-  // é garantido que ele bloqueie em 100% dos casos) e o finally acima não
-  // seja suficiente sozinho.
+  // Limpa o documento paginado quando a impressão realmente termina —
+  // "afterprint" é disparado pelo navegador ao fechar o diálogo de
+  // impressão/salvar PDF. Sem isso, o conteúdo paginado pode continuar
+  // aparecendo na tela em vez de voltar ao preview normal.
   useEffect(() => {
     function aoFecharImpressao() {
       if (pagedContainerRef.current) {
