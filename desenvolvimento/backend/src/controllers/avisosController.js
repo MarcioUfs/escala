@@ -68,22 +68,30 @@ async function publicar(req, res) {
       .json({ msg: `O aviso pode ter no máximo ${LIMITE_CARACTERES} caracteres.` });
   }
 
+  // Admin e master publicam avisos. Cada um vive na sua tabela, então o
+  // autor é buscado onde ele existe — e nome_admin (NOT NULL) guarda o nome
+  // de quem publicou, seja qual for o perfil.
   const idAdmin = req.user?.id_admin;
-  if (!idAdmin) {
+  const idMaster = req.user?.id_master;
+  if (!idAdmin && !idMaster) {
     return res.status(401).json({ msg: "Acesso negado. Administrador não autenticado." });
   }
 
   try {
-    const admin = await database("admins").select("id_admin", "nome").where({ id_admin: idAdmin }).first();
-    if (!admin) {
+    const autor = idAdmin
+      ? await database("admins").select("nome").where({ id_admin: idAdmin }).first()
+      : await database("masters").select("nome").where({ id_master: idMaster }).first();
+
+    if (!autor) {
       return res.status(404).json({ msg: "Administrador não encontrado." });
     }
 
     const [novo] = await database("avisos")
       .insert({
         texto: textoLimpo,
-        fk_id_admin: admin.id_admin,
-        nome_admin: admin.nome,
+        fk_id_admin: idAdmin ?? null,
+        fk_id_master: idMaster ?? null,
+        nome_admin: autor.nome,
         created_at: new Date(),
       })
       .returning("*");

@@ -9,6 +9,7 @@ const iniciarAgendamentos = require("./src/jobs/scheduler");
 const { generalLimiter } = require("./src/middleware/rateLimiter");
 const userRoute = require("./src/routes/userroutes");
 const adminRoute = require("./src/routes/adminroutes");
+const masterRoute = require("./src/routes/masterroutes");
 const setorRoutes = require("./src/routes/setorroutes");
 const v2EscalaRoutes = require("./src/routes/v2EscalaRoutes");
 const v2EscalaUserRoutes = require("./src/routes/v2EscalaUserRoutes");
@@ -88,6 +89,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 // ---------------------------------------------------
 app.use("/", userRoute);
 app.use("/admin", adminRoute);
+app.use("/master", masterRoute);
 app.use("/setores", setorRoutes);
 app.use("/escalas", v2EscalaRoutes);
 app.use("/minha-escala", v2EscalaUserRoutes);

@@ -4,6 +4,7 @@ const gerarProtocoloPermuta = require("../functions/gerarProtocoloPermuta");
 const tratarMatricula = require("../functions/tratarMatricula");
 const { avaliarRestricoesAtivas } = require("../functions/validarAlocacaoAfastamento");
 const { escopoComoAlvo, escopoComoParticipante } = require("../functions/escopoPermutaUsuario");
+const { autoriaDaRequisicao, autoriaDaRequisicaoCom } = require("../functions/autoriaDaRequisicao");
 
 const STATUS = {
   AGUARDANDO_ALVO: "AGUARDANDO_ALVO",
@@ -670,7 +671,6 @@ async function listarHistoricoAdminV2(req, res) {
 async function aprovarPermutaV2(req, res) {
   try {
     const { id } = req.params;
-    const idAdmin = req.user.id_admin;
 
     const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
     if (!solicitacao) {
@@ -717,7 +717,7 @@ async function aprovarPermutaV2(req, res) {
           fk_id_usuario_entra: solicitacao.fk_id_usuario_alvo,
           tipo: "PERMUTA",
           observacao,
-          fk_id_admin: idAdmin,
+          ...autoriaDaRequisicao(req),
           created_at: new Date(),
           updated_at: new Date(),
         })
@@ -732,7 +732,7 @@ async function aprovarPermutaV2(req, res) {
           fk_id_usuario_entra: solicitacao.fk_id_usuario_solicitante,
           tipo: "PERMUTA",
           observacao,
-          fk_id_admin: idAdmin,
+          ...autoriaDaRequisicao(req),
           created_at: new Date(),
           updated_at: new Date(),
         })
@@ -742,7 +742,7 @@ async function aprovarPermutaV2(req, res) {
         .where({ id_permuta: id })
         .update({
           status: STATUS.APROVADA,
-          fk_id_admin_analise: idAdmin,
+          ...autoriaDaRequisicaoCom(req, "analise"),
           fk_id_substituicao_solicitante:
             idSubstituicaoSolicitante.id_substituicao || idSubstituicaoSolicitante,
           fk_id_substituicao_alvo: idSubstituicaoAlvo.id_substituicao || idSubstituicaoAlvo,
@@ -785,7 +785,6 @@ async function aprovarPermutaV2(req, res) {
 async function rejeitarPermutaV2(req, res) {
   try {
     const { id } = req.params;
-    const idAdmin = req.user.id_admin;
     const motivoRecusaAdmin = limparEspaco(req.body.motivo_recusa_admin || "") || null;
 
     const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
@@ -801,7 +800,7 @@ async function rejeitarPermutaV2(req, res) {
       .update({
         status: STATUS.RECUSADA_ADMIN,
         motivo_recusa_admin: motivoRecusaAdmin,
-        fk_id_admin_analise: idAdmin,
+        ...autoriaDaRequisicaoCom(req, "analise"),
         lido_solicitante: false,
         lido_alvo: false,
         updated_at: new Date(),

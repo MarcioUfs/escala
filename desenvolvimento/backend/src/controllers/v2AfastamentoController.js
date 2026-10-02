@@ -2,6 +2,7 @@ const database = require("../database/db");
 const limparEspaco = require("../functions/limparEspacos");
 const validarDataUsuario = require("../functions/validarDataUsuario");
 const { VALORES_TIPOS_AFASTAMENTO, MODOS_RESTRICAO } = require("../constants/tiposAfastamento");
+const { autoriaDaRequisicao, autoriaDaRequisicaoCom } = require("../functions/autoriaDaRequisicao");
 
 // -----------------------------------------------------------------------
 // Módulo de Afastamentos e Restrições
@@ -305,7 +306,6 @@ async function obterAfastamentoV2(req, res) {
 // -----------------------------------------------------------------------
 async function criarAfastamentoV2(req, res) {
   try {
-    const idAdmin = req.user.id_admin;
     const {
       fk_id_usuario,
       tipo,
@@ -373,7 +373,7 @@ async function criarAfastamentoV2(req, res) {
             data_fim: dataFimValida,
             bgo_referencia: bgo_referencia ? limparEspaco(bgo_referencia) : null,
             observacao: observacao ? limparEspaco(observacao) : null,
-            fk_id_admin: idAdmin,
+            ...autoriaDaRequisicao(req),
           })
           .returning(["id_afastamento"]);
 
@@ -533,7 +533,6 @@ async function atualizarAfastamentoV2(req, res) {
 async function encerrarAfastamentoV2(req, res) {
   try {
     const { id } = req.params;
-    const idAdmin = req.user.id_admin;
     const { data_encerramento, bgo_numero, bgo_ano, motivo_encerramento } = req.body;
 
     const afastamento = await database("v2_afastamentos").where({ id_afastamento: id }).first();
@@ -563,7 +562,7 @@ async function encerrarAfastamentoV2(req, res) {
         data_encerramento: dataValida.data,
         bgo_encerramento: bgoValido.bgo,
         motivo_encerramento: motivoValido.texto,
-        fk_id_admin_encerramento: idAdmin,
+        ...autoriaDaRequisicaoCom(req, "encerramento"),
         updated_at: new Date(),
       });
 

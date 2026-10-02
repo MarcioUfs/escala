@@ -1,5 +1,6 @@
 const database = require("../database/db");
 const jwt = require("jsonwebtoken");
+const { autoriaDaRequisicao } = require("../functions/autoriaDaRequisicao");
 const limparEspaco = require("../functions/limparEspacos");
 const formatarDataEscala = require("../functions/formatarDataEscala");
 const validarDataUsuario = require("../functions/validarDataUsuario");
@@ -13,6 +14,18 @@ const {
   avaliarRestricoesEmLote,
 } = require("../functions/validarAlocacaoAfastamento");
 const { montarGradeNominal, paraDataISO } = require("../functions/montarGradeNominalEscala");
+
+// Estas funções revalidam o token aqui dentro, embora as rotas já passem por
+// verifyJwt + isAdmin (duplicidade herdada). Mantida a estrutura, mas agora
+// aceitando também o segredo do master — senão o perfil master, que pode
+// tudo que o admin pode, seria barrado justamente nas rotas de escala.
+function verificarTokenAdminOuMaster(token, callback) {
+  jwt.verify(token, process.env.SECRET_ADMIN, (err, decoded) => {
+    if (!err) return callback(null, decoded);
+    jwt.verify(token, process.env.SECRET_MASTER, callback);
+  });
+}
+
 
 // -----------------------------------------------------------------------
 // 1B) GERAR + DEVOLVER O DOCUMENTO "ESCALA DOS DESPACHANTES" — mesmo
@@ -211,7 +224,7 @@ async function gerarEscalaConsolidadaV2(req, res) {
 async function gerarEscalaV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -266,7 +279,7 @@ async function gerarEscalaV2(req, res) {
 async function criarAjusteManualV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -561,7 +574,7 @@ async function reverterParaCicloV2(req, res) {
 async function vincularUsuarioGrupamentoV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -831,7 +844,7 @@ async function existeSubstituicaoParaUsuario(data, fk_id_turno, id_user) {
 async function criarSubstituicaoAdicaoV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -880,7 +893,7 @@ async function criarSubstituicaoAdicaoV2(req, res) {
         fk_id_usuario_entra,
         tipo: "ADICAO",
         observacao: limparEspaco(observacao || "") || null,
-        fk_id_admin: decoded.id_admin || null,
+        ...autoriaDaRequisicao(req),
         created_at: new Date(),
         updated_at: new Date(),
       });
@@ -912,7 +925,7 @@ async function criarSubstituicaoAdicaoV2(req, res) {
 async function criarSubstituicaoExclusaoV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -960,7 +973,7 @@ async function criarSubstituicaoExclusaoV2(req, res) {
         fk_id_usuario_entra: null,
         tipo: "EXCLUSAO",
         observacao: limparEspaco(observacao || "") || null,
-        fk_id_admin: decoded.id_admin || null,
+        ...autoriaDaRequisicao(req),
         created_at: new Date(),
         updated_at: new Date(),
       });
@@ -984,7 +997,7 @@ async function criarSubstituicaoExclusaoV2(req, res) {
 async function criarSubstituicaoPermutaV2(req, res) {
   const token = req.headers.authorization.split(" ")[1];
 
-  jwt.verify(token, process.env.SECRET_ADMIN, async (err, decoded) => {
+  verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Token inválido ou expirado" });
     }
@@ -1055,7 +1068,7 @@ async function criarSubstituicaoPermutaV2(req, res) {
         fk_id_usuario_entra,
         tipo: "PERMUTA",
         observacao: limparEspaco(observacao || "") || null,
-        fk_id_admin: decoded.id_admin || null,
+        ...autoriaDaRequisicao(req),
         created_at: new Date(),
         updated_at: new Date(),
       });
