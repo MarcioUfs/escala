@@ -158,13 +158,35 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
       );
 
       window.print();
-    } catch {
-      setErro("Não foi possível preparar a paginação para impressão. Tente novamente.");
+    } catch (erroPagedjs) {
+      console.error("Falha ao preparar paginação (pagedjs):", erroPagedjs);
+      const detalhe = erroPagedjs?.message ? ` (detalhe técnico: ${erroPagedjs.message})` : "";
+      setErro(`Não foi possível preparar a paginação para impressão. Tente novamente.${detalhe}`);
     } finally {
       document.title = tituloAntes;
       setGerandoPdf(false);
+      // Garante que o documento paginado some mesmo se o retorno automático
+      // do modo de impressão (@media print) não acontecer — sem isso a tela
+      // pode ficar presa mostrando o documento paginado em vez do preview
+      // normal depois de salvar/cancelar o PDF.
+      if (pagedContainerRef.current) {
+        pagedContainerRef.current.innerHTML = "";
+      }
     }
   }
+
+  // Rede de segurança: "afterprint" é o evento que o navegador dispara ao
+  // fechar o diálogo de impressão/salvar PDF — cobre o caso de window.print()
+  // retornar antes do esperado, quando o finally acima sozinho não bastaria.
+  useEffect(() => {
+    function aoFecharImpressao() {
+      if (pagedContainerRef.current) {
+        pagedContainerRef.current.innerHTML = "";
+      }
+    }
+    window.addEventListener("afterprint", aoFecharImpressao);
+    return () => window.removeEventListener("afterprint", aoFecharImpressao);
+  }, []);
 
   const linhaAssinatura =
     nomeResponsavel || cargoResponsavel

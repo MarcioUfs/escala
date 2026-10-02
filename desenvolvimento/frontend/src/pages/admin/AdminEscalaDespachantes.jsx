@@ -216,8 +216,31 @@ export default function AdminEscalaDespachantes() {
     } finally {
       document.title = tituloAntes;
       setGerandoPdf(false);
+      // Some embora o conteúdo paginado já devesse sumir sozinho assim que
+      // o navegador sai do modo de impressão (@media print volta a não se
+      // aplicar) — limpar aqui garante isso mesmo se, por algum motivo,
+      // esse retorno automático não acontecer e a tela ficar "presa" no
+      // documento paginado em vez de voltar pro preview normal.
+      if (pagedContainerRef.current) {
+        pagedContainerRef.current.innerHTML = "";
+      }
     }
   }
+
+  // Reforço do mesmo cuidado acima: "afterprint" é o evento que o próprio
+  // navegador dispara quando o diálogo de impressão/salvar PDF fecha — serve
+  // de rede de segurança caso window.print() retorne antes do esperado (não
+  // é garantido que ele bloqueie em 100% dos casos) e o finally acima não
+  // seja suficiente sozinho.
+  useEffect(() => {
+    function aoFecharImpressao() {
+      if (pagedContainerRef.current) {
+        pagedContainerRef.current.innerHTML = "";
+      }
+    }
+    window.addEventListener("afterprint", aoFecharImpressao);
+    return () => window.removeEventListener("afterprint", aoFecharImpressao);
+  }, []);
 
   const gerar = useCallback(async () => {
     if (!dataInicio || !dataFim) {
