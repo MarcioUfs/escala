@@ -608,17 +608,26 @@ async function createAdmin(req, res) {
 }
 
 async function getAdmin(req, res) {
-  const { id_admin } = req.user;
+  // Master também chega aqui — /admin/getadmin passa por isAdmin, que
+  // aceita os dois perfis (ver verifyJWTAdmin.js). Mas master vive na
+  // tabela "masters", com id_master, não id_admin: sem essa distinção,
+  // req.user.id_admin vem undefined pro master e a query quebra
+  // ("Undefined binding(s) detected when compiling SELECT").
+  const ehMaster = req.user?.role === "master";
+  const tabela = ehMaster ? "masters" : "admins";
+  const coluna = ehMaster ? "id_master" : "id_admin";
+  const idValor = ehMaster ? req.user.id_master : req.user.id_admin;
+
   await database
-    .select("id_admin", "nome", "cpf", "role", "created_at", "updated_at")
-    .table("admins")
-    .where({ id_admin: id_admin })
+    .select(coluna, "nome", "cpf", "role", "created_at", "updated_at")
+    .table(tabela)
+    .where({ [coluna]: idValor })
     .then((data) => {
       if (data.length <= 0) {
-        return res.status(404).send({ msg: "Administrador não encontrado" });
+        return res.status(404).send({ msg: ehMaster ? "Master não encontrado" : "Administrador não encontrado" });
       } else {
         const userData = {
-          id: data[0].id_admin,
+          id: data[0][coluna],
           nome: data[0].nome,
           cpf: tratarCpf(data[0].cpf),
           role: data[0].role,
@@ -826,18 +835,24 @@ async function updateAdminPassword(req, res) {
     return res.status(400).json({ msg: "A nova senha deve ser diferente da senha atual." });
   }
 
-  const idAdmin = req.user?.id_admin;
-  if (!idAdmin) {
-    return res.status(401).json({ msg: "Acesso negado. Administrador não autenticado." });
+  // Mesma distinção de getAdmin: master troca a própria senha na tabela
+  // "masters" (id_master), não em "admins" (id_admin).
+  const ehMaster = req.user?.role === "master";
+  const tabela = ehMaster ? "masters" : "admins";
+  const coluna = ehMaster ? "id_master" : "id_admin";
+  const idValor = ehMaster ? req.user?.id_master : req.user?.id_admin;
+
+  if (!idValor) {
+    return res.status(401).json({ msg: "Acesso negado. Usuário não autenticado." });
   }
 
   try {
-    const admin = await database("admins").where({ id_admin: idAdmin }).first();
-    if (!admin) {
-      return res.status(404).json({ msg: "Administrador não encontrado." });
+    const registro = await database(tabela).where({ [coluna]: idValor }).first();
+    if (!registro) {
+      return res.status(404).json({ msg: ehMaster ? "Master não encontrado." : "Administrador não encontrado." });
     }
 
-    const senhaCorreta = await bcryptjs.compare(oldPassword, admin.password);
+    const senhaCorreta = await bcryptjs.compare(oldPassword, registro.password);
     if (!senhaCorreta) {
       return res.status(401).json({ msg: "A senha atual está incorreta." });
     }
@@ -845,8 +860,8 @@ async function updateAdminPassword(req, res) {
     const salt = await bcryptjs.genSalt(10);
     const hash = await bcryptjs.hash(newPassword, salt);
 
-    await database("admins")
-      .where({ id_admin: idAdmin })
+    await database(tabela)
+      .where({ [coluna]: idValor })
       .update({ password: hash, updated_at: new Date() });
 
     return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
