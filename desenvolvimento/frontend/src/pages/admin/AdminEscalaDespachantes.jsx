@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ArrowLeft, Printer, AlertTriangle, Radio, ArrowUp, ArrowDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../services/api";
@@ -88,24 +88,35 @@ const CHAVE_FUNCAO_RESPONSAVEL = "despachantes_funcao_responsavel";
 // CSS Paged Media pro pagedjs — página A4, margem com espaço pra numeração,
 // e a numeração em si no canto inferior direito ("1/8", sem "Página" na
 // frente, só o contador puro).
-const REGRAS_PAGINA = `
+// Regras aplicadas direto pelo navegador na impressão (sem pagedjs): tamanho
+// e margens da folha são suportados nativamente. A numeração "página/total"
+// no rodapé NÃO entra aqui porque depende de @bottom-right, que o Chrome não
+// implementa — quem quiser número de página usa a opção "Cabeçalhos e
+// rodapés" do próprio diálogo de impressão.
+const REGRAS_IMPRESSAO = `
   @page {
     size: A4;
     margin: 1.4cm 1.1cm 1.3cm 1.1cm;
-    @bottom-right {
-      content: counter(page) "/" counter(pages);
-      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-      font-size: 9px;
-      color: #64748b;
-    }
   }
   /* Sem isso, a barra cinza "DESPACHANTES" e a célula da data só aparecem
      impressas se o admin marcar "Gráficos em segundo plano" no diálogo de
      impressão — a maioria não marca, e o fundo simplesmente some. Força a
      impressão da cor de fundo independente dessa opção. */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    /* O AdminLayout envolve a tela num container "bg-gray-50"; com as cores
+       de fundo forçadas acima, esse cinza seria impresso como uma faixa no
+       rodapé da última página. Só os contêineres ACIMA do documento viram
+       branco — os fundos de dentro do documento continuam intactos. */
+    html,
+    body,
+    #root,
+    #root > div {
+      background: #fff !important;
+    }
   }
 `;
 
@@ -124,7 +135,6 @@ export default function AdminEscalaDespachantes() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
   const [documento, setDocumento] = useState(null); // { periodo, dias }
-  const [gerandoPdf, setGerandoPdf] = useState(false);
 
   // Nome/posto/função de quem assina — editável direto no rodapé do
   // documento (mesma UX do Boletim do Efetivo). Salvo neste navegador
@@ -171,71 +181,18 @@ export default function AdminEscalaDespachantes() {
     return String(new Date().getTime());
   }
 
-  // Conteúdo real do documento (o que vira PDF) — o pagedjs lê o HTML
-  // daqui, monta as páginas com numeração e devolve pronto pra imprimir.
-  const conteudoRef = useRef(null);
-  // Onde o pagedjs desenha as páginas já paginadas — só aparece na
-  // impressão ("hidden print:block"); em tela, quem aparece é o preview
-  // normal acima (conteudoRef).
-  const pagedContainerRef = useRef(null);
-
-  async function imprimirPaginado() {
-    if (!conteudoRef.current || !pagedContainerRef.current) return;
-    setGerandoPdf(true);
-    setErro(null);
+  // Impressão direta pelo navegador, mesmo modelo da tela de Escalas
+  // Consolidadas: o que está na tela é o que é impresso (o CSS "print:"
+  // esconde cabeçalho/filtros e tira a moldura do cartão). Sem pagedjs —
+  // ele dava problema só em produção e deixava o PDF/tela inconsistentes.
+  function imprimir() {
     const tituloAntes = document.title;
-    try {
-      if (mesReferencia) {
-        document.title = `Escala dos despachantes ${mesReferencia.nome} ${mesReferencia.ano} ${carimboAgora()}`;
-      }
-
-      const { Previewer } = await import("pagedjs");
-
-      // Mesmas folhas de estilo que a própria página já carregou (é o CSS
-      // do Tailwind compilado) — sem isso o pagedjs reseta os estilos do
-      // <link rel="stylesheet"> do documento (ver removeStyles() na lib) e
-      // o conteúdo sai sem nenhuma classe aplicada.
-      const folhasCss = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(
-        (link) => link.href,
-      );
-
-      pagedContainerRef.current.innerHTML = "";
-
-      const previewer = new Previewer();
-      await previewer.preview(conteudoRef.current.innerHTML, [...folhasCss, { "escala-despachantes-page-rules": REGRAS_PAGINA }], pagedContainerRef.current);
-
-      window.print();
-    } catch (erroPagedjs) {
-      // O catch genérico de antes escondia a causa real — sem o erro
-      // verdadeiro aqui (nem no console, nem na tela), não dá pra saber se
-      // é CSS que não carregou, CSP bloqueando o fetch da folha de estilo
-      // etc. Agora ele aparece nos dois lugares.
-      console.error("Falha ao preparar paginação (pagedjs):", erroPagedjs);
-      const detalhe = erroPagedjs?.message ? ` (detalhe técnico: ${erroPagedjs.message})` : "";
-      setErro(`Não foi possível preparar a paginação para impressão. Tente novamente.${detalhe}`);
-    } finally {
-      document.title = tituloAntes;
-      setGerandoPdf(false);
-      // NÃO limpar o container paginado aqui: window.print() devolve o
-      // controle antes de o navegador terminar de montar a pré-visualização,
-      // então apagar o conteúdo neste ponto imprime o documento em branco.
-      // A limpeza acontece só no "afterprint", abaixo.
+    if (mesReferencia) {
+      document.title = `Escala dos despachantes ${mesReferencia.nome} ${mesReferencia.ano} ${carimboAgora()}`;
     }
+    window.print();
+    document.title = tituloAntes;
   }
-
-  // Limpa o documento paginado quando a impressão realmente termina —
-  // "afterprint" é disparado pelo navegador ao fechar o diálogo de
-  // impressão/salvar PDF. Sem isso, o conteúdo paginado pode continuar
-  // aparecendo na tela em vez de voltar ao preview normal.
-  useEffect(() => {
-    function aoFecharImpressao() {
-      if (pagedContainerRef.current) {
-        pagedContainerRef.current.innerHTML = "";
-      }
-    }
-    window.addEventListener("afterprint", aoFecharImpressao);
-    return () => window.removeEventListener("afterprint", aoFecharImpressao);
-  }, []);
 
   const gerar = useCallback(async () => {
     if (!dataInicio || !dataFim) {
@@ -268,14 +225,10 @@ export default function AdminEscalaDespachantes() {
   const linhaFuncao = funcaoResponsavel || " ";
 
   // Editável igual ao Boletim do Efetivo — clica direto no rodapé do
-  // documento e digita. Mas o pagedjs monta as páginas a partir de
-  // conteudoRef.current.innerHTML (uma STRING): um <input> controlado pelo
-  // React só guarda o valor digitado na propriedade DOM, não no atributo
-  // "value" serializado, então esse HTML puro sempre mostraria o campo
-  // vazio (ou o placeholder). Por isso ficam DUAS versões lado a lado — os
-  // <input> (visíveis só em tela, "print:hidden") pra editar, e o texto
-  // simples logo abaixo (invisível em tela, "hidden print:block") que é o
-  // que realmente aparece no documento impresso/PDF.
+  // documento e digita. Ficam DUAS versões lado a lado porque um <input>
+  // impresso sai como caixa de formulário (borda, fundo, texto cortado): os
+  // <input> aparecem só em tela ("print:hidden") pra editar, e o texto
+  // simples logo abaixo ("hidden print:block") é o que sai no PDF.
   const assinaturaJsx = (
     <section className="mt-16 pt-6" style={{ breakInside: "avoid" }}>
       <div className="w-80 mx-auto text-center print:hidden mb-1">
@@ -317,7 +270,8 @@ export default function AdminEscalaDespachantes() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans print:min-h-0 print:bg-white">
+      <style>{REGRAS_IMPRESSAO}</style>
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm print:hidden">
         <div className="px-4 md:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -381,12 +335,11 @@ export default function AdminEscalaDespachantes() {
           </button>
           {documento && (
             <button
-              onClick={imprimirPaginado}
-              disabled={gerandoPdf}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition disabled:opacity-50 ml-auto"
+              onClick={imprimir}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition ml-auto"
             >
               <Printer size={15} />
-              {gerandoPdf ? "Preparando..." : "Imprimir / Gerar PDF"}
+              Imprimir / Gerar PDF
             </button>
           )}
         </div>
@@ -406,14 +359,13 @@ export default function AdminEscalaDespachantes() {
         )}
       </div>
 
-      {/* ===================== PREVIEW EM TELA (nunca imprime — quem */}
-      {/* imprime é o container paginado abaixo, montado pelo pagedjs) ==== */}
+      {/* ===================== DOCUMENTO (tela e impressão) ============== */}
+      {/* É o mesmo bloco nos dois casos: na impressão o cartão perde moldura,
+          sombra e recuos pra ocupar a folha inteira (o resto da tela já sai
+          via "print:hidden"). */}
       {documento && (
-        <div className="max-w-4xl mx-auto px-4 md:px-8 pb-16 print:hidden">
-          <div
-            ref={conteudoRef}
-            className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-10"
-          >
+        <div className="max-w-4xl mx-auto px-4 md:px-8 pb-16 print:max-w-none print:px-0 print:pb-0">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-10 print:border-0 print:shadow-none print:rounded-none print:p-0">
             <div className="text-center mb-6 pb-4 border-b-2 border-slate-800">
               <img
                 src={brasaoSergipe}
@@ -494,19 +446,6 @@ export default function AdminEscalaDespachantes() {
           </div>
         </div>
       )}
-
-      {/* ===================== CONTAINER PAGINADO (só aparece na */}
-      {/* impressão — é o pagedjs que preenche isso ao clicar em Imprimir) */}
-      {/* "fixed" fora da tela, não "hidden" — o pagedjs precisa MEDIR
-          elementos de verdade (getBoundingClientRect) pra decidir onde
-          quebrar cada página; um contêiner com display:none não tem
-          geometria nenhuma (offsetParent vira null) e a paginação quebra
-          com esse erro. Fica fora da área visível até a hora de imprimir,
-          quando volta ao fluxo normal do documento. */}
-      <div
-        ref={pagedContainerRef}
-        className="fixed top-0 -left-[10000px] print:static print:left-auto"
-      />
 
       {/* Botões flutuantes de navegação vertical — mesmo padrão de
           /admin/escala. Somem na impressão (print:hidden). */}
