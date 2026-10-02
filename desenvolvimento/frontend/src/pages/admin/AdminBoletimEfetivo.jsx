@@ -299,13 +299,13 @@ export default function AdminBoletimEfetivo() {
             </div>
 
             {/* Roster por equipe */}
-            <section className="mb-8 break-inside-avoid">
-              <h2 className="text-sm font-bold uppercase tracking-wide mb-2 bg-slate-100 px-2 py-1">
+            <section className="mb-8">
+              <h2 className="text-sm font-bold uppercase tracking-wide mb-2 bg-slate-100 px-2 py-1 break-after-avoid">
                 Efetivo por equipe
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(rosters).map(([sigla, membros]) => (
-                  <div key={sigla} className="border border-slate-300 rounded-lg overflow-hidden text-xs">
+                  <div key={sigla} className="border border-slate-300 rounded-lg overflow-hidden text-xs break-inside-avoid">
                     <div className="bg-slate-800 text-white px-2 py-1 font-bold">
                       Equipe {sigla} ({membros.length})
                     </div>
