@@ -18,6 +18,7 @@ import AdminViewUser from "./pages/user/AdminViewUser";
 import UserResetPassword from "./pages/user/UserResetPassword";
 import AdminListAdmins from "./pages/admin/AdminListAdmins";
 import AdminViewAdmin from "./pages/admin/AdminViewAdmin";
+import AdminEditAdmin from "./pages/admin/AdminEditAdmin";
 import AdminCreateEscala from "./pages/admin/AdminCreateEscala";
 import AdminEscala from "./pages/admin/AdminEscala";
 import AdminPermutas from "./pages/admin/AdminPermutas";
@@ -92,6 +93,7 @@ function App() {
             <Route path="edit-user" element={<AdminEditUser />} />
             <Route path="view-user" element={<AdminViewUser />} />
             <Route path="view-admin" element={<AdminViewAdmin />} />
+            <Route path="edit-admin" element={<AdminEditAdmin />} />
             <Route path="create-user" element={<AdminCreateUser />} />
             <Route path="admins" element={<AdminListAdmins />} />
             <Route path="create-escala" element={<AdminCreateEscala />} />

@@ -40,9 +40,11 @@ export default function AdminListAdmins() {
 
   const filteredAdmins = admins.filter((admin) => {
     const searchLower = searchTerm.toLowerCase();
+    // admin.id é número — sem o String() aqui, .includes() não existe
+    // nesse tipo e a busca quebra pra toda a lista, sempre.
     return (
       admin.nome.toLowerCase().includes(searchLower) ||
-      admin.id.includes(searchLower) ||
+      String(admin.id).includes(searchLower) ||
       admin.cpf.includes(searchLower)
     );
   });
@@ -211,7 +213,7 @@ export default function AdminListAdmins() {
                   </button>
                   <button
                     onClick={() =>
-                      navigate("/admin/edit-user", { state: { admin } })
+                      navigate("/admin/edit-admin", { state: { admin } })
                     }
                     className="w-full py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 text-sm font-medium transition text-center"
                   >
@@ -276,7 +278,7 @@ export default function AdminListAdmins() {
                           </button>
                           <button
                             onClick={() =>
-                              navigate("/admin/edit-user", { state: { admin } })
+                              navigate("/admin/edit-admin", { state: { admin } })
                             }
                             className="min-w-[70px] px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-sm font-medium transition text-center"
                           >
