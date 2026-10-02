@@ -96,6 +96,20 @@ import api from "../services/api";
 
 export const AuthContext = createContext({});
 
+// Cada perfil busca o próprio cadastro numa rota diferente — tabelas
+// distintas (users, admins, masters) e segredos de JWT distintos.
+const ROTA_PERFIL_POR_PAPEL = {
+  admin: "/admin/getadmin",
+  master: "/master/me",
+  user: "/getUser",
+};
+
+const ROTA_PERFIL_POR_LOGIN = {
+  "/admin/login": "/admin/getadmin",
+  "/master/login": "/master/me",
+  "/login": "/getUser",
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -110,8 +124,7 @@ export const AuthProvider = ({ children }) => {
         try {
           api.defaults.headers.Authorization = `Bearer ${storedToken}`;
 
-          const profileRoute =
-            storedRole === "admin" ? "/admin/getadmin" : "/getUser";
+          const profileRoute = ROTA_PERFIL_POR_PAPEL[storedRole] || "/getUser";
 
           const response = await api.get(profileRoute);
           setUser(response.data);
@@ -139,8 +152,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("@App:token", tokenRecebido);
       api.defaults.headers.Authorization = `Bearer ${tokenRecebido}`;
 
-      const profileRoute =
-        apiRoute === "/admin/login" ? "/admin/getadmin" : "/getUser";
+      const profileRoute = ROTA_PERFIL_POR_LOGIN[apiRoute] || "/getUser";
 
       const userProfileResponse = await api.get(profileRoute);
 

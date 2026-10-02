@@ -30,6 +30,11 @@ import AdminEscalasConsolidadas from "./pages/admin/AdminEscalasConsolidadas";
 import UserEscala from "./pages/user/UserEscala";
 import UserPermutas from "./pages/user/UserPermutas";
 import UserBoletins from "./pages/user/UserBoletins";
+import MasterLogin from "./pages/master/MasterLogin";
+import MasterAdmins from "./pages/master/MasterAdmins";
+import MasterViewAdmin from "./pages/master/MasterViewAdmin";
+import MasterEditAdmin from "./pages/master/MasterEditAdmin";
+import MasterLayout from "./layouts/MasterLayout";
 import RateLimitModal from "./components/RateLimitModal";
 
 function App() {
@@ -49,13 +54,34 @@ function App() {
           <Route path="/login-admin" element={<AdminLogin />} />
           <Route path="/login" element={<Login />} />
 
+          {/* Login do master: de propósito não há link para cá em lugar
+              nenhum do sistema — chega quem souber o endereço. */}
+          <Route path="/login-master" element={<MasterLogin />} />
+
+          {/* ==============================================
+              ROTAS PROTEGIDAS - MASTER
+             ============================================== */}
+          <Route
+            path="/master"
+            element={
+              <ProtectedRoute allowedRoles={["master"]}>
+                <MasterLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<MasterAdmins />} />
+            <Route path="view-admin" element={<MasterViewAdmin />} />
+            <Route path="edit-admin" element={<MasterEditAdmin />} />
+          </Route>
+
           {/* ==============================================
               ROTAS PROTEGIDAS - ADMIN
+              O master entra aqui também: faz tudo que o admin faz.
              ============================================== */}
           <Route
             path="/admin"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "master"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }

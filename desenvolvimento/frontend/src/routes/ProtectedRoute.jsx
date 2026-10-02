@@ -69,9 +69,9 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // 2. Se o perfil não estiver autorizado
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    // Redireciona para o dashboard correto do perfil logado (evita loop na rota atual)
-    const destination = user?.role === 'admin' ? '/admin' : '/user';
-    return <Navigate to={destination} replace />;
+    // Redireciona para o painel do perfil logado (evita loop na rota atual)
+    const destinos = { admin: '/admin', master: '/master', user: '/user' };
+    return <Navigate to={destinos[user?.role] || '/user'} replace />;
   }
 
   return children;
