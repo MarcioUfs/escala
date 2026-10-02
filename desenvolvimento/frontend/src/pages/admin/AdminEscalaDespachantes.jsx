@@ -14,16 +14,12 @@ import brasaoSergipe from "../../assets/brasao_sergipe_pb.svg";
 // realmente produz um artefato visível: o documento em si, pronto pra
 // imprimir/salvar como PDF.
 //
-// Paginação via pagedjs (não window.print() puro como o Boletim do
-// Efetivo): "página atual/total" real no canto inferior direito só existe
-// em CSS Paged Media (@page { @bottom-right { content: counter(page) "/"
-// counter(pages) } }) — e o Chrome NÃO implementa esse trecho da spec no
-// motor de impressão nativo (é um limite documentado do Chromium, não bug
-// nosso). O pagedjs poliflui isso: ele lê o HTML do documento e o CSS já
-// carregado pela página, recalcula a paginação ele mesmo em JS e desenha
-// cada página + a numeração como elementos DOM normais — af, quando a
-// gente chama window.print() depois, o navegador só fotografa o que já
-// está pronto, sem precisar entender @page de verdade.
+// Impressão: window.print() direto, igual às telas de Escalas Consolidadas
+// e Boletim do Efetivo. Já usamos pagedjs aqui (para numerar "página/total"
+// no rodapé, que o Chrome não suporta nativamente), mas ele só quebrava em
+// produção — CSS minificado que o parser dele não entendia, documento
+// paginado preso na tela, PDF em branco. O que está na tela agora é
+// exatamente o que vai pro papel.
 // ---------------------------------------------------------------------------
 
 // "200200000098" -> "2002000000-98" — mesmo padrão do documento oficial.
@@ -85,9 +81,6 @@ const CHAVE_NOME_RESPONSAVEL = "despachantes_nome_responsavel";
 const CHAVE_CARGO_RESPONSAVEL = "despachantes_cargo_responsavel";
 const CHAVE_FUNCAO_RESPONSAVEL = "despachantes_funcao_responsavel";
 
-// CSS Paged Media pro pagedjs — página A4, margem com espaço pra numeração,
-// e a numeração em si no canto inferior direito ("1/8", sem "Página" na
-// frente, só o contador puro).
 // Regras aplicadas direto pelo navegador na impressão (sem pagedjs): tamanho
 // e margens da folha são suportados nativamente. A numeração "página/total"
 // no rodapé NÃO entra aqui porque depende de @bottom-right, que o Chrome não

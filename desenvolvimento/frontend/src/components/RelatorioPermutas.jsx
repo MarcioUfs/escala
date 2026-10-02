@@ -1,36 +1,43 @@
-import { useEffect, useRef, useState } from "react";
-import { Printer, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Printer } from "lucide-react";
 import brasaoSergipe from "../assets/brasao_sergipe_pb.svg";
 
 // ---------------------------------------------------------------------------
 // Relatório de permutas de serviço — mesmo formato do boletim oficial do
 // COPOM/PMSE usado como referência (uma linha para o militar que tem o
 // serviço permutado e outra para quem paga, com a data e o turno), com uma
-// bloco de informações detalhadas logo abaixo de cada permuta (opcional). Cabeçalho, assinatura editável e paginação com número de página
-// seguem o mesmo padrão de "Escala dos Despachantes" (pagedjs).
+// bloco de informações detalhadas logo abaixo de cada permuta (opcional). Cabeçalho e assinatura editável
+// seguem o mesmo padrão de "Escala dos Despachantes".
 // ---------------------------------------------------------------------------
 
 const CHAVE_NOME_RESPONSAVEL = "permutas_nome_responsavel";
 const CHAVE_CARGO_RESPONSAVEL = "permutas_cargo_responsavel";
 const CHAVE_FUNCAO_RESPONSAVEL = "permutas_funcao_responsavel";
 
-// Mesmas regras de página de AdminEscalaDespachantes: A4, numeração "1/8" no
-// canto inferior direito e cores de fundo sempre impressas (a faixa amarela
-// do título some se o navegador não imprimir "gráficos em segundo plano").
-const REGRAS_PAGINA = `
+// Mesmas regras de página de AdminEscalaDespachantes: A4 e cores de fundo
+// sempre impressas (a faixa amarela do título some se o navegador não
+// imprimir "gráficos em segundo plano"). A numeração "página/total" não entra
+// aqui porque depende de @bottom-right, que o Chrome não implementa — quem
+// precisar usa a opção "Cabeçalhos e rodapés" do diálogo de impressão.
+const REGRAS_IMPRESSAO = `
   @page {
     size: A4;
     margin: 1.4cm 1.1cm 1.3cm 1.1cm;
-    @bottom-right {
-      content: counter(page) "/" counter(pages);
-      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-      font-size: 9px;
-      color: #64748b;
-    }
   }
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    /* O AdminLayout envolve a tela num container cinza; com as cores de fundo
+       forçadas acima, esse cinza viraria uma faixa no rodapé da última
+       página. Só os contêineres ACIMA do documento viram branco. */
+    html,
+    body,
+    #root,
+    #root > div {
+      background: #fff !important;
+    }
   }
 `;
 
@@ -106,8 +113,6 @@ function detalhesDaPermuta(p) {
 }
 
 export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situacoes }) {
-  const [erro, setErro] = useState(null);
-  const [gerandoPdf, setGerandoPdf] = useState(false);
   // Escolha feita na hora de gerar o documento. Desmarcado (padrão), sai só a
   // tabela dos militares e das datas, como no modelo oficial.
   const [incluirDetalhes, setIncluirDetalhes] = useState(false);
@@ -132,58 +137,18 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
     localStorage.setItem(CHAVE_FUNCAO_RESPONSAVEL, funcaoResponsavel);
   }, [funcaoResponsavel]);
 
-  const conteudoRef = useRef(null);
-  const pagedContainerRef = useRef(null);
-
   const periodoTitulo = tituloPeriodo(dataInicio, dataFim);
 
-  async function imprimirPaginado() {
-    if (!conteudoRef.current || !pagedContainerRef.current) return;
-    setGerandoPdf(true);
-    setErro(null);
+  // Impressão direta pelo navegador, mesmo modelo da tela de Escalas
+  // Consolidadas: o que está na tela é o que é impresso (o CSS "print:"
+  // esconde a barra de ações e tira a moldura do cartão).
+  function imprimir() {
     const tituloAntes = document.title;
-    try {
-      // Timestamp diferente a cada clique, para o PDF salvo nunca sobrescrever o anterior.
-      document.title = `Permutas de serviço ${periodoTitulo.replace(/\//g, "-")} ${new Date().getTime()}`;
-
-      const { Previewer } = await import("pagedjs");
-      const folhasCss = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.href);
-
-      pagedContainerRef.current.innerHTML = "";
-      const previewer = new Previewer();
-      await previewer.preview(
-        conteudoRef.current.innerHTML,
-        [...folhasCss, { "permutas-page-rules": REGRAS_PAGINA }],
-        pagedContainerRef.current,
-      );
-
-      window.print();
-    } catch (erroPagedjs) {
-      console.error("Falha ao preparar paginação (pagedjs):", erroPagedjs);
-      const detalhe = erroPagedjs?.message ? ` (detalhe técnico: ${erroPagedjs.message})` : "";
-      setErro(`Não foi possível preparar a paginação para impressão. Tente novamente.${detalhe}`);
-    } finally {
-      document.title = tituloAntes;
-      setGerandoPdf(false);
-      // NÃO limpar o container paginado aqui: window.print() devolve o
-      // controle antes de o navegador terminar de montar a pré-visualização,
-      // então apagar o conteúdo neste ponto imprime o documento em branco.
-      // A limpeza acontece só no "afterprint", abaixo.
-    }
+    // Timestamp diferente a cada clique, para o PDF salvo nunca sobrescrever o anterior.
+    document.title = `Permutas de serviço ${periodoTitulo.replace(/\//g, "-")} ${new Date().getTime()}`;
+    window.print();
+    document.title = tituloAntes;
   }
-
-  // Limpa o documento paginado quando a impressão realmente termina —
-  // "afterprint" é disparado pelo navegador ao fechar o diálogo de
-  // impressão/salvar PDF.
-  useEffect(() => {
-    function aoFecharImpressao() {
-      if (pagedContainerRef.current) {
-        pagedContainerRef.current.innerHTML = "";
-      }
-    }
-    window.addEventListener("afterprint", aoFecharImpressao);
-    return () => window.removeEventListener("afterprint", aoFecharImpressao);
-  }, []);
 
   const linhaAssinatura =
     nomeResponsavel || cargoResponsavel
@@ -191,10 +156,8 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
       : " ";
   const linhaFuncao = funcaoResponsavel || " ";
 
-  // O pagedjs monta as páginas a partir do innerHTML (uma string), e o valor
-  // digitado num <input> controlado não vai para esse HTML — por isso ficam
-  // duas versões da assinatura: os campos (só em tela) e o texto simples (só
-  // no documento impresso).
+  // Duas versões da assinatura porque um <input> impresso sai como caixa de
+  // formulário: os campos aparecem só em tela e o texto simples só no PDF.
   const assinaturaJsx = (
     <section className="mt-16 pt-6" style={{ breakInside: "avoid" }}>
       <div className="w-80 mx-auto text-center print:hidden mb-1">
@@ -235,8 +198,9 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-4 md:px-8 pb-16 print:hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <style>{REGRAS_IMPRESSAO}</style>
+      <div className="max-w-4xl mx-auto px-4 md:px-8 pb-16 print:max-w-none print:px-0 print:pb-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3 print:hidden">
           <div>
             <h2 className="text-base font-bold text-slate-800">Relatório de permutas</h2>
             <p className="text-xs text-slate-500">
@@ -254,24 +218,16 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
               Incluir informações detalhadas (protocolo, situação, datas, responsável e motivos)
             </label>
             <button
-              onClick={imprimirPaginado}
-              disabled={gerandoPdf}
-              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition disabled:opacity-50"
+              onClick={imprimir}
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-900 transition"
             >
               <Printer size={15} />
-              {gerandoPdf ? "Preparando..." : "Imprimir / Gerar PDF"}
+              Imprimir / Gerar PDF
             </button>
           </div>
         </div>
 
-        {erro && (
-          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
-            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
-            {erro}
-          </div>
-        )}
-
-        <div ref={conteudoRef} className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-10">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-10 print:border-0 print:shadow-none print:rounded-none print:p-0">
           {/* Cabeçalho padrão dos documentos gerados pelo sistema */}
           <div className="text-center mb-6 pb-4 border-b-2 border-slate-800">
             <img
@@ -376,10 +332,6 @@ export default function RelatorioPermutas({ permutas, dataInicio, dataFim, situa
           <div style={{ breakInside: "avoid" }}>{assinaturaJsx}</div>
         </div>
       </div>
-
-      {/* O pagedjs precisa medir elementos de verdade, então o container fica
-          fora da tela (e não com display:none) até a hora de imprimir. */}
-      <div ref={pagedContainerRef} className="fixed top-0 -left-[10000px] print:static print:left-auto" />
     </>
   );
 }
