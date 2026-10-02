@@ -3,6 +3,7 @@ const limparEspaco = require("../functions/limparEspacos");
 const gerarProtocoloPermuta = require("../functions/gerarProtocoloPermuta");
 const tratarMatricula = require("../functions/tratarMatricula");
 const { avaliarRestricoesAtivas } = require("../functions/validarAlocacaoAfastamento");
+const { escopoComoAlvo, escopoComoParticipante } = require("../functions/escopoPermutaUsuario");
 
 const STATUS = {
   AGUARDANDO_ALVO: "AGUARDANDO_ALVO",
@@ -363,24 +364,21 @@ async function confirmarAlvoV2(req, res) {
     const { id } = req.params;
     const idUsuario = req.user.id_user;
 
-    const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
+    // A consulta já restringe ao alvo: permuta de outro militar não é
+    // devolvida e cai no mesmo 404 de uma inexistente (ver escopoPermutaUsuario).
+    const solicitacao = await escopoComoAlvo(id, idUsuario).first();
     if (!solicitacao) {
       return res.status(404).json({ msg: "Solicitação não encontrada" });
-    }
-    if (Number(solicitacao.fk_id_usuario_alvo) !== Number(idUsuario)) {
-      return res.status(403).json({ msg: "Essa solicitação não é direcionada a você" });
     }
     if (solicitacao.status !== STATUS.AGUARDANDO_ALVO) {
       return res.status(409).json({ msg: "Essa solicitação já não está mais aguardando sua confirmação" });
     }
 
-    await database("v2_permuta_solicitacao")
-      .where({ id_permuta: id })
-      .update({
-        status: STATUS.AGUARDANDO_ADMIN,
-        lido_alvo: true,
-        updated_at: new Date(),
-      });
+    await escopoComoAlvo(id, idUsuario).update({
+      status: STATUS.AGUARDANDO_ADMIN,
+      lido_alvo: true,
+      updated_at: new Date(),
+    });
 
     return res.status(200).json({ msg: "Confirmado! A solicitação foi enviada ao administrador para análise." });
   } catch (error) {
@@ -401,26 +399,21 @@ async function recusarAlvoV2(req, res) {
       return res.status(400).json({ msg: "Motivo da recusa precisa ter pelo menos 5 letras" });
     }
 
-    const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
+    const solicitacao = await escopoComoAlvo(id, idUsuario).first();
     if (!solicitacao) {
       return res.status(404).json({ msg: "Solicitação não encontrada" });
-    }
-    if (Number(solicitacao.fk_id_usuario_alvo) !== Number(idUsuario)) {
-      return res.status(403).json({ msg: "Essa solicitação não é direcionada a você" });
     }
     if (solicitacao.status !== STATUS.AGUARDANDO_ALVO) {
       return res.status(409).json({ msg: "Essa solicitação já não está mais aguardando sua confirmação" });
     }
 
-    await database("v2_permuta_solicitacao")
-      .where({ id_permuta: id })
-      .update({
-        status: STATUS.RECUSADA_ALVO,
-        motivo_recusa_alvo: motivoRecusa,
-        lido_alvo: true,
-        lido_solicitante: false,
-        updated_at: new Date(),
-      });
+    await escopoComoAlvo(id, idUsuario).update({
+      status: STATUS.RECUSADA_ALVO,
+      motivo_recusa_alvo: motivoRecusa,
+      lido_alvo: true,
+      lido_solicitante: false,
+      updated_at: new Date(),
+    });
 
     return res.status(200).json({ msg: "Solicitação recusada. O solicitante foi avisado do motivo." });
   } catch (error) {
@@ -436,18 +429,19 @@ async function marcarLidaV2(req, res) {
     const { id } = req.params;
     const idUsuario = req.user.id_user;
 
-    const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
+    // Devolve a permuta só se o usuário for um dos dois lados; não sendo,
+    // responde o mesmo 404 de uma permuta inexistente.
+    const solicitacao = await escopoComoParticipante(id, idUsuario).first();
     if (!solicitacao) {
       return res.status(404).json({ msg: "Solicitação não encontrada" });
     }
 
-    if (Number(solicitacao.fk_id_usuario_solicitante) === Number(idUsuario)) {
-      await database("v2_permuta_solicitacao").where({ id_permuta: id }).update({ lido_solicitante: true });
-    } else if (Number(solicitacao.fk_id_usuario_alvo) === Number(idUsuario)) {
-      await database("v2_permuta_solicitacao").where({ id_permuta: id }).update({ lido_alvo: true });
-    } else {
-      return res.status(403).json({ msg: "Essa solicitação não envolve você" });
-    }
+    // Aqui já é garantido que o usuário é parte — resta saber qual lado,
+    // porque cada um tem a sua própria coluna de "lido".
+    const souSolicitante = Number(solicitacao.fk_id_usuario_solicitante) === Number(idUsuario);
+    await escopoComoParticipante(id, idUsuario).update(
+      souSolicitante ? { lido_solicitante: true } : { lido_alvo: true },
+    );
 
     return res.status(200).json({ msg: "Marcada como lida" });
   } catch (error) {
@@ -467,16 +461,15 @@ function alterarArquivamentoV2(arquivar) {
       const { id } = req.params;
       const idUsuario = req.user.id_user;
 
-      const solicitacao = await database("v2_permuta_solicitacao").where({ id_permuta: id }).first();
+      const solicitacao = await escopoComoParticipante(id, idUsuario).first();
       if (!solicitacao) {
         return res.status(404).json({ msg: "Solicitação não encontrada" });
       }
 
+      // Já é garantido que o usuário é parte; resta saber de qual lado,
+      // porque cada um arquiva só a própria visão.
       const souSolicitante = Number(solicitacao.fk_id_usuario_solicitante) === Number(idUsuario);
-      const souAlvo = Number(solicitacao.fk_id_usuario_alvo) === Number(idUsuario);
-      if (!souSolicitante && !souAlvo) {
-        return res.status(403).json({ msg: "Essa solicitação não envolve você" });
-      }
+      const souAlvo = !souSolicitante;
 
       if (arquivar) {
         if (souAlvo && solicitacao.status === STATUS.AGUARDANDO_ALVO && !periodoEncerrado(solicitacao)) {
@@ -493,7 +486,7 @@ function alterarArquivamentoV2(arquivar) {
       const colunaLido = souSolicitante ? "lido_solicitante" : "lido_alvo";
       // Arquivar implica "já vi": tira o aviso de não lida da tela inicial.
       const alteracao = arquivar ? { [coluna]: true, [colunaLido]: true } : { [coluna]: false };
-      await database("v2_permuta_solicitacao").where({ id_permuta: id }).update(alteracao);
+      await escopoComoParticipante(id, idUsuario).update(alteracao);
 
       return res.status(200).json({ msg: arquivar ? "Permuta arquivada." : "Permuta desarquivada." });
     } catch (error) {
