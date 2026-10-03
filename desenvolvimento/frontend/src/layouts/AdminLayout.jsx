@@ -51,7 +51,7 @@ export default function AdminLayout() {
               </button>
             )}
             <button
-              onClick={signOut}
+              onClick={() => signOut()}
               className="flex items-center gap-2 px-3 py-1.5 bg-blue-800 hover:bg-blue-700 rounded-md transition text-sm font-medium border border-blue-700"
             >
               <svg

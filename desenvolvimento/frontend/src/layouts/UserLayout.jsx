@@ -23,7 +23,7 @@ export default function UserLayout() {
           </div>
           
           <button 
-            onClick={signOut}
+            onClick={() => signOut()}
             className="flex items-center gap-2 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 rounded-md transition text-sm font-medium border border-emerald-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
