@@ -229,7 +229,7 @@ async function gerarEscalaV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     // Tudo dentro de um try/catch (no controller original o corpo do
@@ -282,7 +282,7 @@ async function criarAjusteManualV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     try {
@@ -575,7 +575,7 @@ async function vincularUsuarioGrupamentoV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     try {
@@ -841,7 +841,7 @@ async function criarSubstituicaoAdicaoV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     try {
@@ -920,7 +920,7 @@ async function criarSubstituicaoExclusaoV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     try {
@@ -990,7 +990,7 @@ async function criarSubstituicaoPermutaV2(req, res) {
 
   verificarTokenAdminOuMaster(token, async (err, decoded) => {
     if (err) {
-      return res.status(401).json({ msg: "Token inválido ou expirado" });
+      return res.status(401).json({ msg: "Token inválido ou expirado", tokenError: true });
     }
 
     try {

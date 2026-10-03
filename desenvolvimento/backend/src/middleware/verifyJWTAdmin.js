@@ -11,13 +11,13 @@ function verifyJwt(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-        return res.status(401).send({ "msg": "Não autorizado. Token inexistente." });
+        return res.status(401).send({ "msg": "Não autorizado. Token inexistente.", tokenError: true });
     }
 
     // Boa prática: verificar se o token segue o padrão "Bearer <token>"
     const parts = authHeader.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        return res.status(401).send({ "msg": "Token mal formatado." });
+        return res.status(401).send({ "msg": "Token mal formatado.", tokenError: true });
     }
 
     const token = parts[1];
@@ -32,7 +32,10 @@ function verifyJwt(req, res, next) {
 
         jwt.verify(token, process.env.SECRET_MASTER, function (errMaster, decodedMaster) {
             if (errMaster) {
-                return res.status(403).send({ "msg": "Token inválido ou expirado! Realize novo login." });
+                // 401 (não 403): autenticação, não autorização — ver
+                // explicação em verifyJWT.js. tokenError:true é o sinal
+                // que o front usa pra encerrar a sessão automaticamente.
+                return res.status(401).send({ "msg": "Token inválido ou expirado! Realize novo login.", tokenError: true });
             }
             req.user = decodedMaster;
             return next();

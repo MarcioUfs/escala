@@ -5,13 +5,13 @@ function verifyJwt(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-        return res.status(401).send({ "msg": "Não autorizado. Token inexistente." });
+        return res.status(401).send({ "msg": "Não autorizado. Token inexistente.", tokenError: true });
     }
 
     // Boa prática: verificar se o token segue o padrão "Bearer <token>"
     const parts = authHeader.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        return res.status(401).send({ "msg": "Token mal formatado." });
+        return res.status(401).send({ "msg": "Token mal formatado.", tokenError: true });
     }
 
     const token = parts[1];
@@ -19,11 +19,16 @@ function verifyJwt(req, res, next) {
     // Use uma chave única para todos, ex: JWT_SECRET
     jwt.verify(token, process.env.SECRET, function (err, decoded) {
         if (err) {
-            return res.status(403).send({ "msg": "Token inválido ou expirado! Realize novo login." });
+            // 401 (não 403): o problema é a AUTENTICAÇÃO (sessão inválida/
+            // vencida), não AUTORIZAÇÃO (isUser abaixo é que responde 403,
+            // quando o token é válido mas o perfil não tem permissão).
+            // tokenError:true é o que o front usa pra saber que deve
+            // encerrar a sessão em vez de só mostrar um erro na tela.
+            return res.status(401).send({ "msg": "Token inválido ou expirado! Realize novo login.", tokenError: true });
         }
-        
+
         // Salvamos os dados do token (id, role, etc) na requisição para as próximas etapas
-        req.user = decoded; 
+        req.user = decoded;
         next();
     });
 }
