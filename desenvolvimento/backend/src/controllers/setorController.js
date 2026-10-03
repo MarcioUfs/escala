@@ -36,9 +36,9 @@ async function createSetor(req, res) {
                 .json({ msg: "Setor cadastrado com sucesso!" });
             })
             .catch((err) => {
+              console.error("[setorController.createSetor]", err);
               return res.status(500).json({
                 msg: "Erro interno do servidor ao inserir",
-                error: err,
               });
             });
         } catch (error) {

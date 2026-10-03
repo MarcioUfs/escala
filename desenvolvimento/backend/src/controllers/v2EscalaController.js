@@ -101,7 +101,8 @@ async function gerarDocumentoDespachantesV2(req, res) {
       dias: diasSemAjustes,
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2EscalaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -133,7 +134,8 @@ async function listarMesesConsolidadosV2(req, res) {
 
     return res.status(200).json(meses);
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2EscalaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -212,7 +214,8 @@ async function gerarEscalaConsolidadaV2(req, res) {
       dias: diasComRestricao,
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2EscalaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -264,10 +267,8 @@ async function gerarEscalaV2(req, res) {
         data_fim: dataFim.objetoDate,
       });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }
@@ -337,10 +338,8 @@ async function criarAjusteManualV2(req, res) {
 
       return res.status(201).json({ msg: "Ajuste manual registrado com sucesso" });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }
@@ -620,10 +619,8 @@ async function vincularUsuarioGrupamentoV2(req, res) {
         .status(201)
         .json({ msg: "Usuário vinculado ao grupamento com sucesso!" });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }
@@ -738,10 +735,8 @@ async function listarEscalaPeriodoEstendidoV2(req, res) {
       escalas: arrayDados,
     });
   } catch (error) {
-    return res.status(500).json({
-      msg: "Erro interno do servidor",
-      error: error.message,
-    });
+    console.error("[v2EscalaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -910,10 +905,8 @@ async function criarSubstituicaoAdicaoV2(req, res) {
         avisos,
       });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }
@@ -982,10 +975,8 @@ async function criarSubstituicaoExclusaoV2(req, res) {
         .status(201)
         .json({ msg: "Militar excluído da escala apenas nesse dia com sucesso!" });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }
@@ -1085,10 +1076,8 @@ async function criarSubstituicaoPermutaV2(req, res) {
         avisos,
       });
     } catch (error) {
-      return res.status(500).json({
-        msg: "Erro interno do servidor",
-        error: error.message,
-      });
+      console.error("[v2EscalaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   });
 }

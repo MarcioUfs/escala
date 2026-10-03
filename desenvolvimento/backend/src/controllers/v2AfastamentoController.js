@@ -757,7 +757,8 @@ async function gerarResumoEfetivoV2(req, res) {
 
     return res.status(200).json({ ...resumo, data_referencia: dataReferenciaValida });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2AfastamentoController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -855,7 +856,8 @@ async function gerarBoletimV2(req, res) {
       resumo,
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2AfastamentoController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 

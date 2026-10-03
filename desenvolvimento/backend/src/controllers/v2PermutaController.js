@@ -217,7 +217,8 @@ async function listarAgendaV2(req, res) {
 
     return res.status(200).json({ agenda });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -324,7 +325,8 @@ async function criarSolicitacaoPermutaV2(req, res) {
       protocolo,
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -353,7 +355,8 @@ async function listarMinhasSolicitacoesV2(req, res) {
 
     return res.status(200).json(comPapel);
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -383,7 +386,8 @@ async function confirmarAlvoV2(req, res) {
 
     return res.status(200).json({ msg: "Confirmado! A solicitação foi enviada ao administrador para análise." });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -418,7 +422,8 @@ async function recusarAlvoV2(req, res) {
 
     return res.status(200).json({ msg: "Solicitação recusada. O solicitante foi avisado do motivo." });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -446,7 +451,8 @@ async function marcarLidaV2(req, res) {
 
     return res.status(200).json({ msg: "Marcada como lida" });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -491,7 +497,8 @@ function alterarArquivamentoV2(arquivar) {
 
       return res.status(200).json({ msg: arquivar ? "Permuta arquivada." : "Permuta desarquivada." });
     } catch (error) {
-      return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+      console.error("[v2PermutaController]", error);
+      return res.status(500).json({ msg: "Erro interno do servidor" });
     }
   };
 }
@@ -535,7 +542,8 @@ async function contarPendenciasV2(req, res) {
       total: pendenteAcaoNum + naoLidasNum,
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -551,7 +559,8 @@ async function listarPendentesAdminV2(req, res) {
 
     return res.status(200).json(solicitacoes);
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -566,7 +575,8 @@ async function contarPendenciasAdminV2(req, res) {
 
     return res.status(200).json({ pendentes: Number(count) });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -775,7 +785,8 @@ async function aprovarPermutaV2(req, res) {
       avisos: [...avisosSolicitante, ...avisosAlvo],
     });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
@@ -808,7 +819,8 @@ async function rejeitarPermutaV2(req, res) {
 
     return res.status(200).json({ msg: "Permuta rejeitada. Os envolvidos foram avisados." });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro interno do servidor", error: error.message });
+    console.error("[v2PermutaController]", error);
+    return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
 
