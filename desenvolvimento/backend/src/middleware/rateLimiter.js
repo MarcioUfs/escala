@@ -1,5 +1,6 @@
 // 1. IMPORTANTE: Desestruturamos para extrair a função de mitigação de IPv6
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const somenteCpf = require('../functions/somenteCpf');
 
 // Handler compartilhado: sempre que um limite é atingido, devolve o header
 // Retry-After (em segundos) além da mensagem — sem isso o cliente sabe que
@@ -63,13 +64,19 @@ const strictLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   keyGenerator: (req, res) => {
-    // Tenta primeiro identificar pela regra de negócio (Login por CPF)
-    if (req.body && req.body.cpf) {
-      return `limit_cpf_${req.body.cpf}`;
+    // Tenta primeiro identificar pela regra de negócio (Login por CPF) —
+    // normalizado pra só dígitos: sem isso, "032.510.074-83" e
+    // "03251007483" geravam chaves diferentes e cada formatação ganhava
+    // sua própria cota de 10 tentativas/hora, dobrando (ou mais) o
+    // número real de tentativas possível contra a mesma conta.
+    const cpfNormalizado = req.body && somenteCpf(req.body.cpf);
+    if (cpfNormalizado) {
+      return `limit_cpf_${cpfNormalizado}`;
     }
 
-    // CRITÉRIO DE SEGURANÇA: Se não houver CPF, fazemos o fallback seguro.
-    // O ipKeyGenerator trunca redes IPv6 mascaradas, neutralizando o bypass.
+    // CRITÉRIO DE SEGURANÇA: Se não houver CPF (ou ele for inválido),
+    // fazemos o fallback seguro. O ipKeyGenerator trunca redes IPv6
+    // mascaradas, neutralizando o bypass.
     return ipKeyGenerator(req, res);
   },
   message: {
