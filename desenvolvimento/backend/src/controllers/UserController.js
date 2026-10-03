@@ -6,6 +6,7 @@ const somenteCpf = require("../functions/somenteCpf");
 const tratarMatricula = require("../functions/tratarMatricula");
 const somenteMatricula = require("../functions/somenteMatricula");
 const tratarTelefone = require("../functions/tratarTelefone");
+const { senhaConfere } = require("../functions/compararCredencialLogin");
 
 // function login(req, res) {
 //   if (
@@ -81,16 +82,15 @@ async function login(req, res) {
 
   try {
     const data = await database.select().table("users").where({ cpf: cpfOnly });
-
-    if (data.length <= 0) {
-      return res.status(401).json({ msg: "Credencial inválida!" });
-    }
-
     const user = data[0];
-    const senhaCorreta = await bcryptjs.compare(req.body.password, user.password);
 
-    if (!senhaCorreta) {
-      return res.status(401).json({ msg: "Dados inválidos!!!" });
+    // Mesma mensagem e mesmo tempo de resposta pros três motivos de
+    // recusa (CPF não existe, senha errada, conta desativada) — nenhum
+    // deles pode ser diferenciado de fora, senão dá pra enumerar CPF
+    // cadastrado e/ou saber que uma conta específica foi desativada.
+    const senhaOk = await senhaConfere(user?.password, req.body.password);
+    if (!user || !user.is_active || !senhaOk) {
+      return res.status(401).json({ msg: "Credencial inválida!" });
     }
 
     const token = jwt.sign(

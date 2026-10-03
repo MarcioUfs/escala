@@ -10,6 +10,7 @@ const validarEmail = require("../functions/validarEmail");
 const somenteTelefone = require("../functions/somenteTelefone");
 const limparEspacos = require("../functions/limparEspacos");
 const validarCsvAntiguidade = require("../functions/validarCsvAntiguidade");
+const { senhaConfere } = require("../functions/compararCredencialLogin");
 
 async function readUsers(req, res) {
   await database
@@ -478,7 +479,7 @@ async function readAllPatente(req, res) {
 }
 
 /*************ADMIN CRUD****************/
-function loginAdmin(req, res) {
+async function loginAdmin(req, res) {
   if (!req.body?.cpf || req.body?.cpf === "") {
     return res.status(400).json({ msg: "CPF é obrigatório!" });
   }
@@ -486,53 +487,37 @@ function loginAdmin(req, res) {
     return res.status(400).json({ msg: "Senha é obrigatória!" });
   }
 
-  let cpfOnly = somenteCpf(req.body.cpf);
+  const cpfOnly = somenteCpf(req.body.cpf);
   if (cpfOnly === 0) {
     return res.status(401).send({ msg: "Credencial inválida!" });
   }
-  database
-    .select()
-    .table("admins")
-    .where({ cpf: cpfOnly })
-    .then((data) => {
-      if (data.length <= 0) {
-        return res.status(401).send({ msg: "Usuário não encontrado!" });
-      } else {
-        bcryptjs.compare(
-          req.body.password,
-          data[0].password,
-          function (err, result) {
-            if (result) {
-              const token = jwt.sign(
-                {
-                  // email: data[0].email,
-                  id_admin: data[0].id_admin,
-                  //matricula: data[0].matricula,
-                  role: data[0].role,
-                },
-                process.env.SECRET_ADMIN,
-                { expiresIn: "6h" },
-                function (err, token) {
-                  return res.status(200).json({
-                    msg: "Autenticação com sucesso!",
-                    // nome: data[0].nome,
-                    id: data[0].id_admin,
-                    role: data[0].role,
-                    // matricula: data[0].matricula,
-                    token: token,
-                  });
-                },
-              );
-            } else {
-              return res.status(401).json({ msg: "Dados inválidos!!!" });
-            }
-          },
-        );
-      }
-    })
-    .catch((error) => {
-      return res.status(500).json({ msg: "Erro do servidor!" });
+
+  try {
+    const admin = await database("admins").where({ cpf: cpfOnly }).first();
+
+    // Mesma mensagem e mesmo tempo de resposta pros três motivos de
+    // recusa (CPF não existe, senha errada, conta desativada) — nenhum
+    // deles pode ser diferenciado de fora.
+    const senhaOk = await senhaConfere(admin?.password, req.body.password);
+    if (!admin || !admin.is_active || !senhaOk) {
+      return res.status(401).json({ msg: "Credencial inválida!" });
+    }
+
+    const token = jwt.sign(
+      { id_admin: admin.id_admin, role: admin.role },
+      process.env.SECRET_ADMIN,
+      { expiresIn: "6h" },
+    );
+
+    return res.status(200).json({
+      msg: "Autenticação com sucesso!",
+      id: admin.id_admin,
+      role: admin.role,
+      token: token,
     });
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro do servidor!" });
+  }
 }
 
 async function createAdmin(req, res) {

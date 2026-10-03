@@ -1,8 +1,8 @@
-const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const database = require("../database/db");
 const tratarCpf = require("../functions/tratarCpf");
 const somenteCpf = require("../functions/somenteCpf");
+const { senhaConfere } = require("../functions/compararCredencialLogin");
 
 // -----------------------------------------------------------------------
 // Perfil MASTER — super-administrador.
@@ -32,14 +32,14 @@ async function loginMaster(req, res) {
 
     const master = await database("masters").where({ cpf: cpfOnly }).first();
 
-    // Mesma resposta para CPF inexistente e senha errada: dizer qual dos dois
-    // falhou entregaria de graça a informação de que aquele CPF é um master.
-    if (!master || !master.is_active) {
-      return res.status(401).json({ msg: "Credencial inválida!" });
-    }
-
-    const senhaConfere = await bcryptjs.compare(req.body.password, master.password);
-    if (!senhaConfere) {
+    // Mesma resposta e mesmo tempo de resposta pros três motivos de
+    // recusa (CPF não existe, senha errada, conta desativada) — dizer
+    // qual deles falhou entregaria de graça informação sobre a conta.
+    // O bcrypt.compare roda sempre (contra o hash real ou o fictício),
+    // nunca só quando o master existe — senão o tempo de resposta
+    // sozinho já denunciaria quais CPFs são de master.
+    const senhaOk = await senhaConfere(master?.password, req.body.password);
+    if (!master || !master.is_active || !senhaOk) {
       return res.status(401).json({ msg: "Credencial inválida!" });
     }
 
