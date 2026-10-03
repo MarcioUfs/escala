@@ -90,7 +90,7 @@
 //   );
 // };
 
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
@@ -183,6 +183,29 @@ export const AuthProvider = ({ children }) => {
       navigate("/");
     }
   };
+
+  // Ref em vez de depender direto de `signOut` no useEffect abaixo: assim
+  // o listener é registrado uma única vez (não numa função nova a cada
+  // render), mas sempre chama a versão mais atual de signOut. Atualizada
+  // num efeito (não durante o render) porque mexer em ref.current fora
+  // de evento/efeito quebra a regra do React.
+  const signOutRef = useRef(signOut);
+  useEffect(() => {
+    signOutRef.current = signOut;
+  });
+
+  // Reage a um 401 com tokenError:true vindo de QUALQUER chamada da API
+  // (o interceptor de api.js dispara esse evento) — sessão expirada ou
+  // token inválido no meio do uso agora encerra a sessão e volta pro
+  // início automaticamente, em vez da tela continuar "logada" com as
+  // chamadas falhando silenciosamente até um F5.
+  useEffect(() => {
+    function aoReceberTokenInvalido() {
+      signOutRef.current();
+    }
+    window.addEventListener("api:unauthorized", aoReceberTokenInvalido);
+    return () => window.removeEventListener("api:unauthorized", aoReceberTokenInvalido);
+  }, []);
 
   return (
     <AuthContext.Provider

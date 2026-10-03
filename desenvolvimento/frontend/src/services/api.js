@@ -26,6 +26,14 @@ api.interceptors.response.use(
       const retryAfterSeconds = Number(error.response.data?.retryAfterSeconds) || 300;
       window.dispatchEvent(new CustomEvent('api:rate-limited', { detail: { retryAfterSeconds } }));
     }
+    // tokenError:true só vem dos middlewares de autenticação (token
+    // ausente/mal formatado/inválido/expirado) — um 401 "normal" de
+    // regra de negócio (ex: senha atual errada ao trocar senha) não tem
+    // essa marca, então não dispara logout indevido. O AuthContext
+    // escuta esse evento e encerra a sessão automaticamente.
+    if (error.response?.status === 401 && error.response?.data?.tokenError) {
+      window.dispatchEvent(new CustomEvent('api:unauthorized'));
+    }
     return Promise.reject(error);
   },
 );
