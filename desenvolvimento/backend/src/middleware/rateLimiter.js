@@ -45,8 +45,14 @@ const authenticatedLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   keyGenerator: (req, res) => {
-    const idUsuario = req.user?.id_user || req.user?.id_admin;
-    if (idUsuario) return `user_${idUsuario}`;
+    // Prefixado pelo role (não só pelo id): user/admin/master têm
+    // sequências de id próprias que se sobrepõem (ex: id_user=100000 e
+    // id_admin=100000 são contas diferentes) — sem o role na chave, as
+    // duas dividiam a mesma cota de 600 req/5min. id_master também entra
+    // aqui agora; antes caía sempre no fallback por IP.
+    const idUsuario = req.user?.id_user ?? req.user?.id_admin ?? req.user?.id_master;
+    const role = req.user?.role;
+    if (idUsuario != null && role) return `${role}_${idUsuario}`;
     return ipKeyGenerator(req, res);
   },
   message: {
