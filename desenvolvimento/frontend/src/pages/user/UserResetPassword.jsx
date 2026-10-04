@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { AuthContext } from '../../contexts/AuthContext';
 
 export default function ChangePassword() {
   const navigate = useNavigate();
+  const { user, updateUser } = useContext(AuthContext);
+  // S4: UserLayout manda pra cá à força quando a senha ainda é a inicial
+  // (SEED_PASS) -- nesse caso não existe "cancelar" nem "voltar", porque
+  // não tem pra onde voltar sem trocar primeiro.
+  const trocaObrigatoria = !!user?.mustChangePassword;
 
   const [formData, setFormData] = useState({
     oldPassword: '',
@@ -36,13 +42,18 @@ export default function ChangePassword() {
       });
 
       setStatus({ type: 'success', message: 'Senha atualizada com sucesso!' });
-      
+
       // Limpa o formulário por segurança após o sucesso
       setFormData({ oldPassword: '', newPassword: '', confirmNewPassword: '' });
 
-      // Retorna à tela anterior ou painel após 2 segundos
+      // Desliga o sinalizador na hora (sem esperar F5) -- senão o
+      // UserLayout continuaria mandando pra esta mesma tela.
+      updateUser({ mustChangePassword: false });
+
+      // Troca obrigatória não tem "tela anterior" (o usuário foi
+      // redirecionado pra cá à força) -- manda direto pro painel.
       setTimeout(() => {
-        navigate(-1); 
+        navigate(trocaObrigatoria ? '/user' : -1);
       }, 2000);
 
     } catch (error) {
@@ -73,6 +84,12 @@ export default function ChangePassword() {
           <h2 className="text-2xl font-bold text-gray-900">Alterar Senha</h2>
           <p className="text-sm text-gray-600">Atualize suas credenciais de acesso</p>
         </div>
+
+        {trocaObrigatoria && (
+          <div className="mb-4 p-3 rounded text-sm text-center font-medium bg-yellow-100 text-yellow-800">
+            Esta é sua senha inicial. Por segurança, troque-a antes de continuar.
+          </div>
+        )}
 
         {/* Feedback visual de Sucesso, Erro ou Loading */}
         {status.message && (
@@ -126,17 +143,19 @@ export default function ChangePassword() {
           </div>
 
           <div className="flex gap-4 mt-6">
-            <button 
-              type="button" 
-              onClick={() => navigate(-1)} 
-              className="w-1/3 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              disabled={status.type === 'loading'} 
-              className="w-2/3 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition disabled:opacity-50"
+            {!trocaObrigatoria && (
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="w-1/3 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={status.type === 'loading'}
+              className={`flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition disabled:opacity-50 ${trocaObrigatoria ? 'w-full' : 'w-2/3'}`}
             >
               {status.type === 'loading' ? 'A Atualizar...' : 'Salvar Nova Senha'}
             </button>

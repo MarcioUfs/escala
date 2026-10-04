@@ -170,6 +170,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Atualiza campos do usuário já logado sem precisar de um novo GET/login
+  // -- usado depois da troca de senha obrigatória (S4), pra desligar
+  // mustChangePassword na hora sem esperar um F5.
+  const updateUser = (campos) => {
+    setUser((atual) => (atual ? { ...atual, ...campos } : atual));
+  };
+
   // `redirect = true` por padrão: logout "de verdade" manda pra Home.
   // Passe `signOut(false)` quando quiser só limpar a sessão sem navegar
   // (ex: usuário tentou logar no portal errado e você quer mostrar um erro na mesma tela).
@@ -209,7 +216,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ signed: !!user, user, signIn, signOut, loading }}
+      value={{ signed: !!user, user, signIn, signOut, updateUser, loading }}
     >
       {children}
     </AuthContext.Provider>

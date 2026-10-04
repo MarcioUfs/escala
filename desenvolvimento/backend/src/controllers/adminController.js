@@ -157,6 +157,11 @@ async function createUser(req, res) {
               nome_guerra: req.body.nome_guerra,
               is_active: true,
               role: "user",
+              // Senha inicial vem de SEED_PASS, igual pra todo mundo --
+              // must_change_password força a troca no primeiro acesso em
+              // vez de deixar o militar seguir usando a senha padrão
+              // indefinidamente.
+              must_change_password: true,
               created_at: new Date(),
               updated_at: new Date(),
             };

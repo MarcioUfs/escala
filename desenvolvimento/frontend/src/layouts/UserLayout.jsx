@@ -1,11 +1,19 @@
 import { useContext } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 
 export default function UserLayout() {
-  const { signOut } = useContext(AuthContext);
+  const { signOut, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // S4: senha inicial é a mesma pra todo mundo (SEED_PASS) -- enquanto o
+  // militar não trocar pela própria, nenhuma outra tela do painel é
+  // acessível, só a de troca de senha.
+  if (user?.mustChangePassword && location.pathname !== '/user/reset-password') {
+    return <Navigate to="/user/reset-password" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">

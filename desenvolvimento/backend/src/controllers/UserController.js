@@ -202,6 +202,9 @@ async function getUser(req, res) {
       updated_at: data[0].updated_at,
       id: data[0].id_user,
       role: data[0].role,
+      // Front usa isso pra forçar a tela de troca de senha antes de
+      // liberar o resto do painel (S4) -- fica true até a primeira troca.
+      mustChangePassword: data[0].must_change_password,
     };
 
     return res.status(200).json(userData);
@@ -253,9 +256,11 @@ async function updatePassword(req, res) {
     const salt = await bcryptjs.genSalt(10);
     const hash = await bcryptjs.hash(newPassword, salt);
 
-    // 4. Salva no banco
+    // 4. Salva no banco -- troca aqui já conta como "primeira troca"
+    // cumprida, então desliga o sinalizador que força essa tela (S4).
     await database.table("users").where({ id_user: userId }).update({
       password: hash,
+      must_change_password: false,
       updated_at: new Date(),
     });
 
