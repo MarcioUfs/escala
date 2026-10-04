@@ -128,6 +128,35 @@ export default function AdminListUsers() {
     );
   };
 
+  // ==========================================
+  // ATIVAR / DESATIVAR (toggle, sem modal -- reversível, diferente do delete)
+  // ==========================================
+  const toggleAtivo = async (user) => {
+    const novoStatus = user.ativo !== "Ativo";
+    try {
+      await api.post("/admin/activeuser", { id: user.id, is_active: novoStatus });
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === user.id ? { ...u, ativo: novoStatus ? "Ativo" : "Inativo" } : u,
+        ),
+      );
+
+      setActionMessage({
+        type: "success",
+        text: `O utilizador ${user.nome} foi ${novoStatus ? "ativado" : "desativado"}!`,
+      });
+      setTimeout(() => setActionMessage(null), 3000);
+    } catch (error) {
+      console.error(error);
+      setActionMessage({
+        type: "error",
+        text: "Erro ao atualizar o status do utilizador. Tente novamente.",
+      });
+      setTimeout(() => setActionMessage(null), 3000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -286,6 +315,16 @@ export default function AdminListUsers() {
                     Editar
                   </button>
                   <button
+                    onClick={() => toggleAtivo(user)}
+                    className={`w-full py-2 rounded-lg text-sm font-medium transition text-center ${
+                      user.ativo === "Ativo"
+                        ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                        : "bg-green-100 text-green-700 hover:bg-green-200"
+                    }`}
+                  >
+                    {user.ativo === "Ativo" ? "Desativar" : "Ativar"}
+                  </button>
+                  <button
                     onClick={() => handleDeleteClick(user)}
                     className="w-full py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium transition text-center"
                   >
@@ -377,6 +416,16 @@ export default function AdminListUsers() {
                             className="min-w-[70px] px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-sm font-medium transition text-center"
                           >
                             Editar
+                          </button>
+                          <button
+                            onClick={() => toggleAtivo(user)}
+                            className={`min-w-[70px] px-3 py-1.5 rounded-md text-sm font-medium transition text-center ${
+                              user.ativo === "Ativo"
+                                ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                                : "bg-green-100 text-green-700 hover:bg-green-200"
+                            }`}
+                          >
+                            {user.ativo === "Ativo" ? "Desativar" : "Ativar"}
                           </button>
                           <button
                             onClick={() => handleDeleteClick(user)}
