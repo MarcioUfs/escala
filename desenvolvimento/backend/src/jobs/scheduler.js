@@ -63,6 +63,48 @@ async function rotinaDiaria() {
   });
 }
 
+// Recuperação pós-restart (O1): se o processo cair/reiniciar durante a
+// janela 02h-04h (ou mesmo depois), o cron das 02:00 já disparou e não
+// dispara de novo no mesmo dia -- o dia ficava sem rodar, só descoberto
+// manualmente no dia seguinte. No boot, se já passou das 02h (fuso
+// America/Maceio) e ainda não existe execução com sucesso hoje, dispara a
+// rotina imediatamente, como recuperação. Antes das 02h não faz nada: o
+// cron de hoje ainda vai disparar no horário normal.
+async function catchUpSeNecessario() {
+  // Só em produção: isto dispara uma raspagem REAL contra a intranet da
+  // PMSE com a credencial pessoal (PMSE_USER/PMSE_PASS) -- em
+  // desenvolvimento, cada restart do servidor (coisa que acontece várias
+  // vezes por sessão de trabalho) acabaria martelando o site real sempre
+  // que não houvesse sucesso registrado ainda hoje, incluindo o ciclo de
+  // retentativas de até ~40 minutos.
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
+  try {
+    const agoraMaceio = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Maceio' }));
+    if (agoraMaceio.getHours() < 2) {
+      return;
+    }
+
+    const inicioDeHoje = new Date(agoraMaceio.getFullYear(), agoraMaceio.getMonth(), agoraMaceio.getDate());
+
+    const jaRodouComSucessoHoje = await database('scraper_execucoes')
+      .where({ rotina: 'antiguidade', status: 'sucesso' })
+      .where('iniciado_em', '>=', inicioDeHoje)
+      .first();
+
+    if (jaRodouComSucessoHoje) {
+      return;
+    }
+
+    console.log('[CRON] Sem execução de antiguidade com sucesso hoje e já passamos das 02h -- rodando agora como recuperação pós-restart.');
+    await rotinaDiaria();
+  } catch (erro) {
+    console.error('[CRON] Erro na verificação de recuperação pós-restart:', erro);
+  }
+}
+
 // Janela de execução: 02:00 até 04:00, com hora/minuto/segundo variando
 // aleatoriamente dentro desse intervalo. Cron sozinho não sorteia
 // horário — ele só dispara em ponto fixo — então o padrão aqui é:
@@ -100,6 +142,11 @@ function iniciarAgendamentos() {
   });
 
   console.log('Agendador de tarefas iniciado! O scraper da PMSE roda todos os dias em horário aleatório entre 02:00 e 04:00 (fuso America/Maceio).');
+
+  // Fire-and-forget: não pode atrasar nem derrubar o boot do servidor.
+  catchUpSeNecessario().catch((erro) => {
+    console.error('[CRON] Erro inesperado na recuperação pós-restart:', erro);
+  });
 }
 
 module.exports = iniciarAgendamentos;
