@@ -4,6 +4,7 @@ const adminController = require('../controllers/adminController');
 const { strictLimiter, authenticatedLimiter } = require('../middleware/rateLimiter');
 const uploadCsvAntiguidade = require('../middleware/uploadCsvAntiguidade');
 const avisosController = require('../controllers/avisosController');
+const scraperStatusController = require('../controllers/scraperStatusController');
 const router = express.Router();
 
 // Ordem dos middlewares: verifyJwt (está logado?) -> isAdmin (tem
@@ -37,6 +38,13 @@ router.post(
   authenticatedLimiter,
   uploadCsvAntiguidade,
   adminController.importarAntiguidadeCsv,
+);
+router.get(
+  '/antiguidade/historico-scraper',
+  verifyJwt,
+  isAdmin,
+  authenticatedLimiter,
+  scraperStatusController.historico,
 );
 
 /*************ADMIN CRUD****************/

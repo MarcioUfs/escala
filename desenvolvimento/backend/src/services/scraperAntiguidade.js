@@ -88,18 +88,18 @@ async function autenticar() {
 async function rasparListaAntiguidade() {
   try {
     if (!process.env.PMSE_USER || !process.env.PMSE_PASS) {
-      console.error(
-        "[scraperAntiguidade] PMSE_USER e/ou PMSE_PASS não definidos nas variáveis de ambiente. Abortando antes de tentar logar.",
-      );
-      return false;
+      const detalhe = "PMSE_USER e/ou PMSE_PASS não definidos nas variáveis de ambiente.";
+      console.error(`[scraperAntiguidade] ${detalhe} Abortando antes de tentar logar.`);
+      return { sucesso: false, detalhe };
     }
 
     console.log("[scraperAntiguidade] Autenticando...");
     const autenticacao = await autenticar();
 
     if (!autenticacao) {
-      console.error("[scraperAntiguidade] Falha no login: sem cookie de sessão.");
-      return false;
+      const detalhe = "Falha no login: sem cookie de sessão.";
+      console.error(`[scraperAntiguidade] ${detalhe}`);
+      return { sucesso: false, detalhe };
     }
 
     const { cookie, statusLogin } = autenticacao;
@@ -135,13 +135,12 @@ async function rasparListaAntiguidade() {
         typeof respostaLista.data === "string"
           ? respostaLista.data.slice(0, 300)
           : JSON.stringify(respostaLista.data).slice(0, 300);
+      const detalhe = `Resposta em formato inesperado (sem 'data' como array). Status: ${respostaLista.status}, Content-Type: ${respostaLista.headers["content-type"]}`;
       console.error(
-        "[scraperAntiguidade] Resposta em formato inesperado — sem 'data' como array.",
-        `\nStatus: ${respostaLista.status}`,
-        `\nContent-Type: ${respostaLista.headers["content-type"]}`,
+        `[scraperAntiguidade] ${detalhe}`,
         `\nInício do corpo: ${corpo}`,
       );
-      return false;
+      return { sucesso: false, detalhe };
     }
 
     console.log(`[scraperAntiguidade] ${linhas.length} registros recebidos (total no site: ${respostaLista.data.recordsTotal}).`);
@@ -154,7 +153,7 @@ async function rasparListaAntiguidade() {
 
     if (linhas.length === 0) {
       console.log("[scraperAntiguidade] Nenhum dado para salvar.");
-      return false;
+      return { sucesso: false, detalhe: "Site devolveu 0 registros." };
     }
 
     // Mapeia os campos abreviados da API pro schema do banco.
@@ -216,10 +215,10 @@ async function rasparListaAntiguidade() {
       .merge();
 
     console.log("[scraperAntiguidade] Sucesso! Banco de dados sincronizado.");
-    return true;
+    return { sucesso: true, detalhe: null };
   } catch (erro) {
     console.error("[scraperAntiguidade] Falha na raspagem:", erro.message);
-    return false;
+    return { sucesso: false, detalhe: erro.message };
   }
 }
 

@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const rasparListaAntiguidade = require('../services/scraperAntiguidade');
+const database = require('../database/db');
 
 const aguardar = (minutos) => new Promise(resolve => setTimeout(resolve, minutos * 60 * 1000));
 
@@ -10,28 +11,56 @@ const aguardar = (minutos) => new Promise(resolve => setTimeout(resolve, minutos
 // e faz a última tentativa do dia.
 const INTERVALOS_RETENTATIVA_MIN = [10, 30];
 
+// Grava o resultado em scraper_execucoes -- antes disso, o único registro
+// de uma execução era console.log/console.error, que não sobrevive a um
+// restart do processo nem é consultável sem acesso ao log do servidor
+// (O1). Nunca lança: uma falha ao gravar o histórico não pode mascarar o
+// resultado real do scraper nem derrubar o cron.
+async function registrarExecucao({ status, tentativas, iniciadoEm, detalhe }) {
+  try {
+    await database("scraper_execucoes").insert({
+      rotina: "antiguidade",
+      status,
+      tentativas,
+      iniciado_em: iniciadoEm,
+      finalizado_em: new Date(),
+      detalhe: detalhe || null,
+    });
+  } catch (erro) {
+    console.error('[CRON] Falha ao registrar o histórico de execução (não afeta o resultado do scraper):', erro.message);
+  }
+}
+
 async function rotinaDiaria() {
   console.log('\n[CRON] Iniciando rotina automática de atualização de antiguidade...');
+  const iniciadoEm = new Date();
 
-  let sucesso = await rasparListaAntiguidade();
+  let resultado = await rasparListaAntiguidade();
   let tentativa = 1;
 
   for (const minutos of INTERVALOS_RETENTATIVA_MIN) {
-    if (sucesso) break;
+    if (resultado.sucesso) break;
 
     tentativa += 1;
     console.log(`[CRON] Falha na tentativa ${tentativa - 1}. Aguardando ${minutos} minutos antes da tentativa ${tentativa}...`);
     await aguardar(minutos);
 
     console.log(`[CRON] Iniciando tentativa ${tentativa}...`);
-    sucesso = await rasparListaAntiguidade();
+    resultado = await rasparListaAntiguidade();
   }
 
-  if (sucesso) {
+  if (resultado.sucesso) {
     console.log(`[CRON] Rotina diária concluída com sucesso na tentativa ${tentativa}.`);
   } else {
     console.error(`[CRON] Todas as ${tentativa} tentativas falharam. Nova tentativa apenas amanhã.`);
   }
+
+  await registrarExecucao({
+    status: resultado.sucesso ? 'sucesso' : 'falha',
+    tentativas: tentativa,
+    iniciadoEm,
+    detalhe: resultado.detalhe,
+  });
 }
 
 // Janela de execução: 02:00 até 04:00, com hora/minuto/segundo variando
