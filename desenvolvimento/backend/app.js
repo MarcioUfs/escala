@@ -82,7 +82,12 @@ app.use(generalLimiter);
 // ---------------------------------------------------
 // 2. DOCUMENTAÇÃO
 // ---------------------------------------------------
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
+// Só em dev/local: em produção, /docs expunha publicamente a lista
+// completa de rotas (inclusive administrativas) pra qualquer visitante
+// sem autenticação nenhuma.
+if (!isProduction) {
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile));
+}
 
 // ---------------------------------------------------
 // 3. ROTAS (Acoplamento e Versionamento)
