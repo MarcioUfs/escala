@@ -206,7 +206,11 @@ export default function AdminListUsers() {
       </header>
 
       <div className="p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto">
+      {/* Sem max-w (era 7xl) -- com os 5 botões de ação
+          (Ver/Editar/Ativar-Desativar/Deletar/Escalar) a tabela precisa de
+          toda a largura disponível da tela pra não cair na barra de
+          rolagem; limitar a largura aqui só forçava o scroll antes da hora. */}
+      <div className="w-full">
         {/* BARRA DE PESQUISA */}
         <div className="mb-6 relative">
           <input
@@ -352,16 +356,16 @@ export default function AdminListUsers() {
             <table className="w-full text-left border-collapse min-w-max">
               <thead>
                 <tr className="bg-gray-100 text-gray-600 text-sm uppercase tracking-wider">
-                  <th className="p-4 border-b font-semibold">Nome</th>
-                  {/* <th className="p-4 border-b font-semibold">Patente</th> */}
-                  <th className="p-4 border-b font-semibold">Nome de guerra</th>
-                  <th className="p-4 border-b font-semibold">Telefone</th>
-                  {/* <th className="p-4 border-b font-semibold">Status</th> */}
-                  {/* <th className="p-4 border-b font-semibold">Quadro</th> */}
-                  <th className="p-4 border-b font-semibold">Matrícula</th>
-                  <th className="p-4 border-b font-semibold">CPF</th>
-                  {/* <th className="p-4 border-b font-semibold">Ordem</th> */}
-                  <th className="p-4 border-b font-semibold text-center">
+                  <th className="p-3 border-b font-semibold">Nome</th>
+                  {/* <th className="p-3 border-b font-semibold">Patente</th> */}
+                  <th className="p-3 border-b font-semibold">Nome de guerra</th>
+                  <th className="p-3 border-b font-semibold">Telefone</th>
+                  {/* <th className="p-3 border-b font-semibold">Status</th> */}
+                  {/* <th className="p-3 border-b font-semibold">Quadro</th> */}
+                  <th className="p-3 border-b font-semibold">Matrícula</th>
+                  <th className="p-3 border-b font-semibold">CPF</th>
+                  {/* <th className="p-3 border-b font-semibold">Ordem</th> */}
+                  <th className="p-3 border-b font-semibold text-center">
                     Ações
                   </th>
                 </tr>
@@ -370,7 +374,7 @@ export default function AdminListUsers() {
                 {filteredUsers.length > 0 ? (
                   usersDaPagina.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition">
-                      <td className="p-4 text-gray-900 font-medium">
+                      <td className="p-3 text-gray-900 font-medium">
                         {user.ativo.toUpperCase() +
                           " - " +
                           user.nome.toUpperCase()}
@@ -378,7 +382,7 @@ export default function AdminListUsers() {
                           {user.email}
                         </div>
                       </td>
-                      <td className="p-4 text-gray-900 font-medium">
+                      <td className="p-3 text-gray-900 font-medium">
                         {user.sigla_patente.toUpperCase() +
                           " " +
                           user.nome_guerra.toUpperCase()}
@@ -386,26 +390,26 @@ export default function AdminListUsers() {
                           {user.quadro.toUpperCase()}
                         </div> */}
                       </td>
-                      {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase()}</td> */}
-                      {/* <td className="p-4 text-gray-700">{user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}</td> */}
-                      <td className="p-4 text-gray-700">{user.telefone}</td>
-                      {/* <td className="p-4 text-gray-700">{user.ativo ? 'A' : 'I'}</td> */}
-                      {/* <td className="p-4 text-gray-700">{user.quadro.toUpperCase()}</td> */}
-                      <td className="p-4 text-gray-700">{user.matricula}</td>
-                      <td className="p-4 text-gray-700">{user.cpf}</td>
+                      {/* <td className="p-3 text-gray-700">{user.patente.toUpperCase()}</td> */}
+                      {/* <td className="p-3 text-gray-700">{user.patente.toUpperCase() + ' ' + user.nome_guerra.toUpperCase()}</td> */}
+                      <td className="p-3 text-gray-700">{user.telefone}</td>
+                      {/* <td className="p-3 text-gray-700">{user.ativo ? 'A' : 'I'}</td> */}
+                      {/* <td className="p-3 text-gray-700">{user.quadro.toUpperCase()}</td> */}
+                      <td className="p-3 text-gray-700">{user.matricula}</td>
+                      <td className="p-3 text-gray-700">{user.cpf}</td>
                       {/* <td className="p-4">
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full uppercase">
                           {user.ordem}
                         </span>
                       </td> */}
-                      <td className="p-4">
+                      <td className="p-3">
                         {/* BOTÕES NO DESKTOP (Flex horizontal sem quebrar, botões de largura igual min-w) */}
-                        <div className="flex items-center justify-center gap-2 flex-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 flex-nowrap">
                           <button
                             onClick={() =>
                               navigate("/admin/view-user", { state: { user } })
                             }
-                            className="min-w-[70px] px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium transition text-center"
+                            className="min-w-[58px] px-2 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium transition text-center"
                           >
                             Ver
                           </button>
@@ -413,13 +417,13 @@ export default function AdminListUsers() {
                             onClick={() =>
                               navigate("/admin/edit-user", { state: { user } })
                             }
-                            className="min-w-[70px] px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-sm font-medium transition text-center"
+                            className="min-w-[58px] px-2 py-1.5 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-sm font-medium transition text-center"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => toggleAtivo(user)}
-                            className={`min-w-[70px] px-3 py-1.5 rounded-md text-sm font-medium transition text-center ${
+                            className={`min-w-[58px] px-2 py-1.5 rounded-md text-sm font-medium transition text-center ${
                               user.ativo === "Ativo"
                                 ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
                                 : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -429,13 +433,13 @@ export default function AdminListUsers() {
                           </button>
                           <button
                             onClick={() => handleDeleteClick(user)}
-                            className="min-w-[70px] px-3 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition text-center"
+                            className="min-w-[58px] px-2 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm font-medium transition text-center"
                           >
                             Deletar
                           </button>
                           <button
                             onClick={() => toggleEscala(user.id)}
-                            className="min-w-[70px] px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-md hover:bg-emerald-200 text-sm font-medium transition text-center"
+                            className="min-w-[58px] px-2 py-1.5 bg-emerald-100 text-emerald-800 rounded-md hover:bg-emerald-200 text-sm font-medium transition text-center"
                           >
                             Escalar
                           </button>
