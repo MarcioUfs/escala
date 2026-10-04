@@ -27,6 +27,7 @@ async function avisoAtual(req, res) {
   try {
     return res.status(200).json({ aviso: await buscarVigente() });
   } catch (error) {
+    console.error("[avisosController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -42,6 +43,7 @@ async function historico(req, res) {
     const linhas = await database("avisos").orderBy("id_aviso", "desc").limit(limite);
     return res.status(200).json(linhas.map(formatarAviso));
   } catch (error) {
+    console.error("[avisosController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -101,6 +103,7 @@ async function publicar(req, res) {
       aviso: textoLimpo === "" ? null : formatarAviso(novo),
     });
   } catch (error) {
+    console.error("[avisosController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

@@ -418,6 +418,7 @@ async function listarEscalasV2(req, res) {
 
       return res.status(200).json(arrayDados);
     } catch (error) {
+      console.error("[v2EscalaController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     }
   }
@@ -462,6 +463,7 @@ async function listarEscalasV2(req, res) {
 
       return res.status(200).json(data);
     } catch (error) {
+      console.error("[v2EscalaController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     }
   }
@@ -507,6 +509,7 @@ async function getEscalaV2ById(req, res) {
     }
     return res.status(404).json({ msg: "Escala não encontrada" });
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res
       .status(500)
       .json({ msg: "Erro interno do servidor"});
@@ -559,6 +562,7 @@ async function reverterParaCicloV2(req, res) {
       .status(200)
       .json({ msg: "Escala revertida para o grupamento do ciclo com sucesso!" });
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res
       .status(500)
       .json({ msg: "Erro interno do servidor"});
@@ -653,6 +657,7 @@ async function desvincularUsuarioGrupamentoV2(req, res) {
 
     return res.status(200).json({ msg: "Vínculo encerrado com sucesso!" });
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res
       .status(500)
       .json({ msg: "Erro interno do servidor"});
@@ -781,6 +786,7 @@ async function listarMembrosGrupamentoV2(req, res) {
 
     return res.status(200).json(membrosComAviso);
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -1140,6 +1146,7 @@ async function listarSubstituicoesDoDiaV2(req, res) {
 
     return res.status(200).json(substituicoesComAviso);
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -1166,6 +1173,7 @@ async function reverterSubstituicaoV2(req, res) {
       .status(200)
       .json({ msg: "Substituição revertida — volta a valer o vínculo mensal normal" });
   } catch (error) {
+    console.error("[v2EscalaController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

@@ -107,6 +107,7 @@ async function login(req, res) {
       token: token,
     });
   } catch (error) {
+    console.error("[userController]", error);
     return res.status(500).json({ msg: "Erro do servidor!" });
   }
 }
@@ -209,6 +210,7 @@ async function getUser(req, res) {
 
     return res.status(200).json(userData);
   } catch (error) {
+    console.error("[userController]", error);
     return res.status(500).json({ msg: "Erro do servidor!" });
   }
 }
@@ -266,6 +268,7 @@ async function updatePassword(req, res) {
 
     return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
   } catch (error) {
+    console.error("[userController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

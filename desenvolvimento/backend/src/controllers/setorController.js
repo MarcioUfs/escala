@@ -42,11 +42,13 @@ async function createSetor(req, res) {
               });
             });
         } catch (error) {
+          console.error("[setorController]", error);
           return res.status(500).json({ msg: "Erro interno do servidor" });
         }
       }
     })
     .catch((err) => {
+      console.error("[setorController]", err);
       return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
@@ -72,6 +74,7 @@ async function readSetores(req, res) {
       }
     })
     .catch((error) => {
+      console.error("[setorController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
@@ -133,6 +136,7 @@ async function updateSetor(req, res) {
 
     return res.status(200).json({ msg: "Setor atualizado com sucesso!" });
   } catch (error) {
+    console.error("[setorController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -171,6 +175,7 @@ async function activeSetor(req, res) {
       msg: `Setor ${is_active ? "ativado" : "desativado"} com sucesso!`,
     });
   } catch (error) {
+    console.error("[setorController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -195,6 +200,7 @@ async function deleteSetor(req, res) {
 
     return res.status(200).json({ msg: "Setor deletado com sucesso!" });
   } catch (error) {
+    console.error("[setorController]", error);
     return res
       .status(500)
       .json({ msg: "Erro interno do servidor"});

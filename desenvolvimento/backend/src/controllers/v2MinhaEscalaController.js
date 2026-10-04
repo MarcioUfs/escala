@@ -261,6 +261,7 @@ async function listarMeusDiasV2(req, res) {
 
     return res.status(200).json({ data_inicio: dataInicio, data_fim: dataFim, ...resultado });
   } catch (error) {
+    console.error("[v2MinhaEscalaController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

@@ -82,6 +82,7 @@ async function readUsers(req, res) {
       }
     })
     .catch((error) => {
+      console.error("[adminController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
@@ -175,11 +176,13 @@ async function createUser(req, res) {
                     .json({ msg: "Cadastrado com sucesso!" });
                 })
                 .catch((err) => {
+                  console.error("[adminController]", err);
                   return res
                     .status(500)
                     .json({ msg: "Erro interno do servidor" });
                 });
             } catch (error) {
+              console.error("[adminController]", error);
               return res.status(500).json({ msg: "Erro interno do servidor" });
             }
           });
@@ -187,6 +190,7 @@ async function createUser(req, res) {
       }
     })
     .catch((err) => {
+      console.error("[adminController]", err);
       return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
@@ -206,6 +210,7 @@ async function deleteUser(req, res) {
 
     return res.status(200).json({ msg: "Usuário deletado com sucesso!" });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -238,6 +243,7 @@ async function activeuser(req, res) {
       msg: `Usuário ${is_active ? "ativado" : "desativado"} com sucesso!`,
     });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -369,6 +375,7 @@ async function updateUser(req, res) {
 
     return res.status(200).json({ msg: "Usuário atualizado com sucesso!" });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -454,6 +461,7 @@ async function readAllPm(req, res) {
 
     return res.status(200).json(arrayDados);
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -479,6 +487,7 @@ async function readAllPatente(req, res) {
       }
     })
     .catch((error) => {
+      console.error("[adminController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
@@ -521,6 +530,7 @@ async function loginAdmin(req, res) {
       token: token,
     });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro do servidor!" });
   }
 }
@@ -581,11 +591,13 @@ async function createAdmin(req, res) {
                     .json({ msg: "Cadastrado com sucesso!" });
                 })
                 .catch((err) => {
+                  console.error("[adminController]", err);
                   return res
                     .status(500)
                     .json({ msg: "Erro interno do servidor" });
                 });
             } catch (error) {
+              console.error("[adminController]", error);
               return res.status(500).json({ msg: "Erro interno do servidor" });
             }
           });
@@ -593,6 +605,7 @@ async function createAdmin(req, res) {
       }
     })
     .catch((err) => {
+      console.error("[adminController]", err);
       return res.status(500).json({ msg: "Erro do servidor" });
     });
 }
@@ -628,6 +641,7 @@ async function getAdmin(req, res) {
       }
     })
     .catch((error) => {
+      console.error("[adminController]", error);
       return res.status(500).json({ msg: `Erro do servidor ${error}` });
     });
 }
@@ -656,6 +670,7 @@ async function allAdmins(req, res) {
       }
     })
     .catch((error) => {
+      console.error("[adminController]", error);
       return res.status(500).json({ msg: "Erro do servidor!" });
     });
 }
@@ -675,6 +690,7 @@ async function deleteAdmin(req, res) {
 
     return res.status(200).json({ msg: "Administrador deletado com sucesso!" });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -732,6 +748,7 @@ async function updateAdmin(req, res) {
       .status(200)
       .json({ msg: "Administrador atualizado com sucesso!" });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -797,6 +814,7 @@ async function importarAntiguidadeCsv(req, res) {
       totalRegistros: registrosComTimestamp.length,
     });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -856,6 +874,7 @@ async function updateAdminPassword(req, res) {
 
     return res.status(200).json({ msg: "Senha atualizada com sucesso!" });
   } catch (error) {
+    console.error("[adminController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

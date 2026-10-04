@@ -116,6 +116,7 @@ async function listarMotivosRestricaoV2(req, res) {
       .select("id_motivo_restricao", "descricao");
     return res.status(200).json(motivos);
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -155,6 +156,7 @@ async function criarMotivoRestricaoV2(req, res) {
 
     return res.status(201).json(novo);
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -269,6 +271,7 @@ async function listarAfastamentosV2(req, res) {
 
     return res.status(200).json(resultado);
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -297,6 +300,7 @@ async function obterAfastamentoV2(req, res) {
       motivos: motivos.map((m) => m.fk_id_motivo_restricao),
     });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -396,6 +400,7 @@ async function criarAfastamentoV2(req, res) {
         }
       });
     } catch (erroTransacao) {
+      console.error("[v2AfastamentoController]", erroTransacao);
       // Constraint de exclusão (mesmo militar + mesmo tipo + período
       // sobreposto) cai aqui — código 23P01 é "exclusion_violation".
       if (erroTransacao.code === "23P01") {
@@ -408,6 +413,7 @@ async function criarAfastamentoV2(req, res) {
 
     return res.status(201).json({ msg: "Afastamento registrado com sucesso", id_afastamento: idNovo });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -509,6 +515,7 @@ async function atualizarAfastamentoV2(req, res) {
         }
       });
     } catch (erroTransacao) {
+      console.error("[v2AfastamentoController]", erroTransacao);
       if (erroTransacao.code === "23P01") {
         return res.status(409).json({
           msg: "Já existe um afastamento ativo desse mesmo tipo para este militar, com período sobreposto.",
@@ -519,6 +526,7 @@ async function atualizarAfastamentoV2(req, res) {
 
     return res.status(200).json({ msg: "Afastamento atualizado com sucesso" });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -568,6 +576,7 @@ async function encerrarAfastamentoV2(req, res) {
 
     return res.status(200).json({ msg: "Afastamento encerrado" });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -584,6 +593,7 @@ async function excluirAfastamentoV2(req, res) {
     }
     return res.status(200).json({ msg: "Afastamento excluído" });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
@@ -603,6 +613,7 @@ async function contarAfastamentosAtivosV2(req, res) {
       .count("* as count");
     return res.status(200).json({ ativos: Number(count) });
   } catch (error) {
+    console.error("[v2AfastamentoController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

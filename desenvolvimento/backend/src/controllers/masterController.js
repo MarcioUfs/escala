@@ -57,6 +57,7 @@ async function loginMaster(req, res) {
       token,
     });
   } catch (error) {
+    console.error("[masterController]", error);
     return res.status(500).json({ msg: "Erro do servidor!" });
   }
 }
@@ -81,6 +82,7 @@ async function getMaster(req, res) {
       role: master.role,
     });
   } catch (error) {
+    console.error("[masterController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }

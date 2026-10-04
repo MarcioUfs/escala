@@ -671,6 +671,7 @@ async function listarHistoricoAdminV2(req, res) {
 
     return res.status(200).json({ data_inicio: dataInicio, data_fim: dataFim, truncado, permutas });
   } catch (error) {
+    console.error("[v2PermutaController]", error);
     return res.status(500).json({ msg: "Erro interno do servidor" });
   }
 }
