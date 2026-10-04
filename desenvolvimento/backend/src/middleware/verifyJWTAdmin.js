@@ -24,13 +24,16 @@ function verifyJwt(req, res, next) {
 
     // Tenta primeiro o segredo de admin (caso mais comum) e, se não bater,
     // o de master. Só depois de os dois falharem é que o token é rejeitado.
-    jwt.verify(token, process.env.SECRET_ADMIN, function (err, decoded) {
+    // algorithms: ['HS256'] fixo nos dois -- sem isso, um token assinado
+    // com "none" ou outro algoritmo escolhido pelo atacante passaria pelo
+    // jwt.verify (vulnerabilidade clássica de JWT).
+    jwt.verify(token, process.env.SECRET_ADMIN, { algorithms: ['HS256'] }, function (err, decoded) {
         if (!err) {
             req.user = decoded;
             return next();
         }
 
-        jwt.verify(token, process.env.SECRET_MASTER, function (errMaster, decodedMaster) {
+        jwt.verify(token, process.env.SECRET_MASTER, { algorithms: ['HS256'] }, function (errMaster, decodedMaster) {
             if (errMaster) {
                 // 401 (não 403): autenticação, não autorização — ver
                 // explicação em verifyJWT.js. tokenError:true é o sinal

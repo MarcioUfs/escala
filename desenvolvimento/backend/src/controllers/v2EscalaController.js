@@ -20,9 +20,10 @@ const { montarGradeNominal, paraDataISO } = require("../functions/montarGradeNom
 // aceitando também o segredo do master — senão o perfil master, que pode
 // tudo que o admin pode, seria barrado justamente nas rotas de escala.
 function verificarTokenAdminOuMaster(token, callback) {
-  jwt.verify(token, process.env.SECRET_ADMIN, (err, decoded) => {
+  // algorithms: ['HS256'] fixo nos dois -- mesma razão do verifyJWTAdmin.js.
+  jwt.verify(token, process.env.SECRET_ADMIN, { algorithms: ['HS256'] }, (err, decoded) => {
     if (!err) return callback(null, decoded);
-    jwt.verify(token, process.env.SECRET_MASTER, callback);
+    jwt.verify(token, process.env.SECRET_MASTER, { algorithms: ['HS256'] }, callback);
   });
 }
 

@@ -29,6 +29,31 @@ const isProduction = process.env.NODE_ENV === "production";
 app.set("trust proxy", isProduction ? 1 : "loopback");
 
 // ---------------------------------------------------
+// 0.1 VALIDAÇÃO DOS SEGREDOS DE JWT NO BOOT
+// ---------------------------------------------------
+// Falha rápido (processo não sobe) em vez de rodar com um segredo ausente
+// ou curto demais pra HMAC-SHA256 -- antes disso, SECRET/SECRET_ADMIN
+// podiam ficar fracos (ou até ausentes) sem o servidor avisar em lugar
+// nenhum, só quebrando (ou assinando token com segredo undefined) no
+// primeiro login de verdade.
+// Em NODE_ENV=test, pula essa validação -- mesma lógica do "if
+// (NODE_ENV !== 'test') iniciarAgendamentos()" lá embaixo: testes
+// automatizados que só importam o app.js não devem precisar de um .env
+// de produção completo pra sequer carregar o módulo.
+const SEGREDOS_JWT = ["SECRET", "SECRET_ADMIN", "SECRET_MASTER"];
+const TAMANHO_MINIMO_SEGREDO = 32;
+for (const nome of SEGREDOS_JWT) {
+  if (process.env.NODE_ENV === "test") break;
+  const valor = process.env[nome];
+  if (!valor || valor.length < TAMANHO_MINIMO_SEGREDO) {
+    console.error(
+      `[boot] ${nome} ausente ou curto demais (mínimo ${TAMANHO_MINIMO_SEGREDO} caracteres) -- gere um valor aleatório antes de iniciar o servidor.`,
+    );
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------
 // 1. MIDDLEWARES GLOBAIS (Ordem Crítica de Segurança)
 // ---------------------------------------------------
 

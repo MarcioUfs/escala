@@ -19,7 +19,9 @@ function verifyJwt(req, res, next) {
     return res.status(401).send({ msg: "Token mal formatado.", tokenError: true });
   }
 
-  jwt.verify(parts[1], process.env.SECRET_MASTER, function (err, decoded) {
+  // algorithms: ['HS256'] fixo -- sem isso, um token assinado com "none"
+  // ou outro algoritmo escolhido pelo atacante passaria pelo jwt.verify.
+  jwt.verify(parts[1], process.env.SECRET_MASTER, { algorithms: ['HS256'] }, function (err, decoded) {
     if (err) {
       // 401 (não 403): autenticação, não autorização — ver explicação em
       // verifyJWT.js. tokenError:true é o sinal que o front usa pra

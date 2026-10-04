@@ -16,8 +16,10 @@ function verifyJwt(req, res, next) {
 
     const token = parts[1];
 
-    // Use uma chave única para todos, ex: JWT_SECRET
-    jwt.verify(token, process.env.SECRET, function (err, decoded) {
+    // algorithms: ['HS256'] fixo -- sem isso, um token assinado com "none"
+    // ou outro algoritmo que o atacante escolha passa pelo jwt.verify
+    // (vulnerabilidade clássica de JWT quando o algoritmo não é travado).
+    jwt.verify(token, process.env.SECRET, { algorithms: ['HS256'] }, function (err, decoded) {
         if (err) {
             // 401 (não 403): o problema é a AUTENTICAÇÃO (sessão inválida/
             // vencida), não AUTORIZAÇÃO (isUser abaixo é que responde 403,
