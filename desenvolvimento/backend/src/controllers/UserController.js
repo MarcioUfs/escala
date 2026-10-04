@@ -165,8 +165,16 @@ async function getUser(req, res) {
   const { id_user } = req.user;
 
   try {
+    // Antes usava .table(coluna1, coluna2, ...) -- knex ignora os argumentos
+    // extras de .table() (só o 1º vale, como nome de tabela), então essa
+    // lista toda de colunas nunca teve efeito: a query real virava um
+    // `select *` puro. Com o LEFT JOIN, isso faz tbl_patentes.created_at/
+    // updated_at sobrescreverem os de users (mesmo nome de coluna), e o
+    // alias "AS ativo" nunca existia de fato -- data[0].ativo sempre vinha
+    // undefined, então o status exibido era sempre "Inativo", usuário ativo
+    // ou não. .select(...) de verdade corrige os dois problemas.
     const data = await database
-      .table(
+      .select(
         "users.id_user",
         "users.email",
         "users.cpf",
@@ -175,14 +183,15 @@ async function getUser(req, res) {
         "users.role",
         "users.telefone",
         "users.nome_guerra",
-        "users.is_active AS ativo",
+        "users.is_active as ativo",
         "users.updated_at",
+        "users.must_change_password",
         "tbl_patentes.id_patente",
         "tbl_patentes.nome_patente",
         "tbl_patentes.sigla_patente",
       )
-      .where({ id_user })
       .from("users")
+      .where({ "users.id_user": id_user })
       .leftJoin("tbl_patentes", "users.id_patente", "tbl_patentes.id_patente");
 
     if (data.length <= 0) {
