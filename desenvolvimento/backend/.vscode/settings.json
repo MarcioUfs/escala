@@ -25,7 +25,8 @@
     "commandCenter.foreground": "#15202b",
     "statusBar.debuggingBackground": "#c5d489",
     "statusBar.debuggingForeground": "#15202b",
-    "activityBarTop.activeBorder": "#15202b"
+    "activityBarTop.activeBorder": "#15202b",
+    "statusBar.inactiveBackground": "#c5d489"
   },
   "peacock.color": "#c5d489",
   "workbench.editor.enablePreview": false
